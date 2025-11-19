@@ -1,4 +1,4 @@
-import { BUILDINGS, BASE_POP_PER_BUILT_ACRE, BARREN_EXTRA_POP } from "../constants-age113.ts";
+import { BUILDINGS, BASE_POP_PER_BUILT_ACRE, BARREN_EXTRA_POP } from "../data/buildings.ts";
 import type { BuildingId, Province } from "../types.ts";
 
 export function calculateMaxPopulation(prov: Province): number {

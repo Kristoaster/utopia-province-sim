@@ -1,6 +1,7 @@
 // src/utopia/data/buildings.ts
 import type { BuildingId } from "../types";
 
+export const BASE_POP_PER_BUILT_ACRE = 25;
 export const BARREN_EXTRA_POP = 15;
 export const BARREN_FOOD_PER_ACRE = 2;
 

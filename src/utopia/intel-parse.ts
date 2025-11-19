@@ -1,7 +1,8 @@
 // src/utopia/intel-parse.ts
 import Papa from "papaparse";
 import type { Province, RaceId, PersonalityId, BuildingId } from "./types";
-import { RACES, PERSONALITIES } from "./constants-age113";
+import { RACES } from "./age113/races";
+import { PERSONALITIES } from "./age113/personalities";
 
 type IntelRow = Record<string, string>;
 

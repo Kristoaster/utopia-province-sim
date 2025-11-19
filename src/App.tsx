@@ -2,7 +2,9 @@
 import React, { useState } from "react";
 import "./App.css";
 import type { Province } from "./utopia/types";
-import { RACE_LIST, PERSONALITY_LIST, BUILDING_LIST, } from "./utopia/constants-age113";
+import { RACE_LIST } from "./utopia/age113/races";
+import { PERSONALITY_LIST } from "./utopia/age113/personalities";
+import { BUILDING_LIST } from "./utopia/data/buildings";
 import { calculateBE } from "./utopia/calc/be.ts";
 import { calculateIncome } from "./utopia/calc/income.ts";
 import { calculateMilitary} from "./utopia/calc/military.ts";
