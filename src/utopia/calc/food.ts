@@ -1,4 +1,4 @@
-// src/utopia/food.ts
+// src/utopia/calc/food.ts
 import type { Province } from "../types.ts";
 import { BUILDINGS, BARREN_FOOD_PER_ACRE } from "../data/buildings";
 import { calculateBE } from "./be.ts";

@@ -1,6 +1,6 @@
-// src/utopia/income.ts
+// src/utopia/calc/income.ts
 import type {Province} from "../types.ts";
-import { ECONOMY } from "../constants-age113.ts";
+import { ECONOMY } from "../data/constants.ts";
 import { RACES } from "../age113/races";
 
 export interface IncomeResult {

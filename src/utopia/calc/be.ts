@@ -1,4 +1,5 @@
-// src/utopia/be.ts
+// src/utopia/calc/be.ts
+
 import type { Province, BuildingId } from "../types";
 import { BUILDINGS } from "../data/buildings";
 

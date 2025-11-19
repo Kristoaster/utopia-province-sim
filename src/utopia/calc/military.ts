@@ -1,4 +1,4 @@
-// src/utopia/military.ts
+// src/utopia/calc/military.ts
 import type { Province } from "../types.ts";
 import { RACES } from "../age113/races";
 import { PERSONALITIES } from "../age113/personalities";

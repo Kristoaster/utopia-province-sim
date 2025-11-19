@@ -1,6 +1,6 @@
-// src/utopia/wages.ts
+// src/utopia/calc/wages.ts
 import type { Province } from "../types.ts";
-import { WAGES } from "../constants-age113.ts";
+import { WAGES } from "../data/constants.ts";
 
 export interface WagesResult {
     unitWages: {

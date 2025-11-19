@@ -1,3 +1,5 @@
+// src/utopia/age113/personalities.ts
+
 import type {PersonalityId} from "../types.ts";
 
 export interface Personality {
