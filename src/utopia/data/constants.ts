@@ -38,8 +38,9 @@ export const FOOD = {
 // ----- Wages -----
 export const WAGES = {
     // base gold per unit per tick at 100% wages
-    SOLDIER: 0.5,
-    OFF_SPEC: 1.0,
-    DEF_SPEC: 1.0,
-    ELITE: 1.5,
+    // Soldiers do not get paid wages in-game
+    SOLDIER: 0,
+    OFF_SPEC: 0.5,
+    DEF_SPEC: 0.5,
+    ELITE: 0.75,
 };
