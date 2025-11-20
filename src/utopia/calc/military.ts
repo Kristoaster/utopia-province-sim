@@ -17,6 +17,19 @@ export interface MilitaryResult {
 export function calculateMilitary(prov: Province): MilitaryResult {
     const race = RACES[prov.race];
     const pers = PERSONALITIES[prov.personality];
+
+    // If race is missing for any reason, fall back to zeros instead of crashing
+    if (!race) {
+        return {
+            rawOffense: 0,
+            rawDefense: 0,
+            ome: 1,
+            dme: 1,
+            modOffense: 0,
+            modDefense: 0,
+        };
+    }
+
     const units = race.units;
 
     // ---- 1) Raw offense & defense from units ----
@@ -36,7 +49,7 @@ export function calculateMilitary(prov: Province): MilitaryResult {
     const tgCount = prov.buildings.TRAINING_GROUNDS ?? 0;
     const fortsCount = prov.buildings.FORTS ?? 0;
 
-    const tgPercent = (tgCount / acres) * 100;    // % of land as TGs
+    const tgPercent = (tgCount / acres) * 100;       // % of land as TGs
     const fortsPercent = (fortsCount / acres) * 100; // % of land as Forts
 
     const { be } = calculateBE(prov); // e.g. 1.00 for 100%, 1.10 for 110% BE
@@ -48,7 +61,7 @@ export function calculateMilitary(prov: Province): MilitaryResult {
     const omeFromBuildings = 1 + omeBonusFromBuildings;
     const dme = 1 + dmeBonusFromBuildings;
 
-    // Race + personality OME (e.g. Dark Elf =10%, Warrior +15%)
+    // Race + personality OME (e.g. Dark Elf +10%, Warrior +15%)
     const raceOmeBonus = race.mods.ome ?? 0;
     const persOmeBonus = pers?.mods.ome ?? 0;
 

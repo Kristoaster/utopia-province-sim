@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import "./App.css";
 import type { BuildGoals, BuildPlan } from "./utopia/calc/build-planner.ts";
-import { generateSuggestedBuild, cloneProvinceWithBuildings, } from "./utopia/calc/build-planner.ts";
+import { generateSuggestedBuild } from "./utopia/calc/build-planner.ts";
 import type { Province } from "./utopia/types";
 import { RACE_LIST } from "./utopia/age113/races";
 import { PERSONALITY_LIST } from "./utopia/age113/personalities";
@@ -108,10 +108,6 @@ function App() {
         const plan = generateSuggestedBuild(province, goals);
         setBuildPlan(plan);
     };
-    const suggestedProvince = buildPlan
-        ? cloneProvinceWithBuildings(province, buildPlan.buildings)
-        : null;
-
 
     const beResult = calculateBE(province);
     const incomeResult = calculateIncome(province);

@@ -1,13 +1,10 @@
 // src/features/snapshot/ManualInputsPanel.tsx
-
 import React from "react";
-import {
+import type {
     ProvinceSectionId,
     SnapshotField,
     IntelRow,
     ManualOverrides,
-    getBaseFieldValue,
-    getManualInputFields,
 } from "./snapshotModel";
 import { SNAPSHOT_FIELDS } from "./snapshotFields.generated";
 
@@ -28,22 +25,58 @@ const SECTION_LABELS: Record<ProvinceSectionId, string> = {
     science: "Science",
 };
 
+// Sections we actually show manual inputs for
+const SECTIONS: ProvinceSectionId[] = [
+    "throne",
+    "population",
+    "economy",
+    "military",
+    "buildingsGrowth",
+    "science",
+    // add "state" or "netChanges" here later if needed
+];
+
+// Helper: filter to fields that belong to a section and are marked as
+// manually editable in the spreadsheet config.
+function getManualInputFields(
+    allFields: SnapshotField[],
+    sectionId: ProvinceSectionId
+): SnapshotField[] {
+    return allFields.filter((field) => {
+        const f = field as SnapshotField & {
+            section?: ProvinceSectionId;
+            manualInput?: boolean;
+        };
+
+        const inSection = f.section === sectionId;
+        const isManual = f.manualInput === true;
+
+        return inSection && isManual;
+    });
+}
+
+// Helper: best-effort base value for a field from the intel row
+function getBaseFieldValue(
+    field: SnapshotField,
+    intelRow: IntelRow
+): string | number | null {
+    const rowAsRecord = intelRow as IntelRow & Record<string, unknown>;
+    const value = rowAsRecord[field.key];
+
+    if (value == null) return null;
+
+    if (typeof value === "number" || typeof value === "string") {
+        return value;
+    }
+
+    return String(value);
+}
+
 export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
                                                                         intelRow,
                                                                         manualOverrides,
                                                                         onChange,
                                                                     }) => {
-    const sections: ProvinceSectionId[] = [
-        "throne",
-        "population",
-        "economy",
-        "military",
-        "buildingsGrowth",
-        "science",
-        // You can add "state" and "netChanges" here if/when those sections
-        // get fields with "manual input" in the Excel.
-    ];
-
     const handleInputChange = (field: SnapshotField, raw: string) => {
         const trimmed = raw.trim();
         if (trimmed === "") {
@@ -65,7 +98,7 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
             </summary>
 
             <div className="mt-3 space-y-4">
-                {sections.map((sectionId) => {
+                {SECTIONS.map((sectionId) => {
                     const fields = getManualInputFields(SNAPSHOT_FIELDS, sectionId);
                     if (!fields.length) return null;
 
@@ -76,12 +109,17 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
                             </h3>
                             <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                                 {fields.map((field) => {
-                                    const override = manualOverrides[field.key];
+                                    const overrideValue =
+                                        manualOverrides[field.key as keyof ManualOverrides];
+
                                     const baseFromIntel =
-                                        intelRow && getBaseFieldValue(field, intelRow, {});
+                                        intelRow != null
+                                            ? getBaseFieldValue(field, intelRow)
+                                            : null;
+
                                     const value =
-                                        override !== undefined && override !== null
-                                            ? String(override)
+                                        overrideValue !== undefined && overrideValue !== null
+                                            ? String(overrideValue)
                                             : baseFromIntel != null
                                                 ? String(baseFromIntel)
                                                 : "";

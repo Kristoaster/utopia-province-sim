@@ -1,6 +1,6 @@
 // src/utopia/calc/build-planner.ts
 import type { Province, BuildingId } from "../types.ts";
-import { BUILDINGS, BUILDING_LIST } from "../data/buildings.ts";
+import { BUILDINGS } from "../data/buildings.ts";
 import { RACES } from "../age113/races";
 import { calculateIncome } from "./income.ts";
 import { calculateWages } from "./wages.ts";
@@ -122,10 +122,10 @@ export function generateSuggestedBuild(
     let rebuiltAcres = 0;
 
     const restricted = new Set<BuildingId>();
-    if (race.restrictions.noBarracks) restricted.add("BARRACKS");
-    if (race.restrictions.noStables) restricted.add("STABLES");
-    if (race.restrictions.noDungeons) restricted.add("DUNGEONS");
-    if (race.restrictions.noTrainingGrounds) restricted.add("TRAINING_GROUNDS" as BuildingId);
+    if (race?.restrictions.noBarracks) restricted.add("BARRACKS");
+    if (race?.restrictions.noStables) restricted.add("STABLES");
+    if (race?.restrictions.noDungeons) restricted.add("DUNGEONS");
+    if (race?.restrictions.noTrainingGrounds) restricted.add("TRAINING_GROUNDS" as BuildingId);
 
     const get = (id: BuildingId) => currentBuildings[id] ?? 0;
     const set = (id: BuildingId, value: number) => {
