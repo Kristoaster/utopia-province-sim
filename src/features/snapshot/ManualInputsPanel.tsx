@@ -29,7 +29,6 @@ const SECTION_LABELS: Record<ProvinceSectionId, string> = {
     science: "Science",
 };
 
-// Sections we actually show manual inputs for
 const SECTIONS: ProvinceSectionId[] = [
     "throne",
     "population",
@@ -37,7 +36,6 @@ const SECTIONS: ProvinceSectionId[] = [
     "military",
     "buildingsGrowth",
     "science",
-    // add "state" or "netChanges" here later if needed
 ];
 
 export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
@@ -59,7 +57,6 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
         }
     };
 
-    // If absolutely no fields allow manual input, hide the panel entirely.
     const anyFields = SECTIONS.some(
         (sectionId) =>
             getManualInputFieldsFromModel(SNAPSHOT_FIELDS, sectionId).length > 0
@@ -69,12 +66,13 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
     }
 
     return (
-        <div className="rounded-md border border-slate-600 bg-slate-900/40 p-3">
-            <h3 className="text-sm font-semibold text-slate-100">
-                Manual Inputs / Overrides
-            </h3>
+        <div className="manual-panel rounded-md border border-slate-600 bg-slate-900/40 p-3">
+            <div className="mb-2 text-xs text-slate-300">
+                These fields come from intel, but you can override any value. Leave
+                blank to keep the intel number.
+            </div>
 
-            <div className="mt-3 space-y-4">
+            <div className="space-y-4">
                 {SECTIONS.map((sectionId) => {
                     const fields = getManualInputFieldsFromModel(
                         SNAPSHOT_FIELDS,
@@ -104,28 +102,30 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
                                                 ? String(baseFromIntel)
                                                 : "";
 
-                                    const isNumeric =
-                                        typeof overrideValue === "number" ||
-                                        typeof baseFromIntel === "number";
-
                                     return (
                                         <label
                                             key={field.key}
                                             className="flex flex-col gap-1 text-xs"
                                         >
-            <span className="font-medium text-[11px] tracking-wide">
-                {field.label}
-            </span>
+                      <span className="font-medium text-[11px] tracking-wide">
+                        {field.label}
+                      </span>
                                             <input
-                                                className="rounded border border-slate-600 bg-slate-950/60 px-2 py-1 text-xs text-slate-100"
-                                                type={isNumeric ? "number" : "text"}
+                                                className="snapshot-input"
+                                                type="text"
                                                 value={value}
-                                                onChange={(e) => handleInputChange(field, e.target.value)}
+                                                onChange={(e) =>
+                                                    handleInputChange(field, e.target.value)
+                                                }
+                                                placeholder={
+                                                    baseFromIntel != null
+                                                        ? String(baseFromIntel)
+                                                        : undefined
+                                                }
                                             />
                                         </label>
                                     );
                                 })}
-
                             </div>
                         </section>
                     );
@@ -134,3 +134,4 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
         </div>
     );
 };
+

@@ -153,6 +153,10 @@ function App() {
         beResult.jobs.optimalWorkers > 0
             ? (beResult.jobs.filledJobs / beResult.jobs.optimalWorkers) * 100
             : 100;
+    const netIncomeClass = netIncome < 0 ? "value-bad" : "value-good";
+    const employmentClass =
+        employmentPct < 80 ? "value-bad" : employmentPct < 95 ? "value-warn" : "value-good";
+
 
     // Base construction and raze cost formulas (no mods)
     const baseBuildCostPerAcre = 0.05 * (province.acres + 10000);
@@ -185,9 +189,20 @@ function App() {
 
     return (
         <div className="page">
+            {/* Workflow strip */}
+            <div className="workflow-strip">
+                <span className="step active">1. Load intel</span>
+                <span className="step">2. Review snapshot</span>
+                <span className="step">3. Set goals</span>
+                <span className="step">4. Tweak overrides</span>
+            </div>
+
+            <h2 className="section-title">Current Snapshot</h2>
+
             {/* THRONE SUMMARY */}
             <div className="card throne-card">
-                <div className="throne-header">
+
+            <div className="throne-header">
                     <div>
                         <div className="throne-name">{province.name}</div>
                         <div className="throne-sub">
@@ -272,475 +287,10 @@ function App() {
                 </div>
             </div>
 
-            {/* PROVINCE INPUTS (Intel + manual) */}
-            <div className="card">
-                <div className="card-title">Province inputs</div>
 
-                {/* 1️⃣ Intel file upload & province select – always visible */}
-                <div className="control-grid">
-                    <div>
-                        <label>Load intel CSV</label>
-                        <input
-                            type="file"
-                            accept=".csv"
-                            onChange={handleIntelUpload}
-                        />
-                    </div>
-
-                    {intelProvinces.length > 1 && (
-                        <div>
-                            <label>Province from intel</label>
-                            <select
-                                value={selectedIntelIndex ?? ""}
-                                onChange={(e) => {
-                                    const idx = Number(e.target.value);
-                                    setSelectedIntelIndex(idx);
-                                    const chosen = intelProvinces[idx];
-                                    if (chosen) {
-                                        setProvince(chosen);
-                                        setBuildPlan(null);
-                                        setManualOverrides({});
-                                    }
-                                }}
-                            >
-                                {intelProvinces.map((prov, idx) => (
-                                    <option key={prov.name + idx} value={idx}>
-                                        {prov.name} ({prov.race} / {prov.personality})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-                </div>
-
-                {/* 2️⃣ Manual inputs / overrides live here */}
-                <details style={{ marginTop: "0.75rem" }}>
-                    <summary style={{ cursor: "pointer", fontWeight: 600 }}>
-                        Manual Inputs / Overrides
-                    </summary>
-
-                    <div style={{ marginTop: "0.75rem" }}>
-                        {/* All the existing manual province inputs */}
-                        <div className="control-grid">
-                            {/* Identity & meta */}
-                            <div>
-                                <label>Province name</label>
-                                <input
-                                    type="text"
-                                    value={province.name}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({ ...prev, name: e.target.value }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Race</label>
-                                <select
-                                    value={province.race}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            race: e.target.value as Province["race"],
-                                        }))
-                                    }
-                                >
-                                    {RACE_LIST.map((race) => (
-                                        <option key={race.id} value={race.id}>
-                                            {race.display}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label>Personality</label>
-                                <select
-                                    value={province.personality}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            personality: e.target.value as Province["personality"],
-                                        }))
-                                    }
-                                >
-                                    {PERSONALITY_LIST.map((pers) => (
-                                        <option key={pers.id} value={pers.id}>
-                                            {pers.display}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label>Kingdom location (x:y)</label>
-                                <input
-                                    type="text"
-                                    value={province.location}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({ ...prev, location: e.target.value }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Ruler name</label>
-                                <input
-                                    type="text"
-                                    value={province.rulerName}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({ ...prev, rulerName: e.target.value }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Honor level</label>
-                                <input
-                                    type="number"
-                                    value={province.honorLevel}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            honorLevel: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Total acres</label>
-                                <input
-                                    type="number"
-                                    value={province.acres}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            acres: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Networth</label>
-                                <input
-                                    type="number"
-                                    value={province.networth}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            networth: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Trade balance</label>
-                                <input
-                                    type="number"
-                                    value={province.tradeBalance}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            tradeBalance: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            {/* Population & units */}
-                            <div>
-                                <label>Peasants</label>
-                                <input
-                                    type="number"
-                                    value={province.peasants}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            peasants: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Soldiers</label>
-                                <input
-                                    type="number"
-                                    value={province.soldiers}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            soldiers: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Off specs</label>
-                                <input
-                                    type="number"
-                                    value={province.offSpecs}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            offSpecs: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Def specs</label>
-                                <input
-                                    type="number"
-                                    value={province.defSpecs}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            defSpecs: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Elites</label>
-                                <input
-                                    type="number"
-                                    value={province.elites}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            elites: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Thieves</label>
-                                <input
-                                    type="number"
-                                    value={province.thieves}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            thieves: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Wizards</label>
-                                <input
-                                    type="number"
-                                    value={province.wizards}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            wizards: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            {/* Resources & econ */}
-                            <div>
-                                <label>Gold (gc)</label>
-                                <input
-                                    type="number"
-                                    value={province.gold}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            gold: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Food stock (bushels)</label>
-                                <input
-                                    type="number"
-                                    value={province.food}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            food: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Runes</label>
-                                <input
-                                    type="number"
-                                    value={province.runes}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            runes: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Horses</label>
-                                <input
-                                    type="number"
-                                    value={province.horses}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            horses: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Prisoners</label>
-                                <input
-                                    type="number"
-                                    value={province.prisoners}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            prisoners: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Wages (%)</label>
-                                <input
-                                    type="number"
-                                    value={(province.wageRate * 100).toFixed(0)}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            wageRate: (Number(e.target.value) || 0) / 100,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            {/* Intel-only fields */}
-                            <div>
-                                <label>Intel offense (home)</label>
-                                <input
-                                    type="number"
-                                    value={province.intelOffenseHome}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            intelOffenseHome: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Intel defense (home)</label>
-                                <input
-                                    type="number"
-                                    value={province.intelDefenseHome}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            intelDefenseHome: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Intel wages setting (%)</label>
-                                <input
-                                    type="number"
-                                    value={province.intelWagePercent}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            intelWagePercent: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-
-                            <div>
-                                <label>Draft target (%)</label>
-                                <input
-                                    type="number"
-                                    value={province.draftTargetPercent}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            draftTargetPercent: Number(e.target.value) || 0,
-                                        }))
-                                    }
-                                />
-                            </div>
-                        </div>
-
-                        {/* ManualInputsPanel stays, now clearly under the same section */}
-                        <div style={{ marginTop: "0.75rem" }}>
-                            <ManualInputsPanel
-                                intelRow={snapshotIntelRow}
-                                manualOverrides={manualOverrides}
-                                onChange={(key, value) =>
-                                    setManualOverrides((prev) => ({
-                                        ...prev,
-                                        [key]: value,
-                                    }))
-                                }
-                            />
-                        </div>
-                    </div>
-                </details>
-
-                {/* Buildings manual entry */}
-                <hr />
-                <div style={{ marginTop: "0.5rem" }}>
-                    <div
-                        className="card-title"
-                        style={{ fontSize: "0.8rem", marginBottom: "0.25rem" }}
-                    >
-                        Buildings (acres)
-                    </div>
-                    <div className="buildings-input-grid">
-                        {BUILDING_LIST.map((b) => (
-                            <div key={b.id}>
-                                <label>{b.display}</label>
-                                <input
-                                    type="number"
-                                    value={province.buildings[b.id] ?? 0}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            buildings: {
-                                                ...prev.buildings,
-                                                [b.id]: Number(e.target.value) || 0,
-                                            },
-                                        }))
-                                    }
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
 
             {/* GOALS & OPTIMIZER */}
+            <h2 className="section-title">Planning & Optimization</h2>
             <div className="card">
                 <div className="card-title">Goals & suggested build</div>
                 <div className="control-grid">
@@ -857,10 +407,11 @@ function App() {
                 </div>
             </div>
 
-
             {/* MAIN PANELS: STATE, MIL, FOOD, SCIENCE */}
+            <h2 className="section-title">Detailed Breakdown</h2>
             <div className="content-grid">
-                {/* State & Economy */}
+
+            {/* State & Economy */}
                 <div className="card">
                     <div className="card-title">State & Economy</div>
                     <div className="field-row">
@@ -902,7 +453,7 @@ function App() {
                     </div>
                     <div className="field-row">
                         <span>Employment</span>
-                        <strong>{employmentPct.toFixed(1)}%</strong>
+                        <strong className={employmentClass}>{employmentPct.toFixed(1)}%</strong>
                     </div>
                     <hr />
                     <div className="field-row">
@@ -915,7 +466,7 @@ function App() {
                     </div>
                     <div className="field-row">
                         <span>Net income / tick</span>
-                        <strong>{netIncome.toFixed(0)} gc</strong>
+                        <strong className={netIncomeClass}>{netIncome.toFixed(0)} gc</strong>
                     </div>
                 </div>
 
@@ -1212,6 +763,229 @@ function App() {
                     )}
                 </div>
 
+            </div>
+
+            {/* PROVINCE INPUTS (Intel + manual) */}
+            <h2 className="section-title">Inputs & Overrides</h2>
+            <div className="card">
+                <div className="card-title">Province inputs</div>
+
+                {/* 1️⃣ Intel file upload & province select – always visible */}
+                <div className="control-grid">
+                    <div>
+                        <label>Load intel CSV</label>
+                        <input
+                            type="file"
+                            accept=".csv"
+                            onChange={handleIntelUpload}
+                        />
+                    </div>
+
+                    {intelProvinces.length > 1 && (
+                        <div>
+                            <label>Province from intel</label>
+                            <select
+                                value={selectedIntelIndex ?? ""}
+                                onChange={(e) => {
+                                    const idx = Number(e.target.value);
+                                    setSelectedIntelIndex(idx);
+                                    const chosen = intelProvinces[idx];
+                                    if (chosen) {
+                                        setProvince(chosen);
+                                        setBuildPlan(null);
+                                        setManualOverrides({});
+                                    }
+                                }}
+                            >
+                                {intelProvinces.map((prov, idx) => (
+                                    <option key={prov.name + idx} value={idx}>
+                                        {prov.name} ({prov.race} / {prov.personality})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                </div>
+
+                {/* 2️⃣ Manual inputs / overrides live here */}
+                <details style={{ marginTop: "0.75rem" }}>
+                    <summary style={{ cursor: "pointer", fontWeight: 600 }}>
+                        Manual Inputs / Overrides
+                    </summary>
+
+                    <div style={{ marginTop: "0.75rem" }}>
+                        <p className="help-text">
+                            Values here override intel for calculations. Leave a field blank to keep the
+                            intel value.
+                        </p>
+
+                        {/* Identity */}
+                        <div className="manual-section">
+                            <h4 className="manual-section-title">Identity</h4>
+                            <div className="control-grid">
+                                <div>
+                                    <label>Province name</label>
+                                    <input
+                                        type="text"
+                                        value={province.name}
+                                        onChange={(e) =>
+                                            setProvince((prev) => ({ ...prev, name: e.target.value }))
+                                        }
+                                    />
+                                </div>
+
+                                <div>
+                                    <label>Race</label>
+                                    <select
+                                        value={province.race}
+                                        onChange={(e) =>
+                                            setProvince((prev) => ({
+                                                ...prev,
+                                                race: e.target.value as Province["race"],
+                                            }))
+                                        }
+                                    >
+                                        {RACE_LIST.map((race) => (
+                                            <option key={race.id} value={race.id}>
+                                                {race.display}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label>Personality</label>
+                                    <select
+                                        value={province.personality}
+                                        onChange={(e) =>
+                                            setProvince((prev) => ({
+                                                ...prev,
+                                                personality: e.target.value as Province["personality"],
+                                            }))
+                                        }
+                                    >
+                                        {PERSONALITY_LIST.map((pers) => (
+                                            <option key={pers.id} value={pers.id}>
+                                                {pers.display}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label>Kingdom location (x:y)</label>
+                                    <input
+                                        type="text"
+                                        value={province.location}
+                                        onChange={(e) =>
+                                            setProvince((prev) => ({ ...prev, location: e.target.value }))
+                                        }
+                                    />
+                                </div>
+
+                                <div>
+                                    <label>Ruler name</label>
+                                    <input
+                                        type="text"
+                                        value={province.rulerName}
+                                        onChange={(e) =>
+                                            setProvince((prev) => ({ ...prev, rulerName: e.target.value }))
+                                        }
+                                    />
+                                </div>
+
+                                <div>
+                                    <label>Honor level</label>
+                                    <input
+                                        type="number"
+                                        value={province.honorLevel}
+                                        onChange={(e) =>
+                                            setProvince((prev) => ({
+                                                ...prev,
+                                                honorLevel: Number(e.target.value) || 0,
+                                            }))
+                                        }
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Population & Military */}
+                        <div className="manual-section">
+                            <h4 className="manual-section-title">Population & Military</h4>
+                            <div className="control-grid">
+                                {/* peasants / soldiers / off / def / elites / thieves / wizards */}
+                                {/* this is the same content you already have, just grouped */}
+                                {/* copy your existing divs for these fields into here */}
+                            </div>
+                        </div>
+
+                        {/* Economy & Resources */}
+                        <div className="manual-section">
+                            <h4 className="manual-section-title">Economy & Resources</h4>
+                            <div className="control-grid">
+                                {/* gold, food, runes, horses, prisoners, wageRate */}
+                                {/* copy those input blocks here */}
+                            </div>
+                        </div>
+
+                        {/* Intel-only fields */}
+                        <div className="manual-section">
+                            <h4 className="manual-section-title">Intel-only fields</h4>
+                            <div className="control-grid">
+                                {/* intelOffenseHome, intelDefenseHome, intelWagePercent, draftTargetPercent */}
+                                {/* copy those input blocks here */}
+                            </div>
+                        </div>
+
+                        {/* Snapshot-based manual overrides */}
+                        <div className="manual-section">
+                            <h4 className="manual-section-title">Snapshot overrides</h4>
+                            <ManualInputsPanel
+                                intelRow={snapshotIntelRow}
+                                manualOverrides={manualOverrides}
+                                onChange={(key, value) =>
+                                    setManualOverrides((prev) => ({
+                                        ...prev,
+                                        [key]: value,
+                                    }))
+                                }
+                            />
+                        </div>
+                    </div>
+                </details>
+
+
+                {/* Buildings manual entry */}
+                <hr />
+                <div style={{ marginTop: "0.5rem" }}>
+                    <div
+                        className="card-title"
+                        style={{ fontSize: "0.8rem", marginBottom: "0.25rem" }}
+                    >
+                        Buildings (acres)
+                    </div>
+                    <div className="buildings-input-grid">
+                        {BUILDING_LIST.map((b) => (
+                            <div key={b.id}>
+                                <label>{b.display}</label>
+                                <input
+                                    type="number"
+                                    value={province.buildings[b.id] ?? 0}
+                                    onChange={(e) =>
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            buildings: {
+                                                ...prev.buildings,
+                                                [b.id]: Number(e.target.value) || 0,
+                                            },
+                                        }))
+                                    }
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         </div>
     );
