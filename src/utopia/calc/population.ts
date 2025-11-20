@@ -17,29 +17,28 @@ export function calculateMaxPopulation(prov: Province): number {
         completedBuildings += count;
     }
 
-    // Barren = total acres minus built land
-    const barrenLand = Math.max(prov.acres - completedBuildings, 0);
+    // Built vs barren acres
+    const builtAcres = completedBuildings;
+    const barrenAcres = Math.max(prov.acres - builtAcres, 0);
 
+    // Extra capacity from Homes
     const homes = prov.buildings.HOMES ?? 0;
     const homesExtra =
         homes * (BUILDINGS.HOMES.capacity?.population ?? 0); // +10 pop per Home
 
-    const landInProgress = prov.acres - barren
+    // Base living space:
+    // - built land: 25 pop/acre
+    // - barren land: 15 pop/acre
+    const builtCapacity = builtAcres * BASE_POP_PER_BUILT_ACRE;
+    const barrenCapacity = barrenAcres * BARREN_EXTRA_POP;
 
-    // Built land: 25 pop per acre, plus Homes extra
-    const builtCapacity =
-        completedBuildings * BASE_POP_PER_BUILT_ACRE + homesExtra;
-
-    const rawLivingSpace = ((builtLand + landInProgress) * BASE_POP_PER_BUILT_ACRE)
-                                    + (barrenLand * BARREN_EXTRA_POP)
-                                    + (homes * homesCapacity)
+    const rawLivingSpace = builtCapacity + barrenCapacity + homesExtra;
 
     // Race pop bonus (e.g. Halfling +15% pop)
     const race = RACES[prov.race];
     const racePopBonus = race?.mods.pop ?? 0;
 
-    const maxPopulation =
-        rawLivingSpace * (1 + racePopBonus);
+    const maxPopulation = rawLivingSpace * (1 + racePopBonus);
 
     return maxPopulation;
 }

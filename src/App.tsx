@@ -14,6 +14,11 @@ import { calculateWages } from "./utopia/calc/wages.ts";
 import { calculateFood } from "./utopia/calc/food.ts";
 import { parseIntelCsv } from "./utopia/intel-parse";
 import { calculateMaxPopulation } from "./utopia/calc/population.ts";
+import { ManualInputsPanel } from "./features/snapshot/ManualInputsPanel";
+import type {
+    ManualOverrides,
+    IntelRow as SnapshotIntelRow,
+} from "./features/snapshot/snapshotModel";
 
 
 
@@ -84,6 +89,8 @@ function App() {
         null
     );
 
+    const [manualOverrides, setManualOverrides] = useState<ManualOverrides>({});
+
     const [goals, setGoals] = useState<BuildGoals>({
         minNetIncome: 0,
         noStarvation: true,
@@ -112,6 +119,10 @@ function App() {
     const netIncome = incomeResult.finalIncome - wagesResult.totalWages;
     const foodResult = calculateFood(province);
     const militaryResult = calculateMilitary(province);
+
+    const snapshotIntelRow: SnapshotIntelRow | null = (province as any).rawIntel
+        ? ((province as any).rawIntel as SnapshotIntelRow)
+        : null;
 
     // --- Derived "state page" style numbers ---
     const totalPop =
@@ -163,12 +174,15 @@ function App() {
                 setIntelProvinces(provinces);
                 setSelectedIntelIndex(0);
                 setProvince(provinces[0]);
+                setBuildPlan(null);
+                setManualOverrides({}); // ⬅️ reset snapshot overrides
             } else {
                 alert("No valid provinces found in intel file.");
             }
         };
         reader.readAsText(file);
     };
+
 
     return (
         <div className="page">
@@ -285,7 +299,8 @@ function App() {
                                     const chosen = intelProvinces[idx];
                                     if (chosen) {
                                         setProvince(chosen);
-                                        setBuildPlan(null); // reset suggestion when province changes
+                                        setBuildPlan(null);     // reset suggestion
+                                        setManualOverrides({}); // reset overrides for new province
                                     }
                                 }}
                             >
@@ -666,6 +681,19 @@ function App() {
                             }
                         />
                     </div>
+                </div>
+
+                <div style={{ marginTop: "0.75rem" }}>
+                    <ManualInputsPanel
+                        intelRow={snapshotIntelRow}
+                        manualOverrides={manualOverrides}
+                        onChange={(key, value) =>
+                            setManualOverrides((prev) => ({
+                                ...prev,
+                                [key]: value,
+                            }))
+                        }
+                    />
                 </div>
 
                 {/* Buildings manual entry */}
