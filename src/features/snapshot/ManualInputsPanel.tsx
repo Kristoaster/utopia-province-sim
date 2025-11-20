@@ -38,6 +38,8 @@ const SECTIONS: ProvinceSectionId[] = [
     "science",
 ];
 
+// src/features/snapshot/ManualInputsPanel.tsx
+
 export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
                                                                         intelRow,
                                                                         manualOverrides,
@@ -57,6 +59,7 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
         }
     };
 
+    // If absolutely no fields allow manual input, hide the panel entirely.
     const anyFields = SECTIONS.some(
         (sectionId) =>
             getManualInputFieldsFromModel(SNAPSHOT_FIELDS, sectionId).length > 0
@@ -66,13 +69,16 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
     }
 
     return (
-        <div className="manual-panel rounded-md border border-slate-600 bg-slate-900/40 p-3">
-            <div className="mb-2 text-xs text-slate-300">
-                These fields come from intel, but you can override any value. Leave
-                blank to keep the intel number.
-            </div>
+        <details className="manual-panel">
+            <summary>
+                <span>Snapshot overrides (advanced)</span>
+                <span className="subtle">
+                    These fields come from intel. Leave blank to keep the intel
+                    number.
+                </span>
+            </summary>
 
-            <div className="space-y-4">
+            <div className="manual-panel-inner">
                 {SECTIONS.map((sectionId) => {
                     const fields = getManualInputFieldsFromModel(
                         SNAPSHOT_FIELDS,
@@ -81,22 +87,30 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
                     if (!fields.length) return null;
 
                     return (
-                        <section key={sectionId}>
-                            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        <section key={sectionId} style={{ marginBottom: "0.75rem" }}>
+                            <h3 className="manual-section-title">
                                 {SECTION_LABELS[sectionId]}
                             </h3>
-                            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+
+                            <div className="snapshot-grid">
                                 {fields.map((field) => {
                                     const overrideValue =
-                                        manualOverrides[field.key as keyof ManualOverrides];
+                                        manualOverrides[
+                                            field.key as keyof ManualOverrides
+                                            ];
 
                                     const baseFromIntel =
                                         intelRow != null
-                                            ? getBaseFieldValueFromModel(field, intelRow, {})
+                                            ? getBaseFieldValueFromModel(
+                                                field,
+                                                intelRow,
+                                                {}
+                                            )
                                             : null;
 
                                     const value =
-                                        overrideValue !== undefined && overrideValue !== null
+                                        overrideValue !== undefined &&
+                                        overrideValue !== null
                                             ? String(overrideValue)
                                             : baseFromIntel != null
                                                 ? String(baseFromIntel)
@@ -107,15 +121,18 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
                                             key={field.key}
                                             className="flex flex-col gap-1 text-xs"
                                         >
-                      <span className="font-medium text-[11px] tracking-wide">
-                        {field.label}
-                      </span>
+                                            <span className="font-medium text-[11px] tracking-wide">
+                                                {field.label}
+                                            </span>
                                             <input
                                                 className="snapshot-input"
                                                 type="text"
                                                 value={value}
                                                 onChange={(e) =>
-                                                    handleInputChange(field, e.target.value)
+                                                    handleInputChange(
+                                                        field,
+                                                        e.target.value
+                                                    )
                                                 }
                                                 placeholder={
                                                     baseFromIntel != null
@@ -131,7 +148,6 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
                     );
                 })}
             </div>
-        </div>
+        </details>
     );
 };
-
