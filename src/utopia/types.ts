@@ -89,4 +89,8 @@ export interface Province {
     intelDefenseHome: number;
     intelWagePercent: number;
     draftTargetPercent: number;
+
+    // Full raw intel data for this province:
+    // every CSV column (header -> raw string value).
+    rawIntel?: Record<string, string>;
 }

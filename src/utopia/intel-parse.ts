@@ -88,7 +88,7 @@ function rowToProvince(row: IntelRow): Province | null {
     const banksPct = pct("Bank");
     const tgsPct = pct("TGs");
     const armsPct = pct("Arms");
-    const barracksPct = pct("Barr");
+    const barracksPct = pct("Rax");
     const fortsPct = pct("Fort");
     const castPct = pct("Cast");
     const hospPct = pct("Hosp");
@@ -167,6 +167,8 @@ function rowToProvince(row: IntelRow): Province | null {
         intelDefenseHome,
         intelWagePercent: intelWagePercent || 100,
         draftTargetPercent,
+
+        rawIntel: row,
     };
 
     return province;

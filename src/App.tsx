@@ -1,6 +1,8 @@
 // src/App.tsx
 import React, { useState } from "react";
 import "./App.css";
+import type { BuildGoals, BuildPlan } from "./utopia/calc/build-planner.ts";
+import { generateSuggestedBuild, cloneProvinceWithBuildings, } from "./utopia/calc/build-planner.ts";
 import type { Province } from "./utopia/types";
 import { RACE_LIST } from "./utopia/age113/races";
 import { PERSONALITY_LIST } from "./utopia/age113/personalities";
@@ -14,13 +16,15 @@ import { parseIntelCsv } from "./utopia/intel-parse";
 import { calculateMaxPopulation } from "./utopia/calc/population.ts";
 
 
+
+
 const initialProvince: Province = {
     name: "Province",
     race: "HUMAN",
     personality: "PALADIN",
 
     location: "0:0",
-    rulerName: "Cayn",
+    rulerName: " ",
     honorLevel: 0,
 
     acres: 0,
@@ -79,6 +83,28 @@ function App() {
     const [selectedIntelIndex, setSelectedIntelIndex] = useState<number | null>(
         null
     );
+
+    const [goals, setGoals] = useState<BuildGoals>({
+        minNetIncome: 0,
+        noStarvation: true,
+        minTPA: 2,
+        minWPA: 2,
+        minGuildsPercent: 10,
+        minTDsPercent: 10,
+        maxRebuildPercent: 40,
+        focus: "HYBRID",
+    });
+
+    const [buildPlan, setBuildPlan] = useState<BuildPlan | null>(null);
+
+    const handleGenerateSuggestion = () => {
+        const plan = generateSuggestedBuild(province, goals);
+        setBuildPlan(plan);
+    };
+    const suggestedProvince = buildPlan
+        ? cloneProvinceWithBuildings(province, buildPlan.buildings)
+        : null;
+
 
     const beResult = calculateBE(province);
     const incomeResult = calculateIncome(province);
@@ -233,10 +259,12 @@ function App() {
                 </div>
             </div>
 
-            {/* INPUTS & INTEL */}
+            {/* PROVINCE INPUTS (Intel + manual) */}
             <div className="card">
-                <div className="card-title">Inputs & Intel</div>
+                <div className="card-title">Province inputs</div>
+
                 <div className="control-grid">
+                    {/* Intel file upload & selection */}
                     <div>
                         <label>Load intel CSV</label>
                         <input
@@ -257,6 +285,7 @@ function App() {
                                     const chosen = intelProvinces[idx];
                                     if (chosen) {
                                         setProvince(chosen);
+                                        setBuildPlan(null); // reset suggestion when province changes
                                     }
                                 }}
                             >
@@ -268,6 +297,18 @@ function App() {
                             </select>
                         </div>
                     )}
+
+                    {/* Identity & meta */}
+                    <div>
+                        <label>Province name</label>
+                        <input
+                            type="text"
+                            value={province.name}
+                            onChange={(e) =>
+                                setProvince((prev) => ({ ...prev, name: e.target.value }))
+                            }
+                        />
+                    </div>
 
                     <div>
                         <label>Race</label>
@@ -308,6 +349,85 @@ function App() {
                     </div>
 
                     <div>
+                        <label>Kingdom location (x:y)</label>
+                        <input
+                            type="text"
+                            value={province.location}
+                            onChange={(e) =>
+                                setProvince((prev) => ({ ...prev, location: e.target.value }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Ruler name</label>
+                        <input
+                            type="text"
+                            value={province.rulerName}
+                            onChange={(e) =>
+                                setProvince((prev) => ({ ...prev, rulerName: e.target.value }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Honor level</label>
+                        <input
+                            type="number"
+                            value={province.honorLevel}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    honorLevel: Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Total acres</label>
+                        <input
+                            type="number"
+                            value={province.acres}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    acres: Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Networth</label>
+                        <input
+                            type="number"
+                            value={province.networth}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    networth: Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Trade balance</label>
+                        <input
+                            type="number"
+                            value={province.tradeBalance}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    tradeBalance: Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    {/* Population & units */}
+                    <div>
                         <label>Peasants</label>
                         <input
                             type="number"
@@ -322,14 +442,99 @@ function App() {
                     </div>
 
                     <div>
-                        <label>Wages (%)</label>
+                        <label>Soldiers</label>
                         <input
                             type="number"
-                            value={(province.wageRate * 100).toFixed(0)}
+                            value={province.soldiers}
                             onChange={(e) =>
                                 setProvince((prev) => ({
                                     ...prev,
-                                    wageRate: (Number(e.target.value) || 0) / 100,
+                                    soldiers: Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Off specs</label>
+                        <input
+                            type="number"
+                            value={province.offSpecs}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    offSpecs: Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Def specs</label>
+                        <input
+                            type="number"
+                            value={province.defSpecs}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    defSpecs: Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Elites</label>
+                        <input
+                            type="number"
+                            value={province.elites}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    elites: Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Thieves</label>
+                        <input
+                            type="number"
+                            value={province.thieves}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    thieves: Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Wizards</label>
+                        <input
+                            type="number"
+                            value={province.wizards}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    wizards: Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    {/* Resources & econ settings */}
+                    <div>
+                        <label>Gold (gc)</label>
+                        <input
+                            type="number"
+                            value={province.gold}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    gold: Number(e.target.value) || 0,
                                 }))
                             }
                         />
@@ -350,92 +555,268 @@ function App() {
                     </div>
 
                     <div>
-                        <label>Homes</label>
+                        <label>Runes</label>
                         <input
                             type="number"
-                            value={province.buildings.HOMES ?? 0}
+                            value={province.runes}
                             onChange={(e) =>
                                 setProvince((prev) => ({
                                     ...prev,
-                                    buildings: {
-                                        ...prev.buildings,
-                                        HOMES: Number(e.target.value) || 0,
-                                    },
+                                    runes: Number(e.target.value) || 0,
                                 }))
                             }
                         />
                     </div>
 
                     <div>
-                        <label>Farms</label>
+                        <label>Horses</label>
                         <input
                             type="number"
-                            value={province.buildings.FARMS ?? 0}
+                            value={province.horses}
                             onChange={(e) =>
                                 setProvince((prev) => ({
                                     ...prev,
-                                    buildings: {
-                                        ...prev.buildings,
-                                        FARMS: Number(e.target.value) || 0,
-                                    },
+                                    horses: Number(e.target.value) || 0,
                                 }))
                             }
                         />
                     </div>
 
                     <div>
-                        <label>Banks</label>
+                        <label>Prisoners</label>
                         <input
                             type="number"
-                            value={province.buildings.BANKS ?? 0}
+                            value={province.prisoners}
                             onChange={(e) =>
                                 setProvince((prev) => ({
                                     ...prev,
-                                    buildings: {
-                                        ...prev.buildings,
-                                        BANKS: Number(e.target.value) || 0,
-                                    },
+                                    prisoners: Number(e.target.value) || 0,
                                 }))
                             }
                         />
                     </div>
 
                     <div>
-                        <label>Training Grounds</label>
+                        <label>Wages (%)</label>
                         <input
                             type="number"
-                            value={province.buildings.TRAINING_GROUNDS ?? 0}
+                            value={(province.wageRate * 100).toFixed(0)}
                             onChange={(e) =>
                                 setProvince((prev) => ({
                                     ...prev,
-                                    buildings: {
-                                        ...prev.buildings,
-                                        TRAINING_GROUNDS:
-                                            Number(e.target.value) || 0,
-                                    },
+                                    wageRate: (Number(e.target.value) || 0) / 100,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    {/* Intel-only fields (for reference/comparisons later) */}
+                    <div>
+                        <label>Intel offense (home)</label>
+                        <input
+                            type="number"
+                            value={province.intelOffenseHome}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    intelOffenseHome: Number(e.target.value) || 0,
                                 }))
                             }
                         />
                     </div>
 
                     <div>
-                        <label>Forts</label>
+                        <label>Intel defense (home)</label>
                         <input
                             type="number"
-                            value={province.buildings.FORTS ?? 0}
+                            value={province.intelDefenseHome}
                             onChange={(e) =>
                                 setProvince((prev) => ({
                                     ...prev,
-                                    buildings: {
-                                        ...prev.buildings,
-                                        FORTS: Number(e.target.value) || 0,
-                                    },
+                                    intelDefenseHome: Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Intel wages setting (%)</label>
+                        <input
+                            type="number"
+                            value={province.intelWagePercent}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    intelWagePercent: Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Draft target (%)</label>
+                        <input
+                            type="number"
+                            value={province.draftTargetPercent}
+                            onChange={(e) =>
+                                setProvince((prev) => ({
+                                    ...prev,
+                                    draftTargetPercent: Number(e.target.value) || 0,
                                 }))
                             }
                         />
                     </div>
                 </div>
+
+                {/* Buildings manual entry */}
+                <hr />
+                <div style={{ marginTop: "0.5rem" }}>
+                    <div
+                        className="card-title"
+                        style={{ fontSize: "0.8rem", marginBottom: "0.25rem" }}
+                    >
+                        Buildings (acres)
+                    </div>
+                    <div className="buildings-input-grid">
+                        {BUILDING_LIST.map((b) => (
+                            <div key={b.id}>
+                                <label>{b.display}</label>
+                                <input
+                                    type="number"
+                                    value={province.buildings[b.id] ?? 0}
+                                    onChange={(e) =>
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            buildings: {
+                                                ...prev.buildings,
+                                                [b.id]: Number(e.target.value) || 0,
+                                            },
+                                        }))
+                                    }
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
+
+            {/* GOALS & OPTIMIZER */}
+            <div className="card">
+                <div className="card-title">Goals & suggested build</div>
+                <div className="control-grid">
+                    <div>
+                        <label>Target TPA (min)</label>
+                        <input
+                            type="number"
+                            step="0.1"
+                            value={goals.minTPA ?? ""}
+                            onChange={(e) =>
+                                setGoals((prev) => ({
+                                    ...prev,
+                                    minTPA:
+                                        e.target.value === ""
+                                            ? undefined
+                                            : Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Target WPA (min)</label>
+                        <input
+                            type="number"
+                            step="0.1"
+                            value={goals.minWPA ?? ""}
+                            onChange={(e) =>
+                                setGoals((prev) => ({
+                                    ...prev,
+                                    minWPA:
+                                        e.target.value === ""
+                                            ? undefined
+                                            : Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Min net income / tick (gc)</label>
+                        <input
+                            type="number"
+                            value={goals.minNetIncome ?? ""}
+                            onChange={(e) =>
+                                setGoals((prev) => ({
+                                    ...prev,
+                                    minNetIncome:
+                                        e.target.value === ""
+                                            ? undefined
+                                            : Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Max land to rebuild (%)</label>
+                        <input
+                            type="number"
+                            value={goals.maxRebuildPercent ?? ""}
+                            onChange={(e) =>
+                                setGoals((prev) => ({
+                                    ...prev,
+                                    maxRebuildPercent:
+                                        e.target.value === ""
+                                            ? undefined
+                                            : Number(e.target.value) || 0,
+                                }))
+                            }
+                        />
+                    </div>
+
+                    <div>
+                        <label>Build focus</label>
+                        <select
+                            value={goals.focus}
+                            onChange={(e) =>
+                                setGoals((prev) => ({
+                                    ...prev,
+                                    focus: e.target.value as BuildGoals["focus"],
+                                }))
+                            }
+                        >
+                            <option value="HYBRID">Hybrid</option>
+                            <option value="INCOME">Income</option>
+                            <option value="OFFENSE">Attacker</option>
+                            <option value="TM">T/M</option>
+                        </select>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={goals.noStarvation ?? false}
+                                onChange={(e) =>
+                                    setGoals((prev) => ({
+                                        ...prev,
+                                        noStarvation: e.target.checked,
+                                    }))
+                                }
+                            />{" "}
+                            Avoid starvation
+                        </label>
+                    </div>
+
+                    <div>
+                        <label>&nbsp;</label>
+                        <button type="button" onClick={handleGenerateSuggestion}>
+                            Generate suggested build
+                        </button>
+                    </div>
+                </div>
+            </div>
+
 
             {/* MAIN PANELS: STATE, MIL, FOOD, SCIENCE */}
             <div className="content-grid">
@@ -676,6 +1057,121 @@ function App() {
                         science from the intel export.
                     </p>
                 </div>
+
+                {/* Suggested build vs current */}
+                <div className="card">
+                    <div className="card-title">Suggested build (vs current)</div>
+
+                    {!buildPlan ? (
+                        <p style={{ fontSize: "0.85rem", color: "#9ca3af" }}>
+                            Set your goals above and click{" "}
+                            <strong>Generate suggested build</strong> to see a proposed layout
+                            based on your current intel snapshot.
+                        </p>
+                    ) : (
+                        <>
+                            <div className="field-row">
+                                <span>Net income / tick</span>
+                                <strong>
+                                    {netIncome.toFixed(0)} →{" "}
+                                    {buildPlan.evaluation.netIncome.toFixed(0)} gc
+                                </strong>
+                            </div>
+                            <div className="field-row">
+                                <span>Net food / tick</span>
+                                <strong>
+                                    {foodResult.netPerTick.toFixed(1)} →{" "}
+                                    {buildPlan.evaluation.netFoodPerTick.toFixed(1)} bushels
+                                </strong>
+                            </div>
+                            <div className="field-row">
+                                <span>Building efficiency</span>
+                                <strong>
+                                    {(beResult.be * 100).toFixed(1)}% →{" "}
+                                    {(buildPlan.evaluation.be * 100).toFixed(1)}%
+                                </strong>
+                            </div>
+                            <div className="field-row">
+                                <span>Mod offense</span>
+                                <strong>
+                                    {militaryResult.modOffense.toFixed(0)} →{" "}
+                                    {buildPlan.evaluation.modOffense.toFixed(0)}
+                                </strong>
+                            </div>
+                            <div className="field-row">
+                                <span>Mod defense</span>
+                                <strong>
+                                    {militaryResult.modDefense.toFixed(0)} →{" "}
+                                    {buildPlan.evaluation.modDefense.toFixed(0)}
+                                </strong>
+                            </div>
+
+                            {(buildPlan.requiredExtraThieves > 0 ||
+                                buildPlan.requiredExtraWizards > 0) && (
+                                <p
+                                    style={{
+                                        fontSize: "0.8rem",
+                                        color: "#9ca3af",
+                                        marginTop: "0.5rem",
+                                    }}
+                                >
+                                    To reach your TPA/WPA targets, you’d need approximately{" "}
+                                    {buildPlan.requiredExtraThieves > 0 &&
+                                        `${buildPlan.requiredExtraThieves.toLocaleString()} more thieves`}
+                                    {buildPlan.requiredExtraThieves > 0 &&
+                                        buildPlan.requiredExtraWizards > 0 &&
+                                        " and "}
+                                    {buildPlan.requiredExtraWizards > 0 &&
+                                        `${buildPlan.requiredExtraWizards.toLocaleString()} more wizards.`}
+                                </p>
+                            )}
+
+                            <table className="buildings-table">
+                                <thead>
+                                <tr>
+                                    <th>Building</th>
+                                    <th style={{ textAlign: "right" }}>Current</th>
+                                    <th style={{ textAlign: "right" }}>Suggested</th>
+                                    <th style={{ textAlign: "right" }}>Δ acres</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {BUILDING_LIST.map((b) => {
+                                    const curAcres = province.buildings[b.id] ?? 0;
+                                    const sugAcres = buildPlan.buildings[b.id] ?? 0;
+                                    if (!curAcres && !sugAcres) return null;
+                                    const delta = sugAcres - curAcres;
+                                    return (
+                                        <tr key={b.id}>
+                                            <td>{b.display}</td>
+                                            <td style={{ textAlign: "right" }}>
+                                                {curAcres}
+                                            </td>
+                                            <td style={{ textAlign: "right" }}>
+                                                {sugAcres}
+                                            </td>
+                                            <td
+                                                style={{
+                                                    textAlign: "right",
+                                                    color:
+                                                        delta > 0
+                                                            ? "#4ade80"
+                                                            : delta < 0
+                                                                ? "#f97373"
+                                                                : "inherit",
+                                                }}
+                                            >
+                                                {delta > 0 ? `+${delta}` : delta}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                </tbody>
+                            </table>
+                        </>
+                    )}
+                </div>
+
             </div>
         </div>
     );
