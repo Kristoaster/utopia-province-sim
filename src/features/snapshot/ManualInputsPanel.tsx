@@ -6,6 +6,10 @@ import type {
     IntelRow,
     ManualOverrides,
 } from "./snapshotModel";
+import {
+    getManualInputFields as getManualInputFieldsFromModel,
+    getBaseFieldValue as getBaseFieldValueFromModel,
+} from "./snapshotModel";
 import { SNAPSHOT_FIELDS } from "./snapshotFields.generated";
 
 type ManualInputsPanelProps = {
@@ -36,42 +40,6 @@ const SECTIONS: ProvinceSectionId[] = [
     // add "state" or "netChanges" here later if needed
 ];
 
-// Helper: filter to fields that belong to a section and are marked as
-// manually editable in the spreadsheet config.
-function getManualInputFields(
-    allFields: SnapshotField[],
-    sectionId: ProvinceSectionId
-): SnapshotField[] {
-    return allFields.filter((field) => {
-        const f = field as SnapshotField & {
-            section?: ProvinceSectionId;
-            manualInput?: boolean;
-        };
-
-        const inSection = f.section === sectionId;
-        const isManual = f.manualInput === true;
-
-        return inSection && isManual;
-    });
-}
-
-// Helper: best-effort base value for a field from the intel row
-function getBaseFieldValue(
-    field: SnapshotField,
-    intelRow: IntelRow
-): string | number | null {
-    const rowAsRecord = intelRow as IntelRow & Record<string, unknown>;
-    const value = rowAsRecord[field.key];
-
-    if (value == null) return null;
-
-    if (typeof value === "number" || typeof value === "string") {
-        return value;
-    }
-
-    return String(value);
-}
-
 export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
                                                                         intelRow,
                                                                         manualOverrides,
@@ -91,15 +59,27 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
         }
     };
 
+    // If absolutely no fields allow manual input, hide the panel entirely.
+    const anyFields = SECTIONS.some(
+        (sectionId) =>
+            getManualInputFieldsFromModel(SNAPSHOT_FIELDS, sectionId).length > 0
+    );
+    if (!anyFields) {
+        return null;
+    }
+
     return (
-        <details className="rounded-md border border-slate-600 bg-slate-900/40 p-3">
-            <summary className="cursor-pointer text-sm font-semibold text-slate-100">
+        <div className="rounded-md border border-slate-600 bg-slate-900/40 p-3">
+            <h3 className="text-sm font-semibold text-slate-100">
                 Manual Inputs / Overrides
-            </summary>
+            </h3>
 
             <div className="mt-3 space-y-4">
                 {SECTIONS.map((sectionId) => {
-                    const fields = getManualInputFields(SNAPSHOT_FIELDS, sectionId);
+                    const fields = getManualInputFieldsFromModel(
+                        SNAPSHOT_FIELDS,
+                        sectionId
+                    );
                     if (!fields.length) return null;
 
                     return (
@@ -114,7 +94,7 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
 
                                     const baseFromIntel =
                                         intelRow != null
-                                            ? getBaseFieldValue(field, intelRow)
+                                            ? getBaseFieldValueFromModel(field, intelRow, {})
                                             : null;
 
                                     const value =
@@ -124,32 +104,33 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
                                                 ? String(baseFromIntel)
                                                 : "";
 
+                                    const isNumeric =
+                                        typeof overrideValue === "number" ||
+                                        typeof baseFromIntel === "number";
+
                                     return (
                                         <label
                                             key={field.key}
-                                            className="flex flex-col gap-1 text-xs text-slate-100"
+                                            className="flex flex-col gap-1 text-xs"
                                         >
-                      <span className="flex items-center justify-between">
-                        <span>{field.label}</span>
-                        <span className="text-[10px] text-slate-500">
-                          {field.key}
-                        </span>
-                      </span>
+            <span className="font-medium text-[11px] tracking-wide">
+                {field.label}
+            </span>
                                             <input
-                                                className="rounded border border-slate-700 bg-slate-950/60 px-2 py-1 text-xs text-slate-100 outline-none focus:border-emerald-400"
+                                                className="rounded border border-slate-600 bg-slate-950/60 px-2 py-1 text-xs text-slate-100"
+                                                type={isNumeric ? "number" : "text"}
                                                 value={value}
-                                                onChange={(e) =>
-                                                    handleInputChange(field, e.target.value)
-                                                }
+                                                onChange={(e) => handleInputChange(field, e.target.value)}
                                             />
                                         </label>
                                     );
                                 })}
+
                             </div>
                         </section>
                     );
                 })}
             </div>
-        </details>
+        </div>
     );
 };
