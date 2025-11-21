@@ -327,3 +327,15 @@ body {
     border-color: #38bdf8;
     box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
 }
+
+/* Snapshot overrides – buildings table */
+.snapshot-buildings-table {
+    margin-top: 0.5rem;
+    width: 100%;
+    font-size: 0.75rem;
+}
+
+.snapshot-buildings-table th,
+.snapshot-buildings-table td {
+    padding: 0.15rem 0.3rem;
+}

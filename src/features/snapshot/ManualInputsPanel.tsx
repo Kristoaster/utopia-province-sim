@@ -18,6 +18,12 @@ type ManualInputsPanelProps = {
     onChange: (key: string, value: string | number | null) => void;
 };
 
+type ScienceRow = {
+    name: string;
+    booksField?: SnapshotField;
+    effectField?: SnapshotField;
+};
+
 const SECTION_LABELS: Record<ProvinceSectionId, string> = {
     throne: "Throne / Basics",
     state: "State",
@@ -29,6 +35,7 @@ const SECTION_LABELS: Record<ProvinceSectionId, string> = {
     science: "Science",
 };
 
+// Sections we actually show manual inputs for
 const SECTIONS: ProvinceSectionId[] = [
     "throne",
     "population",
@@ -36,9 +43,8 @@ const SECTIONS: ProvinceSectionId[] = [
     "military",
     "buildingsGrowth",
     "science",
+    // add "state" or "netChanges" here later if needed
 ];
-
-// src/features/snapshot/ManualInputsPanel.tsx
 
 export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
                                                                         intelRow,
@@ -68,49 +74,180 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
         return null;
     }
 
-    return (
-        <details className="manual-panel">
-            <summary>
-                <span>Snapshot overrides (advanced)</span>
-                <span className="subtle">
-                    These fields come from intel. Leave blank to keep the intel
-                    number.
-                </span>
-            </summary>
+    // Track which snapshot keys we've already rendered,
+    // so we only show the first occurrence (per key).
+    const seenKeys = new Set<string>();
 
-            <div className="manual-panel-inner">
+
+    // 🔽 THIS is the new return block
+    return (
+        <div className="manual-panel rounded-md border border-slate-600 bg-slate-900/40 p-3">
+            <div className="mb-2 text-xs text-slate-300">
+                These fields come from intel, but you can override any value. Leave
+                blank to keep the intel number.
+            </div>
+
+            <div className="space-y-4">
                 {SECTIONS.map((sectionId) => {
-                    const fields = getManualInputFieldsFromModel(
+                    // 1️⃣ Get all fields for this section
+                    const allFields = getManualInputFieldsFromModel(
                         SNAPSHOT_FIELDS,
                         sectionId
                     );
+
+                    // 2️⃣ De-dupe by key: only keep the first occurrence of each key
+                    const fields = allFields.filter((field) => {
+                        if (seenKeys.has(field.key)) {
+                            return false; // already rendered in a previous section
+                        }
+                        seenKeys.add(field.key);
+                        return true;
+                    });
+
+                    // If this section has no *new* fields, skip it entirely
                     if (!fields.length) return null;
 
+                    // 🔬 Special layout for SCIENCE: table with Category / # books / Effect
+                    if (sectionId === "science") {
+                        const rowsByName: Record<string, ScienceRow> = {};
+
+                        for (const field of fields) {
+                            const label = field.label;
+                            const booksSuffix = " # of books";
+                            const effectSuffix = " Effect";
+
+                            let baseName = label;
+                            let kind: "books" | "effect" | "other" = "other";
+
+                            if (label.endsWith(booksSuffix)) {
+                                baseName = label.slice(0, -booksSuffix.length);
+                                kind = "books";
+                            } else if (label.endsWith(effectSuffix)) {
+                                baseName = label.slice(0, -effectSuffix.length);
+                                kind = "effect";
+                            }
+
+                            const key = baseName;
+                            if (!rowsByName[key]) {
+                                rowsByName[key] = { name: baseName };
+                            }
+
+                            if (kind === "books") {
+                                rowsByName[key].booksField = field;
+                            } else if (kind === "effect") {
+                                rowsByName[key].effectField = field;
+                            } else {
+                                // fallback – treat as a books-style field if we somehow don’t match
+                                rowsByName[key].booksField ??= field;
+                            }
+                        }
+
+                        const rows = Object.values(rowsByName);
+
+                        const getFieldValue = (field?: SnapshotField) => {
+                            if (!field) {
+                                return {
+                                    value: "",
+                                    placeholder: undefined as string | undefined,
+                                };
+                            }
+
+                            const overrideValue =
+                                manualOverrides[field.key as keyof ManualOverrides];
+
+                            const baseFromIntel =
+                                intelRow != null
+                                    ? getBaseFieldValueFromModel(field, intelRow, {})
+                                    : null;
+
+                            const value =
+                                overrideValue !== undefined && overrideValue !== null
+                                    ? String(overrideValue)
+                                    : baseFromIntel != null
+                                        ? String(baseFromIntel)
+                                        : "";
+
+                            const placeholder =
+                                baseFromIntel != null ? String(baseFromIntel) : undefined;
+
+                            return { value, placeholder };
+                        };
+
+                        return (
+                            <section key={sectionId}>
+                                <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+                                    {SECTION_LABELS[sectionId]}
+                                </h3>
+
+                                <table className="buildings-table science-table">
+                                    <thead>
+                                    <tr>
+                                        <th>Category</th>
+                                        <th style={{ textAlign: "right" }}># books</th>
+                                        <th style={{ textAlign: "right" }}>Effect</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {rows.map((row) => {
+                                        const booksState = getFieldValue(row.booksField);
+                                        const effectState = getFieldValue(row.effectField);
+
+                                        return (
+                                            <tr key={row.name}>
+                                                <td>{row.name}</td>
+                                                <td style={{ textAlign: "right" }}>
+                                                    {row.booksField && (
+                                                        <input
+                                                            className="snapshot-input"
+                                                            type="text"
+                                                            value={booksState.value}
+                                                            onChange={(e) =>
+                                                                handleInputChange(row.booksField!, e.target.value)
+                                                            }
+                                                            placeholder={booksState.placeholder}
+                                                        />
+                                                    )}
+                                                </td>
+                                                <td style={{ textAlign: "right" }}>
+                                                    {row.effectField && (
+                                                        <input
+                                                            className="snapshot-input"
+                                                            type="text"
+                                                            value={effectState.value}
+                                                            onChange={(e) =>
+                                                                handleInputChange(row.effectField!, e.target.value)
+                                                            }
+                                                            placeholder={effectState.placeholder}
+                                                        />
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    </tbody>
+                                </table>
+                            </section>
+                        );
+                    }
+
+                    // 🧩 Default layout for all other sections
                     return (
-                        <section key={sectionId} style={{ marginBottom: "0.75rem" }}>
-                            <h3 className="manual-section-title">
+                        <section key={sectionId}>
+                            <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
                                 {SECTION_LABELS[sectionId]}
                             </h3>
-
-                            <div className="snapshot-grid">
+                            <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                                 {fields.map((field) => {
                                     const overrideValue =
-                                        manualOverrides[
-                                            field.key as keyof ManualOverrides
-                                            ];
+                                        manualOverrides[field.key as keyof ManualOverrides];
 
                                     const baseFromIntel =
                                         intelRow != null
-                                            ? getBaseFieldValueFromModel(
-                                                field,
-                                                intelRow,
-                                                {}
-                                            )
+                                            ? getBaseFieldValueFromModel(field, intelRow, {})
                                             : null;
 
                                     const value =
-                                        overrideValue !== undefined &&
-                                        overrideValue !== null
+                                        overrideValue !== undefined && overrideValue !== null
                                             ? String(overrideValue)
                                             : baseFromIntel != null
                                                 ? String(baseFromIntel)
@@ -121,18 +258,15 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
                                             key={field.key}
                                             className="flex flex-col gap-1 text-xs"
                                         >
-                                            <span className="font-medium text-[11px] tracking-wide">
-                                                {field.label}
-                                            </span>
+              <span className="font-medium text-[11px] tracking-wide">
+                {field.label}
+              </span>
                                             <input
                                                 className="snapshot-input"
                                                 type="text"
                                                 value={value}
                                                 onChange={(e) =>
-                                                    handleInputChange(
-                                                        field,
-                                                        e.target.value
-                                                    )
+                                                    handleInputChange(field, e.target.value)
                                                 }
                                                 placeholder={
                                                     baseFromIntel != null
@@ -147,7 +281,8 @@ export const ManualInputsPanel: React.FC<ManualInputsPanelProps> = ({
                         </section>
                     );
                 })}
+
             </div>
-        </details>
+        </div>
     );
 };

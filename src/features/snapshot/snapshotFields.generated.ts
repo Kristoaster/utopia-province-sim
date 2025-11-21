@@ -1,6 +1,5 @@
-// src/features/snapshot/snapshotFields.generated.ts
-
-//edit Province snapshot info.xlsx to change fields and then run node scripts/generateSnapshotFields.js to repopulate
+// AUTO-GENERATED from Province snapshot info.xlsx. Do not edit by hand.
+// Run: node scripts/generateSnapshotFields.js
 
 import type { SnapshotField } from './snapshotModel';
 
@@ -174,8 +173,8 @@ export const SNAPSHOT_FIELDS: SnapshotField[] = [
     rawSource: "IS Export \"Thv\", manual input",
   },
   {
-    key: "wizard",
-    label: "Wizard",
+    key: "wizards",
+    label: "Wizards",
     section: "population",
     rawSource: "IS Export \"Wiz\" , Manual input",
   },
@@ -336,14 +335,14 @@ export const SNAPSHOT_FIELDS: SnapshotField[] = [
     rawSource: "calculated",
   },
   {
-    key: "peasantPopulation",
-    label: "Peasant Population",
+    key: "peasants",
+    label: "Peasants",
     section: "military",
     rawSource: "IS Export \"Peons\" , manual input",
   },
   {
-    key: "wizardPopulation",
-    label: "Wizard Population",
+    key: "wizards",
+    label: "Wizards",
     section: "military",
     rawSource: "IS Export \"Wiz\" , manual input",
   },
@@ -354,8 +353,8 @@ export const SNAPSHOT_FIELDS: SnapshotField[] = [
     rawSource: "calculated",
   },
   {
-    key: "numberOfSoldiers",
-    label: "Number of Soldiers",
+    key: "soldiers",
+    label: "Soldiers",
     section: "military",
     rawSource: "IS Export \"Solds\" , manual input",
   },

@@ -197,6 +197,46 @@ function App() {
                 <span className="step">4. Tweak overrides</span>
             </div>
 
+            {/* Intel loader at top */}
+            <div className="card">
+                <div className="card-title">Load intel</div>
+                <div className="control-grid">
+                    <div>
+                        <label>Load intel CSV</label>
+                        <input
+                            type="file"
+                            accept=".csv"
+                            onChange={handleIntelUpload}
+                        />
+                    </div>
+
+                    {intelProvinces.length > 1 && (
+                        <div>
+                            <label>Province from intel</label>
+                            <select
+                                value={selectedIntelIndex ?? ""}
+                                onChange={(e) => {
+                                    const idx = Number(e.target.value);
+                                    setSelectedIntelIndex(idx);
+                                    const chosen = intelProvinces[idx];
+                                    if (chosen) {
+                                        setProvince(chosen);
+                                        setBuildPlan(null);
+                                        setManualOverrides({});
+                                    }
+                                }}
+                            >
+                                {intelProvinces.map((prov, idx) => (
+                                    <option key={prov.name + idx} value={idx}>
+                                        {prov.name} ({prov.race} / {prov.personality})
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
+                </div>
+            </div>
+
             <h2 className="section-title">Current Snapshot</h2>
 
             {/* THRONE SUMMARY */}
@@ -769,43 +809,6 @@ function App() {
             <h2 className="section-title">Inputs & Overrides</h2>
             <div className="card">
                 <div className="card-title">Province inputs</div>
-
-                {/* 1️⃣ Intel file upload & province select – always visible */}
-                <div className="control-grid">
-                    <div>
-                        <label>Load intel CSV</label>
-                        <input
-                            type="file"
-                            accept=".csv"
-                            onChange={handleIntelUpload}
-                        />
-                    </div>
-
-                    {intelProvinces.length > 1 && (
-                        <div>
-                            <label>Province from intel</label>
-                            <select
-                                value={selectedIntelIndex ?? ""}
-                                onChange={(e) => {
-                                    const idx = Number(e.target.value);
-                                    setSelectedIntelIndex(idx);
-                                    const chosen = intelProvinces[idx];
-                                    if (chosen) {
-                                        setProvince(chosen);
-                                        setBuildPlan(null);
-                                        setManualOverrides({});
-                                    }
-                                }}
-                            >
-                                {intelProvinces.map((prov, idx) => (
-                                    <option key={prov.name + idx} value={idx}>
-                                        {prov.name} ({prov.race} / {prov.personality})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-                </div>
 
                 {/* 2️⃣ Manual inputs / overrides live here */}
                 <details style={{ marginTop: "0.75rem" }}>
