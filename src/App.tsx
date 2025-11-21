@@ -141,6 +141,30 @@ function computeProvinceMetrics(prov: Province) {
     };
 }
 
+type SnapshotMetricProps = {
+    label: string;
+    baseline: string;
+    current: string;
+    currentClassName?: string;
+};
+
+const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
+                                                           label,
+                                                           baseline,
+                                                           current,
+                                                           currentClassName,
+                                                       }) => (
+    <div className="snapshot-metric">
+        <div className="snapshot-metric-label">{label}</div>
+        <div className="snapshot-metric-values">
+            <span className="snapshot-metric-baseline">{baseline}</span>
+            <span className="snapshot-metric-arrow">→</span>
+            <span className={currentClassName}>{current}</span>
+        </div>
+    </div>
+);
+
+
 function App() {
     const [province, setProvince] = useState<Province>(initialProvince);
     const [baselineProvince, setBaselineProvince] =
@@ -345,359 +369,262 @@ function App() {
                 </div>
 
                 {/* Snapshot comparison table */}
-                <table className="buildings-table">
-                    <thead>
-                    <tr>
-                        <th>Metric</th>
-                        <th style={{ textAlign: "right" }}>Current</th>
-                        <th style={{ textAlign: "right" }}>New</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {/* Throne / basics */}
-                    <tr>
-                        <td>Networth</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineProvince.networth.toLocaleString()} nw
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {province.networth.toLocaleString()} nw
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Trade balance</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineProvince.tradeBalance.toLocaleString()}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {province.tradeBalance.toLocaleString()}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Gold</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineProvince.gold.toLocaleString()} gc
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {province.gold.toLocaleString()} gc
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Food stock</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineProvince.food.toLocaleString()} bushels
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {province.food.toLocaleString()} bushels
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Runes</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineProvince.runes.toLocaleString()}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {province.runes.toLocaleString()}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Horses / Prisoners</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineProvince.horses.toLocaleString()} /{" "}
-                            {baselineProvince.prisoners.toLocaleString()}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {province.horses.toLocaleString()} /{" "}
-                            {province.prisoners.toLocaleString()}
-                        </td>
-                    </tr>
+                {/* Snapshot comparison – grouped, compact metrics */}
+                <div className="snapshot-sections">
+                    {/* Throne / Basics */}
+                    <div className="snapshot-section">
+                        <h3 className="snapshot-section-title-small">
+                            Throne & Resources
+                        </h3>
+                        <div className="snapshot-metric-grid">
+                            <SnapshotMetric
+                                label="Networth"
+                                baseline={`${baselineProvince.networth.toLocaleString()} nw`}
+                                current={`${province.networth.toLocaleString()} nw`}
+                            />
+                            <SnapshotMetric
+                                label="Trade balance"
+                                baseline={baselineProvince.tradeBalance.toLocaleString()}
+                                current={province.tradeBalance.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Gold"
+                                baseline={`${baselineProvince.gold.toLocaleString()} gc`}
+                                current={`${province.gold.toLocaleString()} gc`}
+                            />
+                            <SnapshotMetric
+                                label="Food stock"
+                                baseline={`${baselineProvince.food.toLocaleString()} bushels`}
+                                current={`${province.food.toLocaleString()} bushels`}
+                            />
+                            <SnapshotMetric
+                                label="Runes"
+                                baseline={baselineProvince.runes.toLocaleString()}
+                                current={province.runes.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Horses / Prisoners"
+                                baseline={`${baselineProvince.horses.toLocaleString()} / ${baselineProvince.prisoners.toLocaleString()}`}
+                                current={`${province.horses.toLocaleString()} / ${province.prisoners.toLocaleString()}`}
+                            />
+                        </div>
+                    </div>
 
-                    {/* State & population */}
-                    <tr>
-                        <td>Total population</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.totalPop.toLocaleString()}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {totalPop.toLocaleString()}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Max population</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.maxPopulation.toLocaleString()}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {maxPopulation.toLocaleString()}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Peasants</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineProvince.peasants.toLocaleString()}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {province.peasants.toLocaleString()}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Army population</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.armyPop.toLocaleString()}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {armyPop.toLocaleString()}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Thieves</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.thiefPop.toLocaleString()}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {thiefPop.toLocaleString()}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Wizards</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.wizardPop.toLocaleString()}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {wizardPop.toLocaleString()}
-                        </td>
-                    </tr>
+                    {/* Population */}
+                    <div className="snapshot-section">
+                        <h3 className="snapshot-section-title-small">
+                            Population
+                        </h3>
+                        <div className="snapshot-metric-grid">
+                            <SnapshotMetric
+                                label="Total population"
+                                baseline={baselineMetrics.totalPop.toLocaleString()}
+                                current={totalPop.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Max population"
+                                baseline={baselineMetrics.maxPopulation.toLocaleString()}
+                                current={maxPopulation.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Peasants"
+                                baseline={baselineProvince.peasants.toLocaleString()}
+                                current={province.peasants.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Army population"
+                                baseline={baselineMetrics.armyPop.toLocaleString()}
+                                current={armyPop.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Thieves"
+                                baseline={baselineMetrics.thiefPop.toLocaleString()}
+                                current={thiefPop.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Wizards"
+                                baseline={baselineMetrics.wizardPop.toLocaleString()}
+                                current={wizardPop.toLocaleString()}
+                            />
+                        </div>
+                    </div>
 
                     {/* Employment & BE */}
-                    <tr>
-                        <td>Available jobs</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.beResult.jobs.totalJobs.toFixed(0)}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {beResult.jobs.totalJobs.toFixed(0)}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Workers at work</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.beResult.jobs.filledJobs.toFixed(0)}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {beResult.jobs.filledJobs.toFixed(0)}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Unfilled jobs</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.jobsUnfilled.toFixed(0)}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {jobsUnfilled.toFixed(0)}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Employment</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.employmentPct.toFixed(1)}%
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {employmentPct.toFixed(1)}%
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Building efficiency</td>
-                        <td style={{ textAlign: "right" }}>
-                            {(baselineMetrics.beResult.be * 100).toFixed(2)}%
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {(beResult.be * 100).toFixed(2)}%
-                        </td>
-                    </tr>
+                    <div className="snapshot-section">
+                        <h3 className="snapshot-section-title-small">
+                            Employment & BE
+                        </h3>
+                        <div className="snapshot-metric-grid">
+                            <SnapshotMetric
+                                label="Available jobs"
+                                baseline={baselineMetrics.beResult.jobs.totalJobs.toFixed(0)}
+                                current={beResult.jobs.totalJobs.toFixed(0)}
+                            />
+                            <SnapshotMetric
+                                label="Workers at work"
+                                baseline={baselineMetrics.beResult.jobs.filledJobs.toFixed(0)}
+                                current={beResult.jobs.filledJobs.toFixed(0)}
+                            />
+                            <SnapshotMetric
+                                label="Unfilled jobs"
+                                baseline={baselineMetrics.jobsUnfilled.toFixed(0)}
+                                current={jobsUnfilled.toFixed(0)}
+                            />
+                            <SnapshotMetric
+                                label="Employment"
+                                baseline={`${baselineMetrics.employmentPct.toFixed(1)}%`}
+                                current={`${employmentPct.toFixed(1)}%`}
+                                currentClassName={employmentClass}
+                            />
+                            <SnapshotMetric
+                                label="Building efficiency"
+                                baseline={`${(baselineMetrics.beResult.be * 100).toFixed(2)}%`}
+                                current={`${(beResult.be * 100).toFixed(2)}%`}
+                            />
+                        </div>
+                    </div>
 
                     {/* Economy */}
-                    <tr>
-                        <td>Income / tick</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.incomeResult.finalIncome.toFixed(0)} gc
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {incomeResult.finalIncome.toFixed(0)} gc
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Wages / tick</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.wagesResult.totalWages.toFixed(0)} gc
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {wagesResult.totalWages.toFixed(0)} gc
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Net income / tick</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.netIncome.toFixed(0)} gc
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {netIncome.toFixed(0)} gc
-                        </td>
-                    </tr>
+                    <div className="snapshot-section">
+                        <h3 className="snapshot-section-title-small">
+                            Economy
+                        </h3>
+                        <div className="snapshot-metric-grid">
+                            <SnapshotMetric
+                                label="Income / tick"
+                                baseline={`${baselineMetrics.incomeResult.finalIncome.toFixed(0)} gc`}
+                                current={`${incomeResult.finalIncome.toFixed(0)} gc`}
+                            />
+                            <SnapshotMetric
+                                label="Wages / tick"
+                                baseline={`${baselineMetrics.wagesResult.totalWages.toFixed(0)} gc`}
+                                current={`${wagesResult.totalWages.toFixed(0)} gc`}
+                            />
+                            <SnapshotMetric
+                                label="Net income / tick"
+                                baseline={`${baselineMetrics.netIncome.toFixed(0)} gc`}
+                                current={`${netIncome.toFixed(0)} gc`}
+                                currentClassName={netIncomeClass}
+                            />
+                        </div>
+                    </div>
 
                     {/* Military */}
-                    <tr>
-                        <td>Raw offense</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.militaryResult.rawOffense.toFixed(0)}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {militaryResult.rawOffense.toFixed(0)}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Raw defense</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.militaryResult.rawDefense.toFixed(0)}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {militaryResult.rawDefense.toFixed(0)}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>OME (total)</td>
-                        <td style={{ textAlign: "right" }}>
-                            {(baselineMetrics.militaryResult.ome * 100).toFixed(1)}%
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {(militaryResult.ome * 100).toFixed(1)}%
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>DME (from forts)</td>
-                        <td style={{ textAlign: "right" }}>
-                            {(baselineMetrics.militaryResult.dme * 100).toFixed(1)}%
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {(militaryResult.dme * 100).toFixed(1)}%
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Mod offense</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.militaryResult.modOffense.toFixed(0)}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {militaryResult.modOffense.toFixed(0)}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Mod defense</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.militaryResult.modDefense.toFixed(0)}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {militaryResult.modDefense.toFixed(0)}
-                        </td>
-                    </tr>
+                    <div className="snapshot-section">
+                        <h3 className="snapshot-section-title-small">
+                            Military
+                        </h3>
+                        <div className="snapshot-metric-grid">
+                            <SnapshotMetric
+                                label="Raw offense"
+                                baseline={baselineMetrics.militaryResult.rawOffense.toFixed(0)}
+                                current={militaryResult.rawOffense.toFixed(0)}
+                            />
+                            <SnapshotMetric
+                                label="Raw defense"
+                                baseline={baselineMetrics.militaryResult.rawDefense.toFixed(0)}
+                                current={militaryResult.rawDefense.toFixed(0)}
+                            />
+                            <SnapshotMetric
+                                label="OME (total)"
+                                baseline={`${(baselineMetrics.militaryResult.ome * 100).toFixed(1)}%`}
+                                current={`${(militaryResult.ome * 100).toFixed(1)}%`}
+                            />
+                            <SnapshotMetric
+                                label="DME (from forts)"
+                                baseline={`${(baselineMetrics.militaryResult.dme * 100).toFixed(1)}%`}
+                                current={`${(militaryResult.dme * 100).toFixed(1)}%`}
+                            />
+                            <SnapshotMetric
+                                label="Mod offense"
+                                baseline={baselineMetrics.militaryResult.modOffense.toFixed(0)}
+                                current={militaryResult.modOffense.toFixed(0)}
+                            />
+                            <SnapshotMetric
+                                label="Mod defense"
+                                baseline={baselineMetrics.militaryResult.modDefense.toFixed(0)}
+                                current={militaryResult.modDefense.toFixed(0)}
+                            />
+                        </div>
+                    </div>
 
                     {/* Food */}
-                    <tr>
-                        <td>Food production</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.foodResult.production.total.toFixed(1)} /tick
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {foodResult.production.total.toFixed(1)} /tick
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Food consumption</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.foodResult.consumption.populationConsumption.toFixed(
-                                1
-                            )}{" "}
-                            /tick
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {foodResult.consumption.populationConsumption.toFixed(1)} /tick
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Net food / tick</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.foodResult.netPerTick.toFixed(1)}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {foodResult.netPerTick.toFixed(1)}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Projected stock (1 tick)</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.foodResult.projectedNextStock.toFixed(0)}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {foodResult.projectedNextStock.toFixed(0)}
-                        </td>
-                    </tr>
+                    <div className="snapshot-section">
+                        <h3 className="snapshot-section-title-small">
+                            Food
+                        </h3>
+                        <div className="snapshot-metric-grid">
+                            <SnapshotMetric
+                                label="Food production / tick"
+                                baseline={`${baselineMetrics.foodResult.production.total.toFixed(1)}`}
+                                current={`${foodResult.production.total.toFixed(1)}`}
+                            />
+                            <SnapshotMetric
+                                label="Food consumption / tick"
+                                baseline={`${baselineMetrics.foodResult.consumption.populationConsumption.toFixed(1)}`}
+                                current={`${foodResult.consumption.populationConsumption.toFixed(1)}`}
+                            />
+                            <SnapshotMetric
+                                label="Net food / tick"
+                                baseline={baselineMetrics.foodResult.netPerTick.toFixed(1)}
+                                current={foodResult.netPerTick.toFixed(1)}
+                                currentClassName={
+                                    foodResult.netPerTick < 0 ? "value-bad" : undefined
+                                }
+                            />
+                            <SnapshotMetric
+                                label="Projected stock (1 tick)"
+                                baseline={baselineMetrics.foodResult.projectedNextStock.toFixed(0)}
+                                current={foodResult.projectedNextStock.toFixed(0)}
+                                currentClassName={
+                                    foodResult.projectedNextStock < 0
+                                        ? "value-bad"
+                                        : undefined
+                                }
+                            />
+                        </div>
+                    </div>
 
-                    {/* Buildings high-level */}
-                    <tr>
-                        <td>Total land</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineProvince.acres.toLocaleString()} acres
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {province.acres.toLocaleString()} acres
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Built acres</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineProvince.builtAcres.toLocaleString()}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {province.builtAcres.toLocaleString()}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Barren acres</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineProvince.barrenAcres.toLocaleString()}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {province.barrenAcres.toLocaleString()}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Building credits</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineProvince.buildingCredits.toLocaleString()}
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {province.buildingCredits.toLocaleString()}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Construction cost / acre (base)</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.baseBuildCostPerAcre.toFixed(0)} gc
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {baseBuildCostPerAcre.toFixed(0)} gc
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Raze cost / acre (base)</td>
-                        <td style={{ textAlign: "right" }}>
-                            {baselineMetrics.baseRazeCostPerAcre.toFixed(0)} gc
-                        </td>
-                        <td style={{ textAlign: "right" }}>
-                            {baseRazeCostPerAcre.toFixed(0)} gc
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
+                    {/* Land & Buildings */}
+                    <div className="snapshot-section">
+                        <h3 className="snapshot-section-title-small">
+                            Land & Buildings
+                        </h3>
+                        <div className="snapshot-metric-grid">
+                            <SnapshotMetric
+                                label="Total land"
+                                baseline={`${baselineProvince.acres.toLocaleString()} acres`}
+                                current={`${province.acres.toLocaleString()} acres`}
+                            />
+                            <SnapshotMetric
+                                label="Built acres"
+                                baseline={baselineProvince.builtAcres.toLocaleString()}
+                                current={province.builtAcres.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Barren acres"
+                                baseline={baselineProvince.barrenAcres.toLocaleString()}
+                                current={province.barrenAcres.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Building credits"
+                                baseline={baselineProvince.buildingCredits.toLocaleString()}
+                                current={province.buildingCredits.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Construction cost / acre (base)"
+                                baseline={`${baselineMetrics.baseBuildCostPerAcre.toFixed(0)} gc`}
+                                current={`${baseBuildCostPerAcre.toFixed(0)} gc`}
+                            />
+                            <SnapshotMetric
+                                label="Raze cost / acre (base)"
+                                baseline={`${baselineMetrics.baseRazeCostPerAcre.toFixed(0)} gc`}
+                                current={`${baseRazeCostPerAcre.toFixed(0)} gc`}
+                            />
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             {/* GOALS & OPTIMIZER */}
