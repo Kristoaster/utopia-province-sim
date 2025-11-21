@@ -451,6 +451,13 @@ function App() {
                     <div className="snapshot-section snapshot-section--throne">
                         <h3 className="snapshot-section-title-small">Throne / Basics</h3>
                         <div className="snapshot-metric-grid">
+                            <div className="snapshot-metric-header">
+                                <div>Metric</div>
+                                <div>Baseline</div>
+                                <div>Current</div>
+                                <div>Δ</div>
+                            </div>
+
                             <SnapshotMetric
                                 label="Networth"
                                 baselineValue={baselineProvince.networth}
@@ -524,6 +531,13 @@ function App() {
                     <div className="snapshot-section snapshot-section--state">
                         <h3 className="snapshot-section-title-small">State / Population</h3>
                         <div className="snapshot-metric-grid">
+                            <div className="snapshot-metric-header">
+                                <div>Metric</div>
+                                <div>Baseline</div>
+                                <div>Current</div>
+                                <div>Δ</div>
+                            </div>
+
                             <SnapshotMetric
                                 label="Max population"
                                 baselineValue={baselineMetrics.maxPopulation}
@@ -574,138 +588,146 @@ function App() {
                     <section className="snapshot-section snapshot-section--economy">
                         <h3 className="snapshot-section-title-small">Economy</h3>
 
-                        <div className="snapshot-metric-header">
-                            <div>Metric</div>
-                            <div>Baseline</div>
-                            <div>Current</div>
-                            <div>Δ</div>
+                        <div className="snapshot-metric-grid">
+                            <div className="snapshot-metric-header">
+                                <div>Metric</div>
+                                <div>Baseline</div>
+                                <div>Current</div>
+                                <div>Δ</div>
+                            </div>
+
+                            <SnapshotMetric
+                                label="Land"
+                                baselineValue={baselineProvince.acres}
+                                currentValue={province.acres}
+                                format={(v) => `${v.toLocaleString()} acres`}
+                                showPercentDelta={false}
+                            />
+
+                            <SnapshotMetric
+                                label="Peasants"
+                                baselineValue={baselineProvince.peasants}
+                                currentValue={province.peasants}
+                                format={(v) => v.toLocaleString()}
+                                showPercentDelta={true}
+                            />
+
+                            <SnapshotMetric
+                                label="Building Efficiency"
+                                baselineValue={baselineMetrics.beResult.be * 100}
+                                currentValue={beResult.be * 100}
+                                format={(v) => `${v.toFixed(2)}%`}
+                            />
+
+                            <SnapshotMetric
+                                label="Total population"
+                                baselineValue={baselineMetrics.totalPop}
+                                currentValue={totalPop}
+                                format={(v) => v.toLocaleString()}
+                            />
+
+                            <SnapshotMetric
+                                label="Max population"
+                                baselineValue={baselineMetrics.maxPopulation}
+                                currentValue={maxPopulation}
+                                format={(v) => v.toLocaleString()}
+                            />
+
+                            <SnapshotMetric
+                                label="Available jobs"
+                                baselineValue={baselineMetrics.beResult.jobs.totalJobs}
+                                currentValue={beResult.jobs.totalJobs}
+                                format={(v) => v.toFixed(0)}
+                            />
+
+                            <SnapshotMetric
+                                label="Workers needed for max efficiency"
+                                baselineValue={baselineMetrics.beResult.jobs.optimalWorkers}
+                                currentValue={beResult.jobs.optimalWorkers}
+                                format={(v) => v.toFixed(0)}
+                            />
+
+                            <SnapshotMetric
+                                label="Daily income"
+                                baselineValue={baselineMetrics.dailyIncome}
+                                currentValue={dailyIncome}
+                                format={(v) => `${v.toFixed(0)} gc/day`}
+                                formatDelta={(d) => `${d.toFixed(0)} gc/day`}
+                            />
+
+                            <SnapshotMetric
+                                label="Daily wages"
+                                baselineValue={baselineMetrics.dailyWages}
+                                currentValue={dailyWages}
+                                format={(v) => `${v.toFixed(0)} gc/day`}
+                                formatDelta={(d) => `${d.toFixed(0)} gc/day`}
+                            />
+
+                            <SnapshotMetric
+                                label="Net gc (daily)"
+                                baselineValue={baselineMetrics.dailyNetIncome}
+                                currentValue={dailyNetIncome}
+                                format={(v) => `${v.toFixed(0)} gc/day`}
+                                formatDelta={(d) => `${d.toFixed(0)} gc/day`}
+                            />
+
+                            <SnapshotMetric
+                                label="Daily food produced"
+                                baselineValue={baselineMetrics.dailyFoodProduced}
+                                currentValue={dailyFoodProduced}
+                                format={(v) => v.toFixed(1)}
+                            />
+
+                            <SnapshotMetric
+                                label="Daily food consumed"
+                                baselineValue={baselineMetrics.dailyFoodConsumed}
+                                currentValue={dailyFoodConsumed}
+                                format={(v) => v.toFixed(1)}
+                            />
+
+                            <SnapshotMetric
+                                label="Net food (daily)"
+                                baselineValue={baselineMetrics.dailyFoodNet}
+                                currentValue={dailyFoodNet}
+                                format={(v) => v.toFixed(1)}
+                                formatDelta={(d) => d.toFixed(1)}
+                            />
+
+                            <SnapshotMetric
+                                label="Daily runes produced"
+                                baselineValue={null}
+                                currentValue={0}
+                                format={() => "— (TODO)"}
+                                showPercentDelta={false}
+                            />
+                            <SnapshotMetric
+                                label="Daily runes decayed"
+                                baselineValue={null}
+                                currentValue={0}
+                                format={() => "— (TODO)"}
+                                showPercentDelta={false}
+                            />
+                            <SnapshotMetric
+                                label="Net runes (daily)"
+                                baselineValue={null}
+                                currentValue={0}
+                                format={() => "— (TODO)"}
+                                showPercentDelta={false}
+                            />
                         </div>
-
-                        <SnapshotMetric
-                            label="Land"
-                            baselineValue={baselineProvince.acres}
-                            currentValue={province.acres}
-                            format={(v) => `${v.toLocaleString()} acres`}
-                            showPercentDelta={false}
-                        />
-
-                        <SnapshotMetric
-                            label="Peasants"
-                            baselineValue={baselineProvince.peasants}
-                            currentValue={province.peasants}
-                            format={(v) => v.toLocaleString()}
-                            showPercentDelta={true}
-                        />
-
-                        <SnapshotMetric
-                            label="Building Efficiency"
-                            baselineValue={baselineMetrics.beResult.be * 100}
-                            currentValue={beResult.be * 100}
-                            format={(v) => `${v.toFixed(2)}%`}
-                        />
-
-                        <SnapshotMetric
-                            label="Total population"
-                            baselineValue={baselineMetrics.totalPop}
-                            currentValue={totalPop}
-                            format={(v) => v.toLocaleString()}
-                        />
-
-                        <SnapshotMetric
-                            label="Max population"
-                            baselineValue={baselineMetrics.maxPopulation}
-                            currentValue={maxPopulation}
-                            format={(v) => v.toLocaleString()}
-                        />
-
-                        <SnapshotMetric
-                            label="Available jobs"
-                            baselineValue={baselineMetrics.beResult.jobs.totalJobs}
-                            currentValue={beResult.jobs.totalJobs}
-                            format={(v) => v.toFixed(0)}
-                        />
-
-                        <SnapshotMetric
-                            label="Workers needed for max efficiency"
-                            baselineValue={baselineMetrics.beResult.jobs.optimalWorkers}
-                            currentValue={beResult.jobs.optimalWorkers}
-                            format={(v) => v.toFixed(0)}
-                        />
-
-                        <SnapshotMetric
-                            label="Daily income"
-                            baselineValue={baselineMetrics.dailyIncome}
-                            currentValue={dailyIncome}
-                            format={(v) => `${v.toFixed(0)} gc/day`}
-                            formatDelta={(d) => `${d.toFixed(0)} gc/day`}
-                        />
-
-                        <SnapshotMetric
-                            label="Daily wages"
-                            baselineValue={baselineMetrics.dailyWages}
-                            currentValue={dailyWages}
-                            format={(v) => `${v.toFixed(0)} gc/day`}
-                            formatDelta={(d) => `${d.toFixed(0)} gc/day`}
-                        />
-
-                        <SnapshotMetric
-                            label="Net gc (daily)"
-                            baselineValue={baselineMetrics.dailyNetIncome}
-                            currentValue={dailyNetIncome}
-                            format={(v) => `${v.toFixed(0)} gc/day`}
-                            formatDelta={(d) => `${d.toFixed(0)} gc/day`}
-                        />
-
-                        <SnapshotMetric
-                            label="Daily food produced"
-                            baselineValue={baselineMetrics.dailyFoodProduced}
-                            currentValue={dailyFoodProduced}
-                            format={(v) => v.toFixed(1)}
-                        />
-
-                        <SnapshotMetric
-                            label="Daily food consumed"
-                            baselineValue={baselineMetrics.dailyFoodConsumed}
-                            currentValue={dailyFoodConsumed}
-                            format={(v) => v.toFixed(1)}
-                        />
-
-                        <SnapshotMetric
-                            label="Net food (daily)"
-                            baselineValue={baselineMetrics.dailyFoodNet}
-                            currentValue={dailyFoodNet}
-                            format={(v) => v.toFixed(1)}
-                            formatDelta={(d) => d.toFixed(1)}
-                        />
-
-                        {/* Runes – TODO placeholder */}
-                        <SnapshotMetric
-                            label="Daily runes produced"
-                            baselineValue={null}
-                            currentValue={0}
-                            format={() => "— (TODO)"}
-                            showPercentDelta={false}
-                        />
-                        <SnapshotMetric
-                            label="Daily runes decayed"
-                            baselineValue={null}
-                            currentValue={0}
-                            format={() => "— (TODO)"}
-                            showPercentDelta={false}
-                        />
-                        <SnapshotMetric
-                            label="Net runes (daily)"
-                            baselineValue={null}
-                            currentValue={0}
-                            format={() => "— (TODO)"}
-                            showPercentDelta={false}
-                        />
                     </section>
 
                     {/* NET CHANGES (flows) */}
                     <div className="snapshot-section snapshot-section--net">
                         <h3 className="snapshot-section-title-small">Net Changes</h3>
                         <div className="snapshot-metric-grid">
+                            <div className="snapshot-metric-header">
+                                <div>Metric</div>
+                                <div>Baseline</div>
+                                <div>Current</div>
+                                <div>Δ</div>
+                            </div>
+
                             <SnapshotMetric
                                 label="Net gc / tick"
                                 baselineValue={baselineMetrics.netIncome}
@@ -722,12 +744,9 @@ function App() {
                             <SnapshotMetric
                                 label="Food consumption / tick"
                                 baselineValue={
-                                    baselineMetrics.foodResult.consumption
-                                        .populationConsumption
+                                    baselineMetrics.foodResult.consumption.populationConsumption
                                 }
-                                currentValue={
-                                    foodResult.consumption.populationConsumption
-                                }
+                                currentValue={foodResult.consumption.populationConsumption}
                                 format={(v) => v.toFixed(1)}
                             />
                             <SnapshotMetric
@@ -741,139 +760,137 @@ function App() {
                             />
                             <SnapshotMetric
                                 label="Projected food stock (1 tick)"
-                                baselineValue={
-                                    baselineMetrics.foodResult.projectedNextStock
-                                }
+                                baselineValue={baselineMetrics.foodResult.projectedNextStock}
                                 currentValue={foodResult.projectedNextStock}
                                 format={(v) => v.toFixed(0)}
                                 currentClassNameOverride={
-                                    foodResult.projectedNextStock < 0
-                                        ? "value-bad"
-                                        : undefined
+                                    foodResult.projectedNextStock < 0 ? "value-bad" : undefined
                                 }
                             />
                         </div>
                     </div>
 
+
                     {/* MILITARY */}
                     <section className="snapshot-section snapshot-section--military">
                         <h3 className="snapshot-section-title-small">Military</h3>
 
-                        <div className="snapshot-metric-header">
-                            <div>Metric</div>
-                            <div>Baseline</div>
-                            <div>Current</div>
-                            <div>Δ</div>
+                        <div className="snapshot-metric-grid">
+                            <div className="snapshot-metric-header">
+                                <div>Metric</div>
+                                <div>Baseline</div>
+                                <div>Current</div>
+                                <div>Δ</div>
+                            </div>
+
+                            <SnapshotMetric
+                                label="Draft target"
+                                baselineValue={baselineProvince.draftTargetPercent}
+                                currentValue={province.draftTargetPercent}
+                                format={(v) => `${v.toFixed(1)}%`}
+                            />
+
+                            <SnapshotMetric
+                                label="Wage rate"
+                                baselineValue={baselineProvince.wageRate * 100}
+                                currentValue={province.wageRate * 100}
+                                format={(v) => `${v.toFixed(0)}%`}
+                            />
+
+                            <SnapshotMetric
+                                label="Offensive military efficiency"
+                                baselineValue={baselineMetrics.militaryResult.ome * 100}
+                                currentValue={militaryResult.ome * 100}
+                                format={(v) => `${v.toFixed(1)}%`}
+                            />
+
+                            <SnapshotMetric
+                                label="Defensive military efficiency"
+                                baselineValue={baselineMetrics.militaryResult.dme * 100}
+                                currentValue={militaryResult.dme * 100}
+                                format={(v) => `${v.toFixed(1)}%`}
+                            />
+
+                            <SnapshotMetric
+                                label="Off specs"
+                                baselineValue={baselineProvince.offSpecs}
+                                currentValue={province.offSpecs}
+                                format={(v) => v.toLocaleString()}
+                            />
+
+                            <SnapshotMetric
+                                label="Def specs"
+                                baselineValue={baselineProvince.defSpecs}
+                                currentValue={province.defSpecs}
+                                format={(v) => v.toLocaleString()}
+                            />
+
+                            <SnapshotMetric
+                                label="Elites"
+                                baselineValue={baselineProvince.elites}
+                                currentValue={province.elites}
+                                format={(v) => v.toLocaleString()}
+                            />
+
+                            <SnapshotMetric
+                                label="War horses"
+                                baselineValue={baselineProvince.horses}
+                                currentValue={province.horses}
+                                format={(v) => v.toLocaleString()}
+                            />
+
+                            <SnapshotMetric
+                                label="Prisoners"
+                                baselineValue={baselineProvince.prisoners}
+                                currentValue={province.prisoners}
+                                format={(v) => v.toLocaleString()}
+                            />
+
+                            <SnapshotMetric
+                                label="Total mod offense"
+                                baselineValue={baselineMetrics.militaryResult.modOffense}
+                                currentValue={militaryResult.modOffense}
+                                format={(v) => v.toFixed(0)}
+                            />
+
+                            <SnapshotMetric
+                                label="Total mod defense"
+                                baselineValue={baselineMetrics.militaryResult.modDefense}
+                                currentValue={militaryResult.modDefense}
+                                format={(v) => v.toFixed(0)}
+                            />
+
+                            <SnapshotMetric
+                                label="Base attack time"
+                                baselineValue={null}
+                                currentValue={0}
+                                format={() => "— (TODO)"}
+                            />
+                            <SnapshotMetric
+                                label="War attack time"
+                                baselineValue={null}
+                                currentValue={0}
+                                format={() => "— (TODO)"}
+                            />
+                            <SnapshotMetric
+                                label="Thieves (#)"
+                                baselineValue={baselineProvince.thieves}
+                                currentValue={province.thieves}
+                                format={(v) => v.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Thieves per acre"
+                                baselineValue={
+                                    baselineProvince.acres
+                                        ? baselineProvince.thieves / baselineProvince.acres
+                                        : null
+                                }
+                                currentValue={
+                                    province.acres ? province.thieves / province.acres : 0
+                                }
+                                format={(v) => v.toFixed(2)}
+                            />
                         </div>
-
-                        <SnapshotMetric
-                            label="Draft target"
-                            baselineValue={baselineProvince.draftTargetPercent}
-                            currentValue={province.draftTargetPercent}
-                            format={(v) => `${v.toFixed(1)}%`}
-                        />
-
-                        <SnapshotMetric
-                            label="Wage rate"
-                            baselineValue={baselineProvince.wageRate * 100}
-                            currentValue={province.wageRate * 100}
-                            format={(v) => `${v.toFixed(0)}%`}
-                        />
-
-                        <SnapshotMetric
-                            label="Offensive military efficiency"
-                            baselineValue={baselineMetrics.militaryResult.ome * 100}
-                            currentValue={militaryResult.ome * 100}
-                            format={(v) => `${v.toFixed(1)}%`}
-                        />
-
-                        <SnapshotMetric
-                            label="Defensive military efficiency"
-                            baselineValue={baselineMetrics.militaryResult.dme * 100}
-                            currentValue={militaryResult.dme * 100}
-                            format={(v) => `${v.toFixed(1)}%`}
-                        />
-
-                        <SnapshotMetric
-                            label="Off specs"
-                            baselineValue={baselineProvince.offSpecs}
-                            currentValue={province.offSpecs}
-                            format={(v) => v.toLocaleString()}
-                        />
-
-                        <SnapshotMetric
-                            label="Def specs"
-                            baselineValue={baselineProvince.defSpecs}
-                            currentValue={province.defSpecs}
-                            format={(v) => v.toLocaleString()}
-                        />
-
-                        <SnapshotMetric
-                            label="Elites"
-                            baselineValue={baselineProvince.elites}
-                            currentValue={province.elites}
-                            format={(v) => v.toLocaleString()}
-                        />
-
-                        <SnapshotMetric
-                            label="War horses"
-                            baselineValue={baselineProvince.horses}
-                            currentValue={province.horses}
-                            format={(v) => v.toLocaleString()}
-                        />
-
-                        <SnapshotMetric
-                            label="Prisoners"
-                            baselineValue={baselineProvince.prisoners}
-                            currentValue={province.prisoners}
-                            format={(v) => v.toLocaleString()}
-                        />
-
-                        <SnapshotMetric
-                            label="Total mod offense"
-                            baselineValue={baselineMetrics.militaryResult.modOffense}
-                            currentValue={militaryResult.modOffense}
-                            format={(v) => v.toFixed(0)}
-                        />
-
-                        <SnapshotMetric
-                            label="Total mod defense"
-                            baselineValue={baselineMetrics.militaryResult.modDefense}
-                            currentValue={militaryResult.modDefense}
-                            format={(v) => v.toFixed(0)}
-                        />
-
-                        {/* attack times, TPA/WPA mods – TODO */}
-                        <SnapshotMetric
-                            label="Base attack time"
-                            baselineValue={null}
-                            currentValue={0}
-                            format={() => "— (TODO)"}
-                        />
-                        <SnapshotMetric
-                            label="War attack time"
-                            baselineValue={null}
-                            currentValue={0}
-                            format={() => "— (TODO)"}
-                        />
-                        <SnapshotMetric
-                            label="Thieves (#)"
-                            baselineValue={baselineProvince.thieves}
-                            currentValue={province.thieves}
-                            format={(v) => v.toLocaleString()}
-                        />
-                        <SnapshotMetric
-                            label="Thieves per acre"
-                            baselineValue={
-                                baselineProvince.acres
-                                    ? baselineProvince.thieves / baselineProvince.acres
-                                    : null
-                            }
-                            currentValue={
-                                province.acres ? province.thieves / province.acres : 0
-                            }
-                            format={(v) => v.toFixed(2)}
-                        />
                     </section>
 
                     {/* BUILDINGS / GROWTH */}
