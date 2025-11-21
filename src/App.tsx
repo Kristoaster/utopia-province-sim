@@ -369,18 +369,35 @@ function App() {
                 </div>
 
                 {/* Snapshot comparison table */}
-                {/* Snapshot comparison – grouped, compact metrics */}
                 <div className="snapshot-sections">
-                    {/* Throne / Basics */}
+                    {/* THRONE / BASICS */}
                     <div className="snapshot-section">
-                        <h3 className="snapshot-section-title-small">
-                            Throne & Resources
-                        </h3>
+                        <h3 className="snapshot-section-title-small">Throne / Basics</h3>
                         <div className="snapshot-metric-grid">
                             <SnapshotMetric
                                 label="Networth"
                                 baseline={`${baselineProvince.networth.toLocaleString()} nw`}
                                 current={`${province.networth.toLocaleString()} nw`}
+                            />
+                            <SnapshotMetric
+                                label="Acres"
+                                baseline={baselineProvince.acres.toLocaleString()}
+                                current={province.acres.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Peasants"
+                                baseline={baselineProvince.peasants.toLocaleString()}
+                                current={province.peasants.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Total population"
+                                baseline={baselineMetrics.totalPop.toLocaleString()}
+                                current={totalPop.toLocaleString()}
+                            />
+                            <SnapshotMetric
+                                label="Building efficiency"
+                                baseline={`${(baselineMetrics.beResult.be * 100).toFixed(2)}%`}
+                                current={`${(beResult.be * 100).toFixed(2)}%`}
                             />
                             <SnapshotMetric
                                 label="Trade balance"
@@ -410,26 +427,14 @@ function App() {
                         </div>
                     </div>
 
-                    {/* Population */}
+                    {/* STATE / POPULATION */}
                     <div className="snapshot-section">
-                        <h3 className="snapshot-section-title-small">
-                            Population
-                        </h3>
+                        <h3 className="snapshot-section-title-small">State / Population</h3>
                         <div className="snapshot-metric-grid">
-                            <SnapshotMetric
-                                label="Total population"
-                                baseline={baselineMetrics.totalPop.toLocaleString()}
-                                current={totalPop.toLocaleString()}
-                            />
                             <SnapshotMetric
                                 label="Max population"
                                 baseline={baselineMetrics.maxPopulation.toLocaleString()}
                                 current={maxPopulation.toLocaleString()}
-                            />
-                            <SnapshotMetric
-                                label="Peasants"
-                                baseline={baselineProvince.peasants.toLocaleString()}
-                                current={province.peasants.toLocaleString()}
                             />
                             <SnapshotMetric
                                 label="Army population"
@@ -446,19 +451,11 @@ function App() {
                                 baseline={baselineMetrics.wizardPop.toLocaleString()}
                                 current={wizardPop.toLocaleString()}
                             />
-                        </div>
-                    </div>
-
-                    {/* Employment & BE */}
-                    <div className="snapshot-section">
-                        <h3 className="snapshot-section-title-small">
-                            Employment & BE
-                        </h3>
-                        <div className="snapshot-metric-grid">
                             <SnapshotMetric
-                                label="Available jobs"
-                                baseline={baselineMetrics.beResult.jobs.totalJobs.toFixed(0)}
-                                current={beResult.jobs.totalJobs.toFixed(0)}
+                                label="Employment"
+                                baseline={`${baselineMetrics.employmentPct.toFixed(1)}%`}
+                                current={`${employmentPct.toFixed(1)}%`}
+                                currentClassName={employmentClass}
                             />
                             <SnapshotMetric
                                 label="Workers at work"
@@ -470,25 +467,12 @@ function App() {
                                 baseline={baselineMetrics.jobsUnfilled.toFixed(0)}
                                 current={jobsUnfilled.toFixed(0)}
                             />
-                            <SnapshotMetric
-                                label="Employment"
-                                baseline={`${baselineMetrics.employmentPct.toFixed(1)}%`}
-                                current={`${employmentPct.toFixed(1)}%`}
-                                currentClassName={employmentClass}
-                            />
-                            <SnapshotMetric
-                                label="Building efficiency"
-                                baseline={`${(baselineMetrics.beResult.be * 100).toFixed(2)}%`}
-                                current={`${(beResult.be * 100).toFixed(2)}%`}
-                            />
                         </div>
                     </div>
 
-                    {/* Economy */}
+                    {/* ECONOMY */}
                     <div className="snapshot-section">
-                        <h3 className="snapshot-section-title-small">
-                            Economy
-                        </h3>
+                        <h3 className="snapshot-section-title-small">Economy</h3>
                         <div className="snapshot-metric-grid">
                             <SnapshotMetric
                                 label="Income / tick"
@@ -509,11 +493,48 @@ function App() {
                         </div>
                     </div>
 
-                    {/* Military */}
+                    {/* NET CHANGES (flows) */}
                     <div className="snapshot-section">
-                        <h3 className="snapshot-section-title-small">
-                            Military
-                        </h3>
+                        <h3 className="snapshot-section-title-small">Net Changes</h3>
+                        <div className="snapshot-metric-grid">
+                            <SnapshotMetric
+                                label="Net gc / tick"
+                                baseline={`${baselineMetrics.netIncome.toFixed(0)} gc`}
+                                current={`${netIncome.toFixed(0)} gc`}
+                                currentClassName={netIncomeClass}
+                            />
+                            <SnapshotMetric
+                                label="Food production / tick"
+                                baseline={`${baselineMetrics.foodResult.production.total.toFixed(1)}`}
+                                current={`${foodResult.production.total.toFixed(1)}`}
+                            />
+                            <SnapshotMetric
+                                label="Food consumption / tick"
+                                baseline={`${baselineMetrics.foodResult.consumption.populationConsumption.toFixed(1)}`}
+                                current={`${foodResult.consumption.populationConsumption.toFixed(1)}`}
+                            />
+                            <SnapshotMetric
+                                label="Net food / tick"
+                                baseline={baselineMetrics.foodResult.netPerTick.toFixed(1)}
+                                current={foodResult.netPerTick.toFixed(1)}
+                                currentClassName={
+                                    foodResult.netPerTick < 0 ? "value-bad" : undefined
+                                }
+                            />
+                            <SnapshotMetric
+                                label="Projected food stock (1 tick)"
+                                baseline={baselineMetrics.foodResult.projectedNextStock.toFixed(0)}
+                                current={foodResult.projectedNextStock.toFixed(0)}
+                                currentClassName={
+                                    foodResult.projectedNextStock < 0 ? "value-bad" : undefined
+                                }
+                            />
+                        </div>
+                    </div>
+
+                    {/* MILITARY */}
+                    <div className="snapshot-section">
+                        <h3 className="snapshot-section-title-small">Military</h3>
                         <div className="snapshot-metric-grid">
                             <SnapshotMetric
                                 label="Raw offense"
@@ -548,48 +569,9 @@ function App() {
                         </div>
                     </div>
 
-                    {/* Food */}
+                    {/* BUILDINGS / GROWTH */}
                     <div className="snapshot-section">
-                        <h3 className="snapshot-section-title-small">
-                            Food
-                        </h3>
-                        <div className="snapshot-metric-grid">
-                            <SnapshotMetric
-                                label="Food production / tick"
-                                baseline={`${baselineMetrics.foodResult.production.total.toFixed(1)}`}
-                                current={`${foodResult.production.total.toFixed(1)}`}
-                            />
-                            <SnapshotMetric
-                                label="Food consumption / tick"
-                                baseline={`${baselineMetrics.foodResult.consumption.populationConsumption.toFixed(1)}`}
-                                current={`${foodResult.consumption.populationConsumption.toFixed(1)}`}
-                            />
-                            <SnapshotMetric
-                                label="Net food / tick"
-                                baseline={baselineMetrics.foodResult.netPerTick.toFixed(1)}
-                                current={foodResult.netPerTick.toFixed(1)}
-                                currentClassName={
-                                    foodResult.netPerTick < 0 ? "value-bad" : undefined
-                                }
-                            />
-                            <SnapshotMetric
-                                label="Projected stock (1 tick)"
-                                baseline={baselineMetrics.foodResult.projectedNextStock.toFixed(0)}
-                                current={foodResult.projectedNextStock.toFixed(0)}
-                                currentClassName={
-                                    foodResult.projectedNextStock < 0
-                                        ? "value-bad"
-                                        : undefined
-                                }
-                            />
-                        </div>
-                    </div>
-
-                    {/* Land & Buildings */}
-                    <div className="snapshot-section">
-                        <h3 className="snapshot-section-title-small">
-                            Land & Buildings
-                        </h3>
+                        <h3 className="snapshot-section-title-small">Buildings / Growth</h3>
                         <div className="snapshot-metric-grid">
                             <SnapshotMetric
                                 label="Total land"
@@ -623,7 +605,19 @@ function App() {
                             />
                         </div>
                     </div>
+
+                    {/* SCIENCE */}
+                    <div className="snapshot-section">
+                        <h3 className="snapshot-section-title-small">Science</h3>
+                        <div className="snapshot-metric-grid">
+                            <p style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
+                                Science summary will go here (e.g. total books, key % effects) once we
+                                wire in the science calculations from the intel + snapshot fields.
+                            </p>
+                        </div>
+                    </div>
                 </div>
+
 
             </div>
 
