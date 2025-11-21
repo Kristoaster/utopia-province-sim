@@ -371,7 +371,7 @@ function App() {
                 {/* Snapshot comparison table */}
                 <div className="snapshot-sections">
                     {/* THRONE / BASICS */}
-                    <div className="snapshot-section">
+                    <div className="snapshot-section snapshot-section--throne">
                         <h3 className="snapshot-section-title-small">Throne / Basics</h3>
                         <div className="snapshot-metric-grid">
                             <SnapshotMetric
@@ -428,7 +428,7 @@ function App() {
                     </div>
 
                     {/* STATE / POPULATION */}
-                    <div className="snapshot-section">
+                    <div className="snapshot-section snapshot-section--state">
                         <h3 className="snapshot-section-title-small">State / Population</h3>
                         <div className="snapshot-metric-grid">
                             <SnapshotMetric
@@ -471,7 +471,7 @@ function App() {
                     </div>
 
                     {/* ECONOMY */}
-                    <div className="snapshot-section">
+                    <div className="snapshot-section snapshot-section--economy">
                         <h3 className="snapshot-section-title-small">Economy</h3>
                         <div className="snapshot-metric-grid">
                             <SnapshotMetric
@@ -494,7 +494,7 @@ function App() {
                     </div>
 
                     {/* NET CHANGES (flows) */}
-                    <div className="snapshot-section">
+                    <div className="snapshot-section snapshot-section--net">
                         <h3 className="snapshot-section-title-small">Net Changes</h3>
                         <div className="snapshot-metric-grid">
                             <SnapshotMetric
@@ -533,7 +533,7 @@ function App() {
                     </div>
 
                     {/* MILITARY */}
-                    <div className="snapshot-section">
+                    <div className="snapshot-section snapshot-section--military">
                         <h3 className="snapshot-section-title-small">Military</h3>
                         <div className="snapshot-metric-grid">
                             <SnapshotMetric
@@ -570,7 +570,7 @@ function App() {
                     </div>
 
                     {/* BUILDINGS / GROWTH */}
-                    <div className="snapshot-section">
+                    <div className="snapshot-section snapshot-section--buildings">
                         <h3 className="snapshot-section-title-small">Buildings / Growth</h3>
                         <div className="snapshot-metric-grid">
                             <SnapshotMetric
@@ -607,7 +607,7 @@ function App() {
                     </div>
 
                     {/* SCIENCE */}
-                    <div className="snapshot-section">
+                    <div className="snapshot-section snapshot-section--science">
                         <h3 className="snapshot-section-title-small">Science</h3>
                         <div className="snapshot-metric-grid">
                             <p style={{ fontSize: "0.8rem", color: "#9ca3af" }}>
