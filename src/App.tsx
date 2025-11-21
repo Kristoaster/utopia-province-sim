@@ -1007,65 +1007,68 @@ function App() {
                 {/* State & Economy */}
                 <div className="card">
                     <div className="card-title">State & Economy</div>
-                    <div className="field-row">
-                        <span>Total population</span>
-                        <strong>{totalPop.toLocaleString()}</strong>
-                    </div>
-                    <div className="field-row">
-                        <span>Max population</span>
-                        <strong>{maxPopulation.toLocaleString()}</strong>
-                    </div>
-                    <div className="field-row">
-                        <span>Peasants</span>
-                        <strong>{province.peasants.toLocaleString()}</strong>
-                    </div>
-                    <div className="field-row">
-                        <span>Army population</span>
-                        <strong>{armyPop.toLocaleString()}</strong>
-                    </div>
-                    <div className="field-row">
-                        <span>Thieves</span>
-                        <strong>{thiefPop.toLocaleString()}</strong>
-                    </div>
-                    <div className="field-row">
-                        <span>Wizards</span>
-                        <strong>{wizardPop.toLocaleString()}</strong>
-                    </div>
-                    <hr />
-                    <div className="field-row">
-                        <span>Available jobs</span>
-                        <strong>{beResult.jobs.totalJobs.toFixed(0)}</strong>
-                    </div>
-                    <div className="field-row">
-                        <span>Workers at work</span>
-                        <strong>{beResult.jobs.filledJobs.toFixed(0)}</strong>
-                    </div>
-                    <div className="field-row">
-                        <span>Unfilled jobs</span>
-                        <strong>{jobsUnfilled.toFixed(0)}</strong>
-                    </div>
-                    <div className="field-row">
-                        <span>Employment</span>
-                        <strong className={employmentClass}>{employmentPct.toFixed(1)}%</strong>
-                    </div>
-                    <hr />
-                    <div className="field-row">
-                        <span>Income / tick</span>
-                        <strong>{incomeResult.finalIncome.toFixed(0)} gc</strong>
-                    </div>
-                    <div className="field-row">
-                        <span>Wages / tick</span>
-                        <strong>{wagesResult.totalWages.toFixed(0)} gc</strong>
-                    </div>
-                    <div className="field-row">
-                        <span>Net income / tick</span>
-                        <strong className={netIncomeClass}>{netIncome.toFixed(0)} gc</strong>
+                    <div className="card-columns">
+                        <div className="field-row">
+                            <span>Total population</span>
+                            <strong>{totalPop.toLocaleString()}</strong>
+                        </div>
+                        <div className="field-row">
+                            <span>Max population</span>
+                            <strong>{maxPopulation.toLocaleString()}</strong>
+                        </div>
+                        <div className="field-row">
+                            <span>Peasants</span>
+                            <strong>{province.peasants.toLocaleString()}</strong>
+                        </div>
+                        <div className="field-row">
+                            <span>Army population</span>
+                            <strong>{armyPop.toLocaleString()}</strong>
+                        </div>
+                        <div className="field-row">
+                            <span>Thieves</span>
+                            <strong>{thiefPop.toLocaleString()}</strong>
+                        </div>
+                        <div className="field-row">
+                            <span>Wizards</span>
+                            <strong>{wizardPop.toLocaleString()}</strong>
+                        </div>
+                        <hr />
+                        <div className="field-row">
+                            <span>Available jobs</span>
+                            <strong>{beResult.jobs.totalJobs.toFixed(0)}</strong>
+                        </div>
+                        <div className="field-row">
+                            <span>Workers at work</span>
+                            <strong>{beResult.jobs.filledJobs.toFixed(0)}</strong>
+                        </div>
+                        <div className="field-row">
+                            <span>Unfilled jobs</span>
+                            <strong>{jobsUnfilled.toFixed(0)}</strong>
+                        </div>
+                        <div className="field-row">
+                            <span>Employment</span>
+                            <strong className={employmentClass}>{employmentPct.toFixed(1)}%</strong>
+                        </div>
+                        <hr />
+                        <div className="field-row">
+                            <span>Income / tick</span>
+                            <strong>{incomeResult.finalIncome.toFixed(0)} gc</strong>
+                        </div>
+                        <div className="field-row">
+                            <span>Wages / tick</span>
+                            <strong>{wagesResult.totalWages.toFixed(0)} gc</strong>
+                        </div>
+                        <div className="field-row">
+                            <span>Net income / tick</span>
+                            <strong className={netIncomeClass}>{netIncome.toFixed(0)} gc</strong>
+                        </div>
                     </div>
                 </div>
 
                 {/* Military */}
                 <div className="card">
                     <div className="card-title">Military</div>
+                    <div className="card-columns">
                     <div className="field-row">
                         <span>Soldiers</span>
                         <strong>{province.soldiers.toLocaleString()}</strong>
@@ -1107,11 +1110,13 @@ function App() {
                         <span>Mod defense</span>
                         <strong>{militaryResult.modDefense.toFixed(0)}</strong>
                     </div>
+                    </div>
                 </div>
 
                 {/* Food & Production */}
                 <div className="card">
                     <div className="card-title">Food & Production</div>
+                    <div className="card-columns">
                     <div className="field-row">
                         <span>Farms</span>
                         <strong>{(province.buildings.FARMS ?? 0).toFixed(0)}</strong>
@@ -1152,12 +1157,13 @@ function App() {
                             {foodResult.projectedNextStock.toFixed(0)} bushels
                         </strong>
                     </div>
+                    </div>
                 </div>
 
                 {/* Buildings */}
                 <div className="card">
                     <div className="card-title">Buildings</div>
-
+                    <div className="card-columns">
                     <div className="field-row">
                         <span>Total land</span>
                         <strong>{province.acres.toLocaleString()} acres</strong>
@@ -1230,6 +1236,7 @@ function App() {
                         })}
                         </tbody>
                     </table>
+                </div>
                 </div>
 
                 {/* Science placeholder */}

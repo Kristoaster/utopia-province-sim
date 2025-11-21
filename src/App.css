@@ -511,6 +511,18 @@ body {
     opacity: 0.75;
 }
 
+/* Generic 2-column layout for card contents */
+.card-columns {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    column-gap: 1.5rem;
+    row-gap: 0.25rem;
+}
+
+/* Keep field rows looking the same inside the grid */
+.card-columns .field-row {
+    margin: 0;
+}
 
 /* Each metric cell */
 .snapshot-metric {
