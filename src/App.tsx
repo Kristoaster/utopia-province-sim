@@ -403,29 +403,19 @@ function App() {
                     <div>
                         <div className="throne-name">{province.name}</div>
                         <div className="throne-sub">
-                            <span>
-                                {province.race} / {province.personality}
-                            </span>
-                            <span>KD {province.location}</span>
-                            <span>
+                        </div>
+                        <div className="throne-pills">
+                            <span className="pill">
                                 Ruler: {province.rulerName}
                                 {province.honorLevel
                                     ? ` (Honor ${province.honorLevel})`
                                     : ""}
                             </span>
-                        </div>
-                        <div className="throne-pills">
-                            <span className="pill">
-                                Acres: {province.acres.toLocaleString()}
+                            <span className={"pill"}>
+                                {province.race} / {province.personality}
                             </span>
                             <span className="pill">
-                                Peasants: {province.peasants.toLocaleString()}
-                            </span>
-                            <span className="pill">
-                                Total Pop: {totalPop.toLocaleString()}
-                            </span>
-                            <span className="pill">
-                                BE: {(beResult.be * 100).toFixed(2)}%
+                                KD {province.location}
                             </span>
                         </div>
                     </div>
@@ -460,7 +450,7 @@ function App() {
                                 label="Land"
                                 baselineValue={baselineProvince.acres}
                                 currentValue={province.acres}
-                                format={(v) => `${v.toLocaleString()} acres`}
+                                format={(v) => `${v.toLocaleString()}`}
                                 showPercentDelta={false}
                             />
 
@@ -511,24 +501,24 @@ function App() {
                                 label="Daily income"
                                 baselineValue={baselineMetrics.dailyIncome}
                                 currentValue={dailyIncome}
-                                format={(v) => `${v.toFixed(0)} gc/day`}
-                                formatDelta={(d) => `${d.toFixed(0)} gc/day`}
+                                format={(v) => `${v.toFixed(0)}`}
+                                formatDelta={(d) => `${d.toFixed(0)}`}
                             />
 
                             <SnapshotMetric
                                 label="Daily wages"
                                 baselineValue={baselineMetrics.dailyWages}
                                 currentValue={dailyWages}
-                                format={(v) => `${v.toFixed(0)} gc/day`}
-                                formatDelta={(d) => `${d.toFixed(0)} gc/day`}
+                                format={(v) => `${v.toFixed(0)}`}
+                                formatDelta={(d) => `${d.toFixed(0)}`}
                             />
 
                             <SnapshotMetric
                                 label="Net gc (daily)"
                                 baselineValue={baselineMetrics.dailyNetIncome}
                                 currentValue={dailyNetIncome}
-                                format={(v) => `${v.toFixed(0)} gc/day`}
-                                formatDelta={(d) => `${d.toFixed(0)} gc/day`}
+                                format={(v) => `${v.toFixed(0)}`}
+                                formatDelta={(d) => `${d.toFixed(0)}`}
                             />
 
                             <SnapshotMetric

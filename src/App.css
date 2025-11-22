@@ -512,12 +512,20 @@ body {
 }
 
 /* Generic 2-column layout for card contents */
-.card-columns {
+.card-columns.snapshot-sections {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    column-gap: 1.5rem;
-    row-gap: 0.25rem;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    column-gap: 1rem;
+    row-gap: 0.75rem;
 }
+
+/* On narrow screens, just stack them */
+@media (max-width: 900px) {
+    .card-columns.snapshot-sections {
+        grid-template-columns: 1fr;
+    }
+}
+
 
 /* Keep field rows looking the same inside the grid */
 .card-columns .field-row {
