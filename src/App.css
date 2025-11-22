@@ -448,20 +448,31 @@ body {
     font-size: 0.78rem;
 }
 
-/* Each header/row is a 4-column grid: label | baseline | current | delta */
+/* Metric header + rows: label stretches, numbers size to content */
 .snapshot-metric-header,
 .snapshot-metric-row {
     display: grid;
-    grid-template-columns: minmax(0, 2.4fr) repeat(3, minmax(0, 1.2fr));
+    grid-template-columns:
+        minmax(0, 1.8fr)  /* label takes the flexible space */
+        max-content       /* Baseline */
+        max-content       /* Current */
+        max-content;      /* Δ */
     align-items: baseline;
+    column-gap: 0.5rem;   /* small gap between label and numbers */
 }
 
+/* On small screens, give the label a bit less, but keep numbers content-sized */
 @media (max-width: 640px) {
     .snapshot-metric-header,
     .snapshot-metric-row {
-        grid-template-columns: minmax(0, 1.8fr) repeat(3, minmax(0, 1fr));
+        grid-template-columns:
+            minmax(0, 1.4fr)
+            max-content
+            max-content
+            max-content;
     }
 }
+
 
 /* Cells */
 .snapshot-metric-header > div,
