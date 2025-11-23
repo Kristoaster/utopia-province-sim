@@ -219,6 +219,24 @@ body {
     background: rgba(15, 23, 42, 0.5);
 }
 
+/* Make snapshot numeric columns right-aligned inside the tables */
+.buildings-table .snapshot-metric-value,
+.buildings-table .snapshot-metric-delta {
+    text-align: right;
+}
+
+/* Metric tables (Economy, Military, Networth) should size columns by content */
+.buildings-table.snapshot-metrics-table {
+    width: auto;        /* shrink to fit content instead of stretching to 100% */
+    table-layout: auto; /* let the browser size columns based on the widest cell */
+}
+
+/* Prevent wrapping so the widest value in each column defines the column width */
+.buildings-table.snapshot-metrics-table th,
+.buildings-table.snapshot-metrics-table td {
+    white-space: nowrap;
+}
+
 .buildings-input-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));

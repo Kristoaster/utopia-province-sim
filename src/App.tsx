@@ -439,7 +439,7 @@ function App() {
                     <section className="snapshot-section snapshot-section--economy">
                         <h3 className="snapshot-section-title-small">Economy</h3>
 
-                        <table className="buildings-table">
+                        <table className="buildings-table snapshot-metrics-table">
                             <thead>
                             <tr>
                                 <th>Metric</th>
@@ -574,7 +574,7 @@ function App() {
                     <section className="snapshot-section snapshot-section--military">
                         <h3 className="snapshot-section-title-small">Military</h3>
 
-                        <table className="buildings-table">
+                        <table className="buildings-table snapshot-metrics-table">
                             <thead>
                             <tr>
                                 <th>Metric</th>
@@ -701,7 +701,7 @@ function App() {
                     {/* BUILDINGS / GROWTH */}
                     <section className="snapshot-section snapshot-section--buildings">
                         <h3 className="snapshot-section-title-small">Buildings</h3>
-                        <table className="buildings-table">
+                        <table className="buildings-table snapshot-metrics-table">
                             <thead>
                             <tr>
                                 <th>Building type</th>
@@ -819,7 +819,7 @@ function App() {
                     {/* NETWORTH BREAKDOWN (skeleton) */}
                     <section className="snapshot-section snapshot-section--net">
                         <h3 className="snapshot-section-title-small">Networth</h3>
-                        <table className="buildings-table">
+                        <table className="buildings-table snapshot-metrics-table">
                             <thead>
                             <tr>
                                 <th>Component</th>
