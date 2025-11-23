@@ -360,22 +360,10 @@ body {
 
 /* Wrapper for each category (Throne, Economy, etc.) */
 .snapshot-sections {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr)); /* 2 sections per row */
-    column-gap: 1rem;
-    row-gap: 0.75rem;
+    /* Layout is handled by the more specific .card-columns.snapshot-sections rule */
     margin-top: 0.5rem;
 }
 
-/* On smaller screens, stack them */
-@media (max-width: 900px) {
-    .snapshot-sections {
-        grid-template-columns: 1fr;
-    }
-}
-
-
-/* Wrapper for each category (Throne, Economy, etc.) */
 .snapshot-section {
     border-radius: 0.5rem;
     border: 1px solid #1f2937;
@@ -383,6 +371,9 @@ body {
     border-left-color: #1f2937;
     padding: 0.55rem 0.75rem 0.65rem;
     background: rgba(15, 23, 42, 0.9);
+
+    /* Let width be determined by its contents (the table + padding) */
+    flex: 0 0 auto;
 }
 
 /* Slightly different accents per section */
@@ -524,21 +515,13 @@ body {
     opacity: 0.75;
 }
 
-/* Generic 2-column layout for card contents */
+/* Layout for the snapshot cards (Economy, Military, Buildings, Science, Networth) */
 .card-columns.snapshot-sections {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    column-gap: 1rem;
-    row-gap: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    align-items: flex-start; /* prevents stretching so width = content */
 }
-
-/* On narrow screens, just stack them */
-@media (max-width: 900px) {
-    .card-columns.snapshot-sections {
-        grid-template-columns: 1fr;
-    }
-}
-
 
 /* Keep field rows looking the same inside the grid */
 .card-columns .field-row {

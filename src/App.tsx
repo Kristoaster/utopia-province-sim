@@ -771,7 +771,7 @@ function App() {
                     {/* SCIENCE */}
                     <section className="snapshot-section snapshot-section--science">
                         <h3 className="snapshot-section-title-small">Science</h3>
-                        <table className="buildings-table science-table">
+                        <table className="buildings-table snapshot-metrics-table science-table">
                             <thead>
                             <tr>
                                 <th>Science type</th>
