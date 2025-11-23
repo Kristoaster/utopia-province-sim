@@ -1,5 +1,4 @@
 // src/App.tsx
-// src/App.tsx
 import React, { useState } from "react";
 import "./App.css";
 import type { BuildGoals, BuildPlan } from "./utopia/calc/build-planner.ts";
@@ -242,6 +241,8 @@ const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
 
 };
 
+type IntelSource = "CSV" | "MANUAL";
+
 function App() {
     const [province, setProvince] = useState<Province>(initialProvince);
     const [baselineProvince, setBaselineProvince] =
@@ -252,6 +253,8 @@ function App() {
     );
 
     const [manualOverrides, setManualOverrides] = useState<ManualOverrides>({});
+
+    const [intelSource, setIntelSource] = useState<IntelSource>("CSV");
 
     const [goals, setGoals] = useState<BuildGoals>({
         minNetIncome: 0,
@@ -264,7 +267,7 @@ function App() {
         focus: "HYBRID",
     });
 
-    const [buildPlan, setBuildPlan] = useState<BuildPlan | null>(null);
+    const [, setBuildPlan] = useState<BuildPlan | null>(null);
 
     const handleGenerateSuggestion = () => {
         const plan = generateSuggestedBuild(province, goals);
@@ -282,20 +285,9 @@ function App() {
 
     const {
         beResult,
-        incomeResult,
-        wagesResult,
-        netIncome,
-        foodResult,
         militaryResult,
         maxPopulation,
         totalPop,
-        armyPop,
-        thiefPop,
-        wizardPop,
-        jobsUnfilled,
-        employmentPct,
-        baseBuildCostPerAcre,
-        baseRazeCostPerAcre,
         dailyIncome,
         dailyWages,
         dailyNetIncome,
@@ -344,55 +336,484 @@ function App() {
     };
 
     return (
-        <div className="page">
-            {/* Workflow strip */}
-            <div className="workflow-strip">
-                <span className="step active">1. Load intel</span>
-                <span className="step">2. Review snapshot</span>
-                <span className="step">3. Set goals</span>
-                <span className="step">4. Tweak overrides</span>
+        <>
+            <div className="alpha-banner">
+                🚧 Utopia Province Sim – <strong>alpha build</strong>. Calculations not yet implemented.
+                Need feedback on interface and UI
             </div>
 
-            {/* Intel loader at top */}
-            <div className="card">
+            <div className="page">
+                {/* Workflow strip */}
+                <div className="workflow-strip">
+                    <span className="step active">1. Load intel</span>
+                    <span className="step">2. Review snapshot</span>
+                    <span className="step">3. Set goals</span>
+                    <span className="step">4. Tweak overrides</span>
+                </div>
+
+                {/* Intel loader at top */}
+                <div className="card">
                 <div className="card-title">Load intel</div>
-                <div className="control-grid">
+
+                {/* Source Selector */}
+                <div
+                    className="control-grid"
+                    style={{ marginBottom: "0.5rem" }}
+                >
                     <div>
-                        <label>Load intel CSV</label>
-                        <input
-                            type="file"
-                            accept=".csv"
-                            onChange={handleIntelUpload}
-                        />
+                        <label>Intel source</label>
+                        <select
+                            value={intelSource}
+                            onChange={(e) =>
+                                setIntelSource(e.target.value as IntelSource)
+                            }
+                        >
+                            <option value="CSV">CSV export from Intel Site</option>
+                            <option value="MANUAL">Manual entry</option>
+                        </select>
                     </div>
 
-                    {intelProvinces.length > 1 && (
-                        <div>
-                            <label>Province from intel</label>
-                            <select
-                                value={selectedIntelIndex ?? ""}
-                                onChange={(e) => {
-                                    const idx = Number(e.target.value);
-                                    setSelectedIntelIndex(idx);
-                                    const chosen = intelProvinces[idx];
-                                    if (chosen) {
-                                        setProvince(chosen);
-                                        setBaselineProvince({
-                                            ...chosen,
-                                            buildings: { ...chosen.buildings },
-                                        });
-                                        setBuildPlan(null);
-                                        setManualOverrides({});
+                    {intelSource === "CSV" && (
+                        <>
+                            <div>
+                                <label>Load intel CSV</label>
+                                <input
+                                    type="file"
+                                    accept=".csv"
+                                    onChange={handleIntelUpload}
+                                />
+                            </div>
+
+                            {intelProvinces.length > 1 && (
+                                <div>
+                                    <label>Province from intel</label>
+                                    <select
+                                        value={selectedIntelIndex ?? ""}
+                                        onChange={(e) => {
+                                            const idx = Number(e.target.value);
+                                            setSelectedIntelIndex(idx);
+                                            const chosen = intelProvinces[idx];
+                                            if (chosen) {
+                                                setProvince(chosen);
+                                                setBaselineProvince({
+                                                    ...chosen,
+                                                    buildings: { ...chosen.buildings },
+                                                });
+                                                setBuildPlan(null);
+                                                setManualOverrides({});
+                                            }
+                                        }}
+                                    >
+                                        {intelProvinces.map((prov, idx) => (
+                                            <option key={prov.name + idx} value={idx}>
+                                                {prov.name} ({prov.race} / {prov.personality})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {intelSource === "MANUAL" && (
+                        <>
+                            {/* Basic identity */}
+                            <div>
+                                <label>Province name</label>
+                                <input
+                                    type="text"
+                                    value={province.name}
+                                    onChange={(e) =>
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            name: e.target.value,
+                                        }))
                                     }
-                                }}
-                            >
-                                {intelProvinces.map((prov, idx) => (
-                                    <option key={prov.name + idx} value={idx}>
-                                        {prov.name} ({prov.race} / {prov.personality})
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                                />
+                            </div>
+
+                            <div>
+                                <label>Ruler name</label>
+                                <input
+                                    type="text"
+                                    value={province.rulerName}
+                                    onChange={(e) =>
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            rulerName: e.target.value,
+                                        }))
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <label>KD location (e.g. 4:11)</label>
+                                <input
+                                    type="text"
+                                    value={province.location}
+                                    onChange={(e) =>
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            location: e.target.value,
+                                        }))
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <label>Honor level</label>
+                                <input
+                                    type="number"
+                                    value={province.honorLevel || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            honorLevel: Number.isFinite(v) ? v : prev.honorLevel,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            {/* Race / Personality */}
+                            <div>
+                                <label>Race</label>
+                                <select
+                                    value={province.race}
+                                    onChange={(e) =>
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            race: e.target.value as Province["race"],
+                                        }))
+                                    }
+                                >
+                                    {RACE_LIST.map((race) => (
+                                        <option key={race.id} value={race.id}>
+                                            {race.display}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label>Personality</label>
+                                <select
+                                    value={province.personality}
+                                    onChange={(e) =>
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            personality: e.target.value as Province["personality"],
+                                        }))
+                                    }
+                                >
+                                    {PERSONALITY_LIST.map((p) => (
+                                        <option key={p.id} value={p.id}>
+                                            {p.display}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Land + peasants */}
+                            <div>
+                                <label>Land (acres)</label>
+                                <input
+                                    type="number"
+                                    value={province.acres || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => {
+                                            const acres = Number.isFinite(v) ? v : prev.acres;
+                                            const next = { ...prev, acres };
+                                            const builtFromBuildings = Object.values(
+                                                next.buildings
+                                            ).reduce(
+                                                (sum, val) => sum + (val || 0),
+                                                0
+                                            );
+                                            return {
+                                                ...next,
+                                                builtAcres: builtFromBuildings,
+                                                barrenAcres: Math.max(
+                                                    acres - builtFromBuildings,
+                                                    0
+                                                ),
+                                            };
+                                        });
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Peasants</label>
+                                <input
+                                    type="number"
+                                    value={province.peasants || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            peasants: Number.isFinite(v) ? v : prev.peasants,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            {/* Military units */}
+                            <div>
+                                <label>Soldiers</label>
+                                <input
+                                    type="number"
+                                    value={province.soldiers || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            soldiers: Number.isFinite(v) ? v : prev.soldiers,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Off specs</label>
+                                <input
+                                    type="number"
+                                    value={province.offSpecs || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            offSpecs: Number.isFinite(v) ? v : prev.offSpecs,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Def specs</label>
+                                <input
+                                    type="number"
+                                    value={province.defSpecs || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            defSpecs: Number.isFinite(v) ? v : prev.defSpecs,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Elites</label>
+                                <input
+                                    type="number"
+                                    value={province.elites || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            elites: Number.isFinite(v) ? v : prev.elites,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Thieves</label>
+                                <input
+                                    type="number"
+                                    value={province.thieves || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            thieves: Number.isFinite(v) ? v : prev.thieves,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Wizards</label>
+                                <input
+                                    type="number"
+                                    value={province.wizards || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            wizards: Number.isFinite(v) ? v : prev.wizards,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            {/* Economy + misc */}
+                            <div>
+                                <label>Gold (gc)</label>
+                                <input
+                                    type="number"
+                                    value={province.gold || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            gold: Number.isFinite(v) ? v : prev.gold,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Food (bushels)</label>
+                                <input
+                                    type="number"
+                                    value={province.food || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            food: Number.isFinite(v) ? v : prev.food,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Wage rate (%)</label>
+                                <input
+                                    type="number"
+                                    value={province.wageRate * 100}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            wageRate: Number.isFinite(v)
+                                                ? v / 100
+                                                : prev.wageRate,
+                                            intelWagePercent: Number.isFinite(v)
+                                                ? v
+                                                : prev.intelWagePercent,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Draft target (%)</label>
+                                <input
+                                    type="number"
+                                    value={province.draftTargetPercent}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            draftTargetPercent: Number.isFinite(v)
+                                                ? v
+                                                : prev.draftTargetPercent,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>War horses</label>
+                                <input
+                                    type="number"
+                                    value={province.horses || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            horses: Number.isFinite(v) ? v : prev.horses,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Prisoners</label>
+                                <input
+                                    type="number"
+                                    value={province.prisoners || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            prisoners: Number.isFinite(v) ? v : prev.prisoners,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Networth</label>
+                                <input
+                                    type="number"
+                                    value={province.networth || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            networth: Number.isFinite(v) ? v : prev.networth,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Trade balance</label>
+                                <input
+                                    type="number"
+                                    value={province.tradeBalance || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            tradeBalance: Number.isFinite(v)
+                                                ? v
+                                                : prev.tradeBalance,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Training credits</label>
+                                <input
+                                    type="number"
+                                    value={province.trainingCredits || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            trainingCredits: Number.isFinite(v)
+                                                ? v
+                                                : prev.trainingCredits,
+                                        }));
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Building credits</label>
+                                <input
+                                    type="number"
+                                    value={province.buildingCredits || ""}
+                                    onChange={(e) => {
+                                        const v = Number(e.target.value);
+                                        setProvince((prev) => ({
+                                            ...prev,
+                                            buildingCredits: Number.isFinite(v)
+                                                ? v
+                                                : prev.buildingCredits,
+                                        }));
+                                    }}
+                                />
+                            </div>
+                        </>
                     )}
                 </div>
             </div>
@@ -1177,6 +1598,7 @@ function App() {
                 </div>
             </div>
         </div>
+        </>
     );
 }
 
