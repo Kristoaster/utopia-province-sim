@@ -230,15 +230,16 @@ const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
     }
 
     return (
-        <div className="snapshot-metric-row">
-            <div className="snapshot-metric-label">{label}</div>
-            <div className="snapshot-metric-value baseline">
+        <tr>
+            <td className="snapshot-metric-label">{label}</td>
+            <td className="snapshot-metric-value baseline">
                 {baselineDisplay}
-            </div>
-            <div className={currentClassName}>{currentDisplay}</div>
-            <div className="snapshot-metric-delta">{deltaContent}</div>
-        </div>
+            </td>
+            <td className={currentClassName}>{currentDisplay}</td>
+            <td className="snapshot-metric-delta">{deltaContent}</td>
+        </tr>
     );
+
 };
 
 function App() {
@@ -438,19 +439,22 @@ function App() {
                     <section className="snapshot-section snapshot-section--economy">
                         <h3 className="snapshot-section-title-small">Economy</h3>
 
-                        <div className="snapshot-metric-grid">
-                            <div className="snapshot-metric-header">
-                                <div>Metric</div>
-                                <div>Baseline</div>
-                                <div>Current</div>
-                                <div>Δ</div>
-                            </div>
-
+                        <table className="buildings-table">
+                            <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th style={{ textAlign: "right" }}>Baseline</th>
+                                <th style={{ textAlign: "right" }}>Current</th>
+                                <th style={{ textAlign: "right" }}>Δ</th>
+                            </tr>
+                            </thead>
+                            <tbody>
                             <SnapshotMetric
                                 label="Land"
                                 baselineValue={baselineProvince.acres}
                                 currentValue={province.acres}
-                                format={(v) => `${v.toLocaleString()}`}
+                                format={(v) => v.toLocaleString()}
+                                formatDelta={(d) => d.toLocaleString()}
                                 showPercentDelta={false}
                             />
 
@@ -543,42 +547,43 @@ function App() {
                                 formatDelta={(d) => d.toFixed(1)}
                             />
 
-                            <SnapshotMetric
-                                label="Daily runes produced"
-                                baselineValue={null}
-                                currentValue={0}
-                                format={() => "— (TODO)"}
-                                showPercentDelta={false}
-                            />
-                            <SnapshotMetric
-                                label="Daily runes decayed"
-                                baselineValue={null}
-                                currentValue={0}
-                                format={() => "— (TODO)"}
-                                showPercentDelta={false}
-                            />
-                            <SnapshotMetric
-                                label="Net runes (daily)"
-                                baselineValue={null}
-                                currentValue={0}
-                                format={() => "— (TODO)"}
-                                showPercentDelta={false}
-                            />
-                        </div>
+                            {/* TODO rows for runes */}
+                            <tr>
+                                <td>Daily runes produced</td>
+                                <td style={{ textAlign: "right" }}>—</td>
+                                <td style={{ textAlign: "right" }}>— (TODO)</td>
+                                <td style={{ textAlign: "right" }}></td>
+                            </tr>
+                            <tr>
+                                <td>Daily runes decayed</td>
+                                <td style={{ textAlign: "right" }}>—</td>
+                                <td style={{ textAlign: "right" }}>— (TODO)</td>
+                                <td style={{ textAlign: "right" }}></td>
+                            </tr>
+                            <tr>
+                                <td>Net runes (daily)</td>
+                                <td style={{ textAlign: "right" }}>—</td>
+                                <td style={{ textAlign: "right" }}>— (TODO)</td>
+                                <td style={{ textAlign: "right" }}></td>
+                            </tr>
+                            </tbody>
+                        </table>
                     </section>
 
                     {/* MILITARY */}
                     <section className="snapshot-section snapshot-section--military">
                         <h3 className="snapshot-section-title-small">Military</h3>
 
-                        <div className="snapshot-metric-grid">
-                            <div className="snapshot-metric-header">
-                                <div>Metric</div>
-                                <div>Baseline</div>
-                                <div>Current</div>
-                                <div>Δ</div>
-                            </div>
-
+                        <table className="buildings-table">
+                            <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th style={{ textAlign: "right" }}>Baseline</th>
+                                <th style={{ textAlign: "right" }}>Current</th>
+                                <th style={{ textAlign: "right" }}>Δ</th>
+                            </tr>
+                            </thead>
+                            <tbody>
                             <SnapshotMetric
                                 label="Draft target"
                                 baselineValue={baselineProvince.draftTargetPercent}
@@ -656,24 +661,26 @@ function App() {
                                 format={(v) => v.toFixed(0)}
                             />
 
-                            <SnapshotMetric
-                                label="Base attack time"
-                                baselineValue={null}
-                                currentValue={0}
-                                format={() => "— (TODO)"}
-                            />
-                            <SnapshotMetric
-                                label="War attack time"
-                                baselineValue={null}
-                                currentValue={0}
-                                format={() => "— (TODO)"}
-                            />
+                            <tr>
+                                <td>Base attack time</td>
+                                <td style={{ textAlign: "right" }}>—</td>
+                                <td style={{ textAlign: "right" }}>— (TODO)</td>
+                                <td style={{ textAlign: "right" }}></td>
+                            </tr>
+                            <tr>
+                                <td>War attack time</td>
+                                <td style={{ textAlign: "right" }}>—</td>
+                                <td style={{ textAlign: "right" }}>— (TODO)</td>
+                                <td style={{ textAlign: "right" }}></td>
+                            </tr>
+
                             <SnapshotMetric
                                 label="Thieves (#)"
                                 baselineValue={baselineProvince.thieves}
                                 currentValue={province.thieves}
                                 format={(v) => v.toLocaleString()}
                             />
+
                             <SnapshotMetric
                                 label="Thieves per acre"
                                 baselineValue={
@@ -686,8 +693,10 @@ function App() {
                                 }
                                 format={(v) => v.toFixed(2)}
                             />
-                        </div>
+                            </tbody>
+                        </table>
                     </section>
+
 
                     {/* BUILDINGS / GROWTH */}
                     <section className="snapshot-section snapshot-section--buildings">
