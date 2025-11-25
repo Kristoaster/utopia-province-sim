@@ -521,6 +521,7 @@ body {
     flex-wrap: wrap;
     gap: 0.75rem 1rem;
     align-items: flex-start; /* prevents stretching so width = content */
+    justify-content: center;
 }
 
 /* Keep field rows looking the same inside the grid */
@@ -565,7 +566,6 @@ body {
     font-size: 0.8em;
     padding: 0 0.1rem;
 }
-
 
 .snapshot-metric-label {
     font-size: 0.7rem;

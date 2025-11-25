@@ -32,7 +32,7 @@ export const SNAPSHOT_FIELDS: SnapshotField[] = [
     key: "personality",
     label: "Personality",
     section: "throne",
-    rawSource: "IS Export \"Personality , Manual input",
+    rawSource: "IS Export \"Personality\" , Manual input",
   },
   {
     key: "land",
