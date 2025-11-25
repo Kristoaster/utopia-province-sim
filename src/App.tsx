@@ -1,8 +1,8 @@
 // src/App.tsx
 import React, { useState } from "react";
 import "./App.css";
-import type { BuildGoals, BuildPlan } from "./utopia/calc/build-planner.ts";
-import { generateSuggestedBuild } from "./utopia/calc/build-planner.ts";
+// import type { BuildGoals, BuildPlan } from "./utopia/calc/build-planner.ts";
+// import { generateSuggestedBuild } from "./utopia/calc/build-planner.ts";
 import type { Province } from "./utopia/types";
 import { RACE_LIST } from "./utopia/age113/races";
 import { PERSONALITY_LIST } from "./utopia/age113/personalities";
@@ -14,11 +14,11 @@ import { calculateWages } from "./utopia/calc/wages.ts";
 import { calculateFood } from "./utopia/calc/food.ts";
 import { parseIntelCsv } from "./utopia/intel-parse";
 import { calculateMaxPopulation } from "./utopia/calc/population.ts";
-import { ManualInputsPanel } from "./features/snapshot/ManualInputsPanel";
-import type {
-    ManualOverrides,
-    IntelRow as SnapshotIntelRow,
-} from "./features/snapshot/snapshotModel";
+// import { ManualInputsPanel } from "./features/snapshot/ManualInputsPanel";
+// import type {
+//     ManualOverrides,
+//     IntelRow as SnapshotIntelRow,
+// } from "./features/snapshot/snapshotModel";
 
 const initialProvince: Province = {
     name: "Province",
@@ -252,33 +252,33 @@ function App() {
         null
     );
 
-    const [manualOverrides, setManualOverrides] = useState<ManualOverrides>({});
+    // const [manualOverrides, setManualOverrides] = useState<ManualOverrides>({});
 
     const [intelSource, setIntelSource] = useState<IntelSource>("CSV");
 
-    const [goals, setGoals] = useState<BuildGoals>({
-        minNetIncome: 0,
-        noStarvation: true,
-        minTPA: 2,
-        minWPA: 2,
-        minGuildsPercent: 10,
-        minTDsPercent: 10,
-        maxRebuildPercent: 40,
-        focus: "HYBRID",
-    });
+    // const [goals, setGoals] = useState<BuildGoals>({
+    //     minNetIncome: 0,
+    //     noStarvation: true,
+    //     minTPA: 2,
+    //     minWPA: 2,
+    //     minGuildsPercent: 10,
+    //     minTDsPercent: 10,
+    //     maxRebuildPercent: 40,
+    //     focus: "HYBRID",
+    // });
 
-    const [, setBuildPlan] = useState<BuildPlan | null>(null);
+    // const [, setBuildPlan] = useState<BuildPlan | null>(null);
 
-    const handleGenerateSuggestion = () => {
-        const plan = generateSuggestedBuild(province, goals);
-        setBuildPlan(plan);
-    };
+    // const handleGenerateSuggestion = () => {
+    //     const plan = generateSuggestedBuild(province, goals);
+    //     setBuildPlan(plan);
+    // };
 
-    type ProvinceWithIntel = Province & { rawIntel?: SnapshotIntelRow };
+    // type ProvinceWithIntel = Province & { rawIntel?: SnapshotIntelRow };
 
-    const provinceWithIntel = province as ProvinceWithIntel;
-    const snapshotIntelRow: SnapshotIntelRow | null =
-        provinceWithIntel.rawIntel ?? null;
+    // const provinceWithIntel = province as ProvinceWithIntel;
+    // const snapshotIntelRow: SnapshotIntelRow | null =
+    //     provinceWithIntel.rawIntel ?? null;
 
     const baselineMetrics = computeProvinceMetrics(baselineProvince);
     const currentMetrics = computeProvinceMetrics(province);
@@ -318,8 +318,8 @@ function App() {
                     buildings: { ...first.buildings },
                 });
 
-                setBuildPlan(null);
-                setManualOverrides({});
+                // setBuildPlan(null);
+                // setManualOverrides({});
             } else {
                 alert("No valid provinces found in intel file.");
             }
@@ -376,7 +376,7 @@ function App() {
                     {intelSource === "CSV" && (
                         <>
                             <div>
-                                <label>Load intel CSV</label>
+                                <label>Load intel CSV - New Intel site - ALL tab - download CSV</label>
                                 <input
                                     type="file"
                                     accept=".csv"
@@ -399,8 +399,8 @@ function App() {
                                                     ...chosen,
                                                     buildings: { ...chosen.buildings },
                                                 });
-                                                setBuildPlan(null);
-                                                setManualOverrides({});
+                                                // setBuildPlan(null);
+                                                // setManualOverrides({});
                                             }
                                         }}
                                     >
@@ -1299,304 +1299,304 @@ function App() {
                 </div>
             </div>
 
-            {/* GOALS & OPTIMIZER */}
-            <h2 className="section-title">Planning & Optimization</h2>
-            <div className="card">
-                <div className="card-title">Goals & suggested build</div>
-                <div className="control-grid">
-                    <div>
-                        <label>Target TPA (min)</label>
-                        <input
-                            type="number"
-                            step="0.1"
-                            value={goals.minTPA ?? ""}
-                            onChange={(e) =>
-                                setGoals((prev) => ({
-                                    ...prev,
-                                    minTPA:
-                                        e.target.value === ""
-                                            ? undefined
-                                            : Number(e.target.value) || 0,
-                                }))
-                            }
-                        />
-                    </div>
+            {/*/!* GOALS & OPTIMIZER *!/*/}
+            {/*<h2 className="section-title">Planning & Optimization</h2>*/}
+            {/*<div className="card">*/}
+            {/*    <div className="card-title">Goals & suggested build</div>*/}
+            {/*    <div className="control-grid">*/}
+            {/*        <div>*/}
+            {/*            <label>Target TPA (min)</label>*/}
+            {/*            <input*/}
+            {/*                type="number"*/}
+            {/*                step="0.1"*/}
+            {/*                value={goals.minTPA ?? ""}*/}
+            {/*                onChange={(e) =>*/}
+            {/*                    setGoals((prev) => ({*/}
+            {/*                        ...prev,*/}
+            {/*                        minTPA:*/}
+            {/*                            e.target.value === ""*/}
+            {/*                                ? undefined*/}
+            {/*                                : Number(e.target.value) || 0,*/}
+            {/*                    }))*/}
+            {/*                }*/}
+            {/*            />*/}
+            {/*        </div>*/}
 
-                    <div>
-                        <label>Target WPA (min)</label>
-                        <input
-                            type="number"
-                            step="0.1"
-                            value={goals.minWPA ?? ""}
-                            onChange={(e) =>
-                                setGoals((prev) => ({
-                                    ...prev,
-                                    minWPA:
-                                        e.target.value === ""
-                                            ? undefined
-                                            : Number(e.target.value) || 0,
-                                }))
-                            }
-                        />
-                    </div>
+            {/*        <div>*/}
+            {/*            <label>Target WPA (min)</label>*/}
+            {/*            <input*/}
+            {/*                type="number"*/}
+            {/*                step="0.1"*/}
+            {/*                value={goals.minWPA ?? ""}*/}
+            {/*                onChange={(e) =>*/}
+            {/*                    setGoals((prev) => ({*/}
+            {/*                        ...prev,*/}
+            {/*                        minWPA:*/}
+            {/*                            e.target.value === ""*/}
+            {/*                                ? undefined*/}
+            {/*                                : Number(e.target.value) || 0,*/}
+            {/*                    }))*/}
+            {/*                }*/}
+            {/*            />*/}
+            {/*        </div>*/}
 
-                    <div>
-                        <label>Min net income / tick (gc)</label>
-                        <input
-                            type="number"
-                            value={goals.minNetIncome ?? ""}
-                            onChange={(e) =>
-                                setGoals((prev) => ({
-                                    ...prev,
-                                    minNetIncome:
-                                        e.target.value === ""
-                                            ? undefined
-                                            : Number(e.target.value) || 0,
-                                }))
-                            }
-                        />
-                    </div>
+            {/*        <div>*/}
+            {/*            <label>Min net income / tick (gc)</label>*/}
+            {/*            <input*/}
+            {/*                type="number"*/}
+            {/*                value={goals.minNetIncome ?? ""}*/}
+            {/*                onChange={(e) =>*/}
+            {/*                    setGoals((prev) => ({*/}
+            {/*                        ...prev,*/}
+            {/*                        minNetIncome:*/}
+            {/*                            e.target.value === ""*/}
+            {/*                                ? undefined*/}
+            {/*                                : Number(e.target.value) || 0,*/}
+            {/*                    }))*/}
+            {/*                }*/}
+            {/*            />*/}
+            {/*        </div>*/}
 
-                    <div>
-                        <label>Max land to rebuild (%)</label>
-                        <input
-                            type="number"
-                            value={goals.maxRebuildPercent ?? ""}
-                            onChange={(e) =>
-                                setGoals((prev) => ({
-                                    ...prev,
-                                    maxRebuildPercent:
-                                        e.target.value === ""
-                                            ? undefined
-                                            : Number(e.target.value) || 0,
-                                }))
-                            }
-                        />
-                    </div>
+            {/*        <div>*/}
+            {/*            <label>Max land to rebuild (%)</label>*/}
+            {/*            <input*/}
+            {/*                type="number"*/}
+            {/*                value={goals.maxRebuildPercent ?? ""}*/}
+            {/*                onChange={(e) =>*/}
+            {/*                    setGoals((prev) => ({*/}
+            {/*                        ...prev,*/}
+            {/*                        maxRebuildPercent:*/}
+            {/*                            e.target.value === ""*/}
+            {/*                                ? undefined*/}
+            {/*                                : Number(e.target.value) || 0,*/}
+            {/*                    }))*/}
+            {/*                }*/}
+            {/*            />*/}
+            {/*        </div>*/}
 
-                    <div>
-                        <label>Build focus</label>
-                        <select
-                            value={goals.focus}
-                            onChange={(e) =>
-                                setGoals((prev) => ({
-                                    ...prev,
-                                    focus: e.target.value as BuildGoals["focus"],
-                                }))
-                            }
-                        >
-                            <option value="HYBRID">Hybrid</option>
-                            <option value="INCOME">Income</option>
-                            <option value="OFFENSE">Attacker</option>
-                            <option value="TM">T/M</option>
-                        </select>
-                    </div>
+            {/*        <div>*/}
+            {/*            <label>Build focus</label>*/}
+            {/*            <select*/}
+            {/*                value={goals.focus}*/}
+            {/*                onChange={(e) =>*/}
+            {/*                    setGoals((prev) => ({*/}
+            {/*                        ...prev,*/}
+            {/*                        focus: e.target.value as BuildGoals["focus"],*/}
+            {/*                    }))*/}
+            {/*                }*/}
+            {/*            >*/}
+            {/*                <option value="HYBRID">Hybrid</option>*/}
+            {/*                <option value="INCOME">Income</option>*/}
+            {/*                <option value="OFFENSE">Attacker</option>*/}
+            {/*                <option value="TM">T/M</option>*/}
+            {/*            </select>*/}
+            {/*        </div>*/}
 
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={goals.noStarvation ?? false}
-                                onChange={(e) =>
-                                    setGoals((prev) => ({
-                                        ...prev,
-                                        noStarvation: e.target.checked,
-                                    }))
-                                }
-                            />{" "}
-                            Avoid starvation
-                        </label>
-                    </div>
+            {/*        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>*/}
+            {/*            <label>*/}
+            {/*                <input*/}
+            {/*                    type="checkbox"*/}
+            {/*                    checked={goals.noStarvation ?? false}*/}
+            {/*                    onChange={(e) =>*/}
+            {/*                        setGoals((prev) => ({*/}
+            {/*                            ...prev,*/}
+            {/*                            noStarvation: e.target.checked,*/}
+            {/*                        }))*/}
+            {/*                    }*/}
+            {/*                />{" "}*/}
+            {/*                Avoid starvation*/}
+            {/*            </label>*/}
+            {/*        </div>*/}
 
-                    <div>
-                        <label>&nbsp;</label>
-                        <button type="button" onClick={handleGenerateSuggestion}>
-                            Generate suggested build
-                        </button>
-                    </div>
-                </div>
-            </div>
+            {/*        <div>*/}
+            {/*            <label>&nbsp;</label>*/}
+            {/*            <button type="button" onClick={handleGenerateSuggestion}>*/}
+            {/*                Generate suggested build*/}
+            {/*            </button>*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+            {/*</div>*/}
 
 
-            {/* PROVINCE INPUTS (Intel + manual) */}
-            <h2 className="section-title">Inputs & Overrides</h2>
-            <div className="card">
-                <div className="card-title">Province inputs</div>
+            {/*/!* PROVINCE INPUTS (Intel + manual) *!/*/}
+            {/*<h2 className="section-title">Inputs & Overrides</h2>*/}
+            {/*<div className="card">*/}
+            {/*    <div className="card-title">Province inputs</div>*/}
 
-                <details style={{ marginTop: "0.75rem" }}>
-                    <summary style={{ cursor: "pointer", fontWeight: 600 }}>
-                        Manual Inputs / Overrides
-                    </summary>
+            {/*    <details style={{ marginTop: "0.75rem" }}>*/}
+            {/*        <summary style={{ cursor: "pointer", fontWeight: 600 }}>*/}
+            {/*            Manual Inputs / Overrides*/}
+            {/*        </summary>*/}
 
-                    <div style={{ marginTop: "0.75rem" }}>
-                        <p className="help-text">
-                            Values here override intel for calculations. Leave a field blank to keep the
-                            intel value.
-                        </p>
+            {/*        <div style={{ marginTop: "0.75rem" }}>*/}
+            {/*            <p className="help-text">*/}
+            {/*                Values here override intel for calculations. Leave a field blank to keep the*/}
+            {/*                intel value.*/}
+            {/*            </p>*/}
 
-                        {/* Identity */}
-                        <div className="manual-section">
-                            <h4 className="manual-section-title">Identity</h4>
-                            <div className="control-grid">
-                                <div>
-                                    <label>Province name</label>
-                                    <input
-                                        type="text"
-                                        value={province.name}
-                                        onChange={(e) =>
-                                            setProvince((prev) => ({ ...prev, name: e.target.value }))
-                                        }
-                                    />
-                                </div>
+            {/*            /!* Identity *!/*/}
+            {/*            <div className="manual-section">*/}
+            {/*                <h4 className="manual-section-title">Identity</h4>*/}
+            {/*                <div className="control-grid">*/}
+            {/*                    <div>*/}
+            {/*                        <label>Province name</label>*/}
+            {/*                        <input*/}
+            {/*                            type="text"*/}
+            {/*                            value={province.name}*/}
+            {/*                            onChange={(e) =>*/}
+            {/*                                setProvince((prev) => ({ ...prev, name: e.target.value }))*/}
+            {/*                            }*/}
+            {/*                        />*/}
+            {/*                    </div>*/}
 
-                                <div>
-                                    <label>Race</label>
-                                    <select
-                                        value={province.race}
-                                        onChange={(e) =>
-                                            setProvince((prev) => ({
-                                                ...prev,
-                                                race: e.target.value as Province["race"],
-                                            }))
-                                        }
-                                    >
-                                        {RACE_LIST.map((race) => (
-                                            <option key={race.id} value={race.id}>
-                                                {race.display}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+            {/*                    <div>*/}
+            {/*                        <label>Race</label>*/}
+            {/*                        <select*/}
+            {/*                            value={province.race}*/}
+            {/*                            onChange={(e) =>*/}
+            {/*                                setProvince((prev) => ({*/}
+            {/*                                    ...prev,*/}
+            {/*                                    race: e.target.value as Province["race"],*/}
+            {/*                                }))*/}
+            {/*                            }*/}
+            {/*                        >*/}
+            {/*                            {RACE_LIST.map((race) => (*/}
+            {/*                                <option key={race.id} value={race.id}>*/}
+            {/*                                    {race.display}*/}
+            {/*                                </option>*/}
+            {/*                            ))}*/}
+            {/*                        </select>*/}
+            {/*                    </div>*/}
 
-                                <div>
-                                    <label>Personality</label>
-                                    <select
-                                        value={province.personality}
-                                        onChange={(e) =>
-                                            setProvince((prev) => ({
-                                                ...prev,
-                                                personality: e.target.value as Province["personality"],
-                                            }))
-                                        }
-                                    >
-                                        {PERSONALITY_LIST.map((pers) => (
-                                            <option key={pers.id} value={pers.id}>
-                                                {pers.display}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
+            {/*                    <div>*/}
+            {/*                        <label>Personality</label>*/}
+            {/*                        <select*/}
+            {/*                            value={province.personality}*/}
+            {/*                            onChange={(e) =>*/}
+            {/*                                setProvince((prev) => ({*/}
+            {/*                                    ...prev,*/}
+            {/*                                    personality: e.target.value as Province["personality"],*/}
+            {/*                                }))*/}
+            {/*                            }*/}
+            {/*                        >*/}
+            {/*                            {PERSONALITY_LIST.map((pers) => (*/}
+            {/*                                <option key={pers.id} value={pers.id}>*/}
+            {/*                                    {pers.display}*/}
+            {/*                                </option>*/}
+            {/*                            ))}*/}
+            {/*                        </select>*/}
+            {/*                    </div>*/}
 
-                                <div>
-                                    <label>Kingdom location (x:y)</label>
-                                    <input
-                                        type="text"
-                                        value={province.location}
-                                        onChange={(e) =>
-                                            setProvince((prev) => ({ ...prev, location: e.target.value }))
-                                        }
-                                    />
-                                </div>
+            {/*                    <div>*/}
+            {/*                        <label>Kingdom location (x:y)</label>*/}
+            {/*                        <input*/}
+            {/*                            type="text"*/}
+            {/*                            value={province.location}*/}
+            {/*                            onChange={(e) =>*/}
+            {/*                                setProvince((prev) => ({ ...prev, location: e.target.value }))*/}
+            {/*                            }*/}
+            {/*                        />*/}
+            {/*                    </div>*/}
 
-                                <div>
-                                    <label>Ruler name</label>
-                                    <input
-                                        type="text"
-                                        value={province.rulerName}
-                                        onChange={(e) =>
-                                            setProvince((prev) => ({ ...prev, rulerName: e.target.value }))
-                                        }
-                                    />
-                                </div>
+            {/*                    <div>*/}
+            {/*                        <label>Ruler name</label>*/}
+            {/*                        <input*/}
+            {/*                            type="text"*/}
+            {/*                            value={province.rulerName}*/}
+            {/*                            onChange={(e) =>*/}
+            {/*                                setProvince((prev) => ({ ...prev, rulerName: e.target.value }))*/}
+            {/*                            }*/}
+            {/*                        />*/}
+            {/*                    </div>*/}
 
-                                <div>
-                                    <label>Honor level</label>
-                                    <input
-                                        type="number"
-                                        value={province.honorLevel}
-                                        onChange={(e) =>
-                                            setProvince((prev) => ({
-                                                ...prev,
-                                                honorLevel: Number(e.target.value) || 0,
-                                            }))
-                                        }
-                                    />
-                                </div>
-                            </div>
-                        </div>
+            {/*                    <div>*/}
+            {/*                        <label>Honor level</label>*/}
+            {/*                        <input*/}
+            {/*                            type="number"*/}
+            {/*                            value={province.honorLevel}*/}
+            {/*                            onChange={(e) =>*/}
+            {/*                                setProvince((prev) => ({*/}
+            {/*                                    ...prev,*/}
+            {/*                                    honorLevel: Number(e.target.value) || 0,*/}
+            {/*                                }))*/}
+            {/*                            }*/}
+            {/*                        />*/}
+            {/*                    </div>*/}
+            {/*                </div>*/}
+            {/*            </div>*/}
 
-                        {/* Population & Military */}
-                        <div className="manual-section">
-                            <h4 className="manual-section-title">Population & Military</h4>
-                            <div className="control-grid">
-                                {/* TODO: wire your existing numeric inputs for peasants/soldiers/etc here */}
-                            </div>
-                        </div>
+            {/*            /!* Population & Military *!/*/}
+            {/*            <div className="manual-section">*/}
+            {/*                <h4 className="manual-section-title">Population & Military</h4>*/}
+            {/*                <div className="control-grid">*/}
+            {/*                    /!* TODO: wire your existing numeric inputs for peasants/soldiers/etc here *!/*/}
+            {/*                </div>*/}
+            {/*            </div>*/}
 
-                        {/* Economy & Resources */}
-                        <div className="manual-section">
-                            <h4 className="manual-section-title">Economy & Resources</h4>
-                            <div className="control-grid">
-                                {/* TODO: wire gold, food, runes, horses, prisoners, wageRate */}
-                            </div>
-                        </div>
+            {/*            /!* Economy & Resources *!/*/}
+            {/*            <div className="manual-section">*/}
+            {/*                <h4 className="manual-section-title">Economy & Resources</h4>*/}
+            {/*                <div className="control-grid">*/}
+            {/*                    /!* TODO: wire gold, food, runes, horses, prisoners, wageRate *!/*/}
+            {/*                </div>*/}
+            {/*            </div>*/}
 
-                        {/* Intel-only fields */}
-                        <div className="manual-section">
-                            <h4 className="manual-section-title">Intel-only fields</h4>
-                            <div className="control-grid">
-                                {/* TODO: intelOffenseHome, intelDefenseHome, intelWagePercent, draftTargetPercent */}
-                            </div>
-                        </div>
+            {/*            /!* Intel-only fields *!/*/}
+            {/*            <div className="manual-section">*/}
+            {/*                <h4 className="manual-section-title">Intel-only fields</h4>*/}
+            {/*                <div className="control-grid">*/}
+            {/*                    /!* TODO: intelOffenseHome, intelDefenseHome, intelWagePercent, draftTargetPercent *!/*/}
+            {/*                </div>*/}
+            {/*            </div>*/}
 
-                        {/* Snapshot-based manual overrides */}
-                        <div className="manual-section">
-                            <h4 className="manual-section-title">Snapshot overrides</h4>
-                            <ManualInputsPanel
-                                intelRow={snapshotIntelRow}
-                                manualOverrides={manualOverrides}
-                                onChange={(key, value) =>
-                                    setManualOverrides((prev) => ({
-                                        ...prev,
-                                        [key]: value,
-                                    }))
-                                }
-                            />
-                        </div>
-                    </div>
-                </details>
+            {/*            /!* Snapshot-based manual overrides *!/*/}
+            {/*            <div className="manual-section">*/}
+            {/*                <h4 className="manual-section-title">Snapshot overrides</h4>*/}
+            {/*                <ManualInputsPanel*/}
+            {/*                    intelRow={snapshotIntelRow}*/}
+            {/*                    manualOverrides={manualOverrides}*/}
+            {/*                    onChange={(key, value) =>*/}
+            {/*                        setManualOverrides((prev) => ({*/}
+            {/*                            ...prev,*/}
+            {/*                            [key]: value,*/}
+            {/*                        }))*/}
+            {/*                    }*/}
+            {/*                />*/}
+            {/*            </div>*/}
+            {/*        </div>*/}
+            {/*    </details>*/}
 
-                {/* Buildings manual entry */}
-                <hr />
-                <div style={{ marginTop: "0.5rem" }}>
-                    <div
-                        className="card-title"
-                        style={{ fontSize: "0.8rem", marginBottom: "0.25rem" }}
-                    >
-                        Buildings (acres)
-                    </div>
-                    <div className="buildings-input-grid">
-                        {BUILDING_LIST.map((b) => (
-                            <div key={b.id}>
-                                <label>{b.display}</label>
-                                <input
-                                    type="number"
-                                    value={province.buildings[b.id] ?? 0}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            buildings: {
-                                                ...prev.buildings,
-                                                [b.id]: Number(e.target.value) || 0,
-                                            },
-                                        }))
-                                    }
-                                />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
+            {/*    /!* Buildings manual entry *!/*/}
+            {/*    <hr />*/}
+            {/*    <div style={{ marginTop: "0.5rem" }}>*/}
+            {/*        <div*/}
+            {/*            className="card-title"*/}
+            {/*            style={{ fontSize: "0.8rem", marginBottom: "0.25rem" }}*/}
+            {/*        >*/}
+            {/*            Buildings (acres)*/}
+            {/*        </div>*/}
+            {/*        <div className="buildings-input-grid">*/}
+            {/*            {BUILDING_LIST.map((b) => (*/}
+            {/*                <div key={b.id}>*/}
+            {/*                    <label>{b.display}</label>*/}
+            {/*                    <input*/}
+            {/*                        type="number"*/}
+            {/*                        value={province.buildings[b.id] ?? 0}*/}
+            {/*                        onChange={(e) =>*/}
+            {/*                            setProvince((prev) => ({*/}
+            {/*                                ...prev,*/}
+            {/*                                buildings: {*/}
+            {/*                                    ...prev.buildings,*/}
+            {/*                                    [b.id]: Number(e.target.value) || 0,*/}
+            {/*                                },*/}
+            {/*                            }))*/}
+            {/*                        }*/}
+            {/*                    />*/}
+            {/*                </div>*/}
+            {/*            ))}*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+            {/*</div>*/}
         </div>
         </>
     );
