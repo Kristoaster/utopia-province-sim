@@ -2,7 +2,7 @@
 
 // ----- Age / Time -----
 export const AGE = {
-    NUMBER: 113,
+    NUMBER: 114,
     TICK_HOURS: 1,
     TICKS_PER_DAY: 24,
     PROTECTION_TICKS: 24,

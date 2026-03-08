@@ -3,7 +3,7 @@
 import type { RaceId } from "../../types";
 import type { Race } from "../shared/races";
 
-export const RACES: Record<RaceId, Race> = {
+export const RACES: Partial<Record<RaceId, Race>> = {
     AVIAN: {
         id: "AVIAN",
         display: "Avian",
@@ -241,4 +241,6 @@ export const RACES: Record<RaceId, Race> = {
     },
 };
 
-export const RACE_LIST = Object.values(RACES);
+export const RACE_LIST = Object.values(RACES).filter(
+    (race): race is Race => Boolean(race)
+);

@@ -267,7 +267,7 @@ export function generateSuggestedBuild(
                 (targetTgPct / 100) * builtAcres
             );
             if (
-                !race.restrictions.noTrainingGrounds &&
+                !race?.restrictions.noTrainingGrounds &&
                 haveTg < desiredTg
             ) {
                 takeFromDonors(desiredTg - haveTg, "TRAINING_GROUNDS");

@@ -15,14 +15,15 @@ export type RaceId =
 export type PersonalityId =
     | "ARTISAN"
     | "CLERIC"
+    | "GENERAL"
     | "HERETIC"
     | "MYSTIC"
+    | "NECROMANCER"
+    | "PALADIN"
     | "ROGUE"
     | "TACTICIAN"
     | "WARRIOR"
-    | "PALADIN"
-    | "NECROMANCER"
-    | "GENERAL";
+    | "WAR_HERO";
 
 export type BuildingId =
     | "HOMES"

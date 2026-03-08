@@ -45,4 +45,5 @@ export interface Personality {
     };
     spellbook: string[];
     uniqueAbility: string;
+    notes?: string[];
 }

@@ -34,8 +34,18 @@ export interface Race {
         gains?: number;
         gainsWar?: number;
         ome?: number;
+        dme?: number;
         wages?: number;
         thiefCost?: number;
+        spellDamage?: number;
+        buildingCreditsGain?: number;
+        scienceEff?: number;
+        stealthRecovery?: number;
+        manaRecovery?: number;
+        offensiveSpellDuration?: number;
+        selfSpellDuration?: number;
+        prisonerCapacityPerAcre?: number;
+        libraryEffectiveness?: number;
     };
     restrictions: {
         noBarracks?: boolean;
@@ -44,8 +54,11 @@ export interface Race {
         noTrainingGrounds?: boolean;
         noDungeons?: boolean;
         onlyThieveryIntel?: boolean;
+        cannotAmbush?: boolean;
+        cannotAccelerateConstruction?: boolean;
     };
     spellbook: string[];
     uniqueAbility: string;
     units: RaceUnits;
+    notes?: string[];
 }

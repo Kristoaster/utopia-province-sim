@@ -2,7 +2,7 @@
 import type { PersonalityId } from "../../types";
 import type { Personality } from "../shared/personalities";
 
-export const PERSONALITIES: Record<PersonalityId, Personality> = {
+export const PERSONALITIES: Partial<Record<PersonalityId, Personality>> = {
     ARTISAN: {
         id: "ARTISAN",
         display: "Artisan",
@@ -175,4 +175,6 @@ export const PERSONALITIES: Record<PersonalityId, Personality> = {
     },
 };
 
-export const PERSONALITY_LIST = Object.values(PERSONALITIES);
+export const PERSONALITY_LIST = Object.values(PERSONALITIES).filter(
+    (personality): personality is Personality => Boolean(personality)
+);
