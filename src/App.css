@@ -639,3 +639,58 @@ body {
 .snapshot-inline-select.wide {
     width: 140px;
 }
+
+.honor-edit-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.honor-info {
+    display: inline-flex;
+    align-items: center;
+}
+
+.honor-info-trigger {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    border: 1px solid #475569;
+    background: #020617;
+    color: #cbd5e1;
+    cursor: pointer;
+    font-size: 0.75rem;
+    line-height: 1;
+    padding: 0;
+}
+
+.honor-info-trigger:hover,
+.honor-info-trigger:focus {
+    border-color: #38bdf8;
+    color: #ffffff;
+    outline: none;
+}
+
+.honor-info-popover {
+    position: fixed;
+    z-index: 1000;
+    padding: 0.35rem;
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
+    background: #020617;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    max-width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    overflow: auto;
+}
+
+.honor-info-popover .buildings-table {
+    margin-top: 0;
+}
+
+.honor-info-popover th,
+.honor-info-popover td {
+    white-space: nowrap;
+    font-size: 0.62rem;
+    padding: 0.1rem 0.25rem;
+}

@@ -1,5 +1,11 @@
 // src/App.tsx
-import React, { useMemo, useState } from "react";
+import React, {
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
 import "./App.css";
 import type { Province, ScienceCategoryId } from "./utopia/types";
 import { RACE_LIST } from "./utopia/age113/races";
@@ -23,7 +29,12 @@ import {
 } from "./features/snapshot/snapshotDisplay";
 import type { SnapshotMetricCell } from "./features/snapshot/snapshotDisplay";
 import { SCIENCE_CATEGORIES, createEmptyScience, estimateScienceBooksFromEffect } from "./utopia/data/science";
-import { HONOR_RANKS, getHonorRankLabel } from "./utopia/data/honor";
+import {
+    HONOR_RANKS,
+    getHonorRank,
+    getHonorRankLabel,
+    formatHonorRange,
+} from "./utopia/data/honor";
 
 const initialProvince: Province = {
     name: "Province",
@@ -226,6 +237,173 @@ const cloneProvince = (prov: Province): Province => ({
     }, {} as Province["science"]),
     rawIntel: prov.rawIntel ? { ...prov.rawIntel } : undefined,
 });
+
+type HonorInfoProps = {
+    honorLevel: number;
+};
+
+type HonorPopoverPosition = {
+    top: number;
+    left: number;
+};
+
+const HonorInfo: React.FC<HonorInfoProps> = ({ honorLevel }) => {
+    const rank = getHonorRank(honorLevel);
+
+    const triggerRef = useRef<HTMLButtonElement | null>(null);
+    const popoverRef = useRef<HTMLDivElement | null>(null);
+
+    const [open, setOpen] = useState(false);
+    const [position, setPosition] = useState<HonorPopoverPosition>({
+        top: 0,
+        left: 0,
+    });
+
+    const updatePosition = () => {
+        const trigger = triggerRef.current;
+        const popover = popoverRef.current;
+
+        if (!trigger || !popover) return;
+
+        const triggerRect = trigger.getBoundingClientRect();
+        const popoverRect = popover.getBoundingClientRect();
+
+        const gap = 8;
+        const padding = 8;
+
+        let top = triggerRect.bottom + gap;
+        let left = triggerRect.right - popoverRect.width;
+
+        // Flip upward if there isn't enough room below
+        if (top + popoverRect.height > window.innerHeight - padding) {
+            const aboveTop = triggerRect.top - gap - popoverRect.height;
+            if (aboveTop >= padding) {
+                top = aboveTop;
+            } else {
+                top = Math.max(
+                    padding,
+                    window.innerHeight - popoverRect.height - padding
+                );
+            }
+        }
+
+        // Clamp horizontally into viewport
+        if (left < padding) {
+            left = padding;
+        }
+
+        if (left + popoverRect.width > window.innerWidth - padding) {
+            left = window.innerWidth - popoverRect.width - padding;
+        }
+
+        // Final safety clamp
+        left = Math.max(padding, left);
+        top = Math.max(padding, top);
+
+        setPosition({ top, left });
+    };
+
+    useLayoutEffect(() => {
+        if (!open) return;
+        updatePosition();
+    }, [open, honorLevel]);
+
+    useEffect(() => {
+        if (!open) return;
+
+        const handleResize = () => updatePosition();
+        const handleScroll = () => updatePosition();
+
+        const handlePointerDown = (event: MouseEvent) => {
+            const target = event.target as Node | null;
+            if (!target) return;
+
+            if (triggerRef.current?.contains(target)) return;
+            if (popoverRef.current?.contains(target)) return;
+
+            setOpen(false);
+        };
+
+        const handleEscape = (event: KeyboardEvent) => {
+            if (event.key === "Escape") {
+                setOpen(false);
+            }
+        };
+
+        window.addEventListener("resize", handleResize);
+        window.addEventListener("scroll", handleScroll, true);
+        document.addEventListener("mousedown", handlePointerDown);
+        document.addEventListener("keydown", handleEscape);
+
+        return () => {
+            window.removeEventListener("resize", handleResize);
+            window.removeEventListener("scroll", handleScroll, true);
+            document.removeEventListener("mousedown", handlePointerDown);
+            document.removeEventListener("keydown", handleEscape);
+        };
+    }, [open]);
+
+    return (
+        <span
+            className="honor-info"
+            onMouseEnter={() => setOpen(true)}
+            onMouseLeave={() => setOpen(false)}
+        >
+            <button
+                ref={triggerRef}
+                type="button"
+                className="honor-info-trigger"
+                aria-label={`Show bonuses for ${rank.rank}`}
+                title={`Show bonuses for ${rank.rank}`}
+                onClick={() => setOpen((prev) => !prev)}
+            >
+                ?
+            </button>
+
+            {open && (
+                <div
+                    ref={popoverRef}
+                    className="honor-info-popover"
+                    style={{
+                        top: `${position.top}px`,
+                        left: `${position.left}px`,
+                    }}
+                >
+                    <table className="buildings-table snapshot-metrics-table">
+                        <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Honor Range</th>
+                            <th>Population mod</th>
+                            <th>OME mod</th>
+                            <th>Income mod</th>
+                            <th>Food mod</th>
+                            <th>Rune mod</th>
+                            <th>WPA mod</th>
+                            <th>TPA mod</th>
+                            <th>Votes</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>{rank.rank}</td>
+                            <td>{formatHonorRange(rank)}</td>
+                            <td>{rank.populationMod.toFixed(2)}</td>
+                            <td>{rank.omeMod.toFixed(2)}</td>
+                            <td>{rank.incomeMod.toFixed(2)}</td>
+                            <td>{rank.foodMod.toFixed(2)}</td>
+                            <td>{rank.runeMod.toFixed(2)}</td>
+                            <td>{rank.wpaMod.toFixed(2)}</td>
+                            <td>{rank.tpaMod.toFixed(2)}</td>
+                            <td>{rank.votes}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            )}
+        </span>
+    );
+};
 
 function App() {
     const [province, setProvince] = useState<Province>(initialProvince);
@@ -604,22 +782,26 @@ function App() {
                                         numeric: province.honorLevel,
                                     }}
                                     editor={
-                                        <select
-                                            className="snapshot-inline-select wide"
-                                            value={province.honorLevel}
-                                            onChange={(e) =>
-                                                setProvince((prev) => ({
-                                                    ...prev,
-                                                    honorLevel: Number(e.target.value),
-                                                }))
-                                            }
-                                        >
-                                            {HONOR_RANKS.map((rank, index) => (
-                                                <option key={rank} value={index}>
-                                                    {rank}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <div className="honor-edit-cell">
+                                            <select
+                                                className="snapshot-inline-select wide"
+                                                value={province.honorLevel}
+                                                onChange={(e) =>
+                                                    setProvince((prev) => ({
+                                                        ...prev,
+                                                        honorLevel: Number(e.target.value),
+                                                    }))
+                                                }
+                                            >
+                                                {HONOR_RANKS.map((rank) => (
+                                                    <option key={rank.level} value={rank.level}>
+                                                        {rank.rank}
+                                                    </option>
+                                                ))}
+                                            </select>
+
+                                            <HonorInfo honorLevel={province.honorLevel} />
+                                        </div>
                                     }
                                     formatDelta={(d) => `${Math.abs(d)} rank${Math.abs(d) === 1 ? "" : "s"}`}
                                     showPercentDelta={false}
