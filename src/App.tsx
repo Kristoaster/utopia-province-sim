@@ -1410,6 +1410,55 @@ function App() {
                                 />
 
                                 <SnapshotMetric
+                                    label="Raw unit offense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.rawUnitOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.rawUnitOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Horse offense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.rawHorseOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.rawHorseOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Prisoner offense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.rawPrisonerOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.rawPrisonerOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Horse capacity"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.horseCapacity,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.horseCapacity,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    showPercentDelta={false}
+                                />
+
+                                <SnapshotMetric
                                     label="Total mod offense"
                                     baseline={simpleMetricCell(
                                         baselineMetrics.militaryResult.modOffense,
@@ -1503,6 +1552,24 @@ function App() {
                                 />
                                 </tbody>
                             </table>
+
+                            {militaryResult.notes.length > 0 && (
+                                <div
+                                    style={{
+                                        marginTop: "0.5rem",
+                                        fontSize: "0.72rem",
+                                        color: "#facc15",
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "0.2rem",
+                                    }}
+                                >
+                                    {militaryResult.notes.map((note, index) => (
+                                        <div key={index}>• {note}</div>
+                                    ))}
+                                </div>
+                            )}
+
                         </section>
 
 

@@ -6,12 +6,42 @@ import { BUILDINGS } from "../data/buildings";
 import { calculateBE } from "./be.ts";
 
 export interface MilitaryResult {
+    rawUnitOffense: number;
+    rawHorseOffense: number;
+    rawPrisonerOffense: number;
     rawOffense: number;
     rawDefense: number;
     ome: number;
     dme: number;
     modOffense: number;
     modDefense: number;
+    horseCapacity: number;
+    horseCapHit: boolean;
+    notes: string[];
+}
+
+function getHorseOffensePerHorse(prov: Province): number {
+    const race = RACES[prov.race];
+
+    if (!race) return 2;
+
+    if (race.restrictions.noWarHorses) {
+        return 0;
+    }
+
+    return race.id === "HUMAN" ? 3 : 2;
+}
+
+function getPrisonerOffensePerPrisoner(_prov: Province): number {
+    // Age 114 rule per your spec:
+    // all active races use 8 offense prisoners
+    return 8;
+}
+
+function getHorseCapacity(prov: Province): number {
+    // Current project default:
+    // horses can only be sent by attacking units
+    return prov.soldiers + prov.offSpecs + prov.elites;
 }
 
 export function calculateMilitary(prov: Province): MilitaryResult {
@@ -20,12 +50,18 @@ export function calculateMilitary(prov: Province): MilitaryResult {
 
     if (!race) {
         return {
+            rawUnitOffense: 0,
+            rawHorseOffense: 0,
+            rawPrisonerOffense: 0,
             rawOffense: 0,
             rawDefense: 0,
             ome: 1,
             dme: 1,
             modOffense: 0,
             modDefense: 0,
+            horseCapacity: 0,
+            horseCapHit: false,
+            notes: [],
         };
     }
 
@@ -34,7 +70,7 @@ export function calculateMilitary(prov: Province): MilitaryResult {
     const eliteDefBonus = pers?.mods.eliteDefBonus ?? 0;
     const defSpecDefBonus = pers?.mods.defSpecDefBonus ?? 0;
 
-    const rawOffense =
+    const rawUnitOffense =
         prov.soldiers * units.soldier.off +
         prov.offSpecs * units.offSpec.off +
         prov.elites * units.elite.off;
@@ -43,6 +79,34 @@ export function calculateMilitary(prov: Province): MilitaryResult {
         prov.soldiers * units.soldier.def +
         prov.defSpecs * (units.defSpec.def + defSpecDefBonus) +
         prov.elites * (units.elite.def + eliteDefBonus);
+
+    const horseOffensePerHorse = getHorseOffensePerHorse(prov);
+    const prisonerOffensePerPrisoner = getPrisonerOffensePerPrisoner(prov);
+
+    const rawHorseOffense = prov.horses * horseOffensePerHorse;
+    const rawPrisonerOffense = prov.prisoners * prisonerOffensePerPrisoner;
+
+    const rawOffense =
+        rawUnitOffense +
+        rawHorseOffense +
+        rawPrisonerOffense;
+
+    const horseCapacity = getHorseCapacity(prov);
+    const horseCapHit = prov.horses > horseCapacity;
+
+    const notes: string[] = [];
+
+    if (race.restrictions.noWarHorses && prov.horses > 0) {
+        notes.push(
+            `${race.display} cannot use war horses in Age 114, so horse offense is treated as 0.`
+        );
+    }
+
+    if (horseCapHit) {
+        notes.push(
+            `Horse cap exceeded: ${prov.horses.toLocaleString()} horses vs ${horseCapacity.toLocaleString()} attacking units. All entered horses are currently counted in offense.`
+        );
+    }
 
     const acres = prov.acres || 1;
 
@@ -97,11 +161,17 @@ export function calculateMilitary(prov: Province): MilitaryResult {
     const modDefense = rawDefense * dme;
 
     return {
+        rawUnitOffense,
+        rawHorseOffense,
+        rawPrisonerOffense,
         rawOffense,
         rawDefense,
         ome,
         dme,
         modOffense,
         modDefense,
+        horseCapacity,
+        horseCapHit,
+        notes,
     };
 }
