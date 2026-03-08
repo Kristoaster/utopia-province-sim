@@ -22,8 +22,6 @@ import {
     simpleMetricCell,
 } from "./features/snapshot/snapshotDisplay";
 import type { SnapshotMetricCell } from "./features/snapshot/snapshotDisplay";
-import { ManualInputsPanel } from "./features/snapshot/ManualInputsPanel";
-import type { ManualOverrides } from "./features/snapshot/snapshotModel";
 
 const initialProvince: Province = {
     name: "Province",
@@ -31,7 +29,7 @@ const initialProvince: Province = {
     personality: "PALADIN",
 
     location: "0:0",
-    rulerName: " ",
+    rulerName: "",
     honorLevel: 0,
 
     acres: 0,
@@ -129,6 +127,7 @@ type SnapshotMetricProps = {
     label: string;
     baseline: SnapshotMetricCell;
     current: SnapshotMetricCell;
+    editor?: React.ReactNode;
     formatDelta?: (delta: number) => string;
     showPercentDelta?: boolean;
 };
@@ -137,6 +136,7 @@ const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
                                                            label,
                                                            baseline,
                                                            current,
+                                                           editor,
                                                            formatDelta,
                                                            showPercentDelta = true,
                                                        }) => {
@@ -164,15 +164,15 @@ const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
 
             deltaContent = (
                 <div className="snapshot-metric-delta-inner">
-          <span className={isPositive ? "value-good" : "value-bad"}>
-            {isPositive ? "+" : ""}
-              {deltaText}
-          </span>
+                    <span className={isPositive ? "value-good" : "value-bad"}>
+                        {isPositive ? "+" : ""}
+                        {deltaText}
+                    </span>
                     {showPercentDelta && pct !== null && (
                         <span className="snapshot-metric-delta-percent">
-              ({parseFloat(pct) > 0 ? "+" : ""}
+                            ({parseFloat(pct) > 0 ? "+" : ""}
                             {pct}%)
-            </span>
+                        </span>
                     )}
                 </div>
             );
@@ -201,6 +201,10 @@ const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
                 </div>
             </td>
 
+            <td className="snapshot-metric-edit">
+                {editor ?? "—"}
+            </td>
+
             <td className="snapshot-metric-delta">{deltaContent}</td>
         </tr>
     );
@@ -223,11 +227,7 @@ function App() {
         null
     );
 
-    const [manualOverrides, setManualOverrides] = useState<ManualOverrides>({});
-
     const [intelSource, setIntelSource] = useState<IntelSource>("CSV");
-
-    const snapshotIntelRow = province.rawIntel ?? null;
 
     const baselineMetrics = useMemo(
         () => computeProvinceMetrics(baselineProvince),
@@ -271,7 +271,6 @@ function App() {
         const cloned = cloneProvince(prov);
         setProvince(cloned);
         setBaselineProvince(cloneProvince(cloned));
-        setManualOverrides({});
     };
 
     // --- Intel upload handler ---
@@ -297,10 +296,7 @@ function App() {
 
     const handleSaveSnapshot = () => {
         // Clone so future edits to `province` don’t mutate the baseline object
-        setBaselineProvince({
-            ...province,
-            buildings: { ...province.buildings },
-        });
+        setBaselineProvince(cloneProvince(province));
     };
 
     const handleStartManual = () => {
@@ -309,7 +305,6 @@ function App() {
         setBaselineProvince(cloneProvince(fresh));
         setIntelProvinces([]);
         setSelectedIntelIndex(null);
-        setManualOverrides({});
     };
 
     const updateProvinceText =
@@ -457,291 +452,6 @@ function App() {
                     </div>
                 </div>
 
-                <div className="card">
-                    <div className="card-title">Simulation inputs</div>
-
-                    <div className="manual-section">
-                        <h4 className="manual-section-title">Identity</h4>
-                        <div className="control-grid">
-                            <div>
-                                <label>Province name</label>
-                                <input
-                                    type="text"
-                                    value={province.name}
-                                    onChange={updateProvinceText("name")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Ruler name</label>
-                                <input
-                                    type="text"
-                                    value={province.rulerName}
-                                    onChange={updateProvinceText("rulerName")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>KD location</label>
-                                <input
-                                    type="text"
-                                    value={province.location}
-                                    onChange={updateProvinceText("location")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Honor level</label>
-                                <input
-                                    type="number"
-                                    value={province.honorLevel}
-                                    onChange={updateProvinceNumber("honorLevel")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Race</label>
-                                <select
-                                    value={province.race}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            race: e.target.value as Province["race"],
-                                        }))
-                                    }
-                                >
-                                    {RACE_LIST.map((race) => (
-                                        <option key={race.id} value={race.id}>
-                                            {race.display}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div>
-                                <label>Personality</label>
-                                <select
-                                    value={province.personality}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            personality: e.target.value as Province["personality"],
-                                        }))
-                                    }
-                                >
-                                    {PERSONALITY_LIST.map((p) => (
-                                        <option key={p.id} value={p.id}>
-                                            {p.display}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="manual-section">
-                        <h4 className="manual-section-title">Population & Military</h4>
-                        <div className="control-grid">
-                            <div>
-                                <label>Land (acres)</label>
-                                <input type="number" value={province.acres} onChange={updateAcres}/>
-                            </div>
-
-                            <div>
-                                <label>Peasants</label>
-                                <input
-                                    type="number"
-                                    value={province.peasants}
-                                    onChange={updateProvinceNumber("peasants")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Soldiers</label>
-                                <input
-                                    type="number"
-                                    value={province.soldiers}
-                                    onChange={updateProvinceNumber("soldiers")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Off specs</label>
-                                <input
-                                    type="number"
-                                    value={province.offSpecs}
-                                    onChange={updateProvinceNumber("offSpecs")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Def specs</label>
-                                <input
-                                    type="number"
-                                    value={province.defSpecs}
-                                    onChange={updateProvinceNumber("defSpecs")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Elites</label>
-                                <input
-                                    type="number"
-                                    value={province.elites}
-                                    onChange={updateProvinceNumber("elites")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Thieves</label>
-                                <input
-                                    type="number"
-                                    value={province.thieves}
-                                    onChange={updateProvinceNumber("thieves")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Wizards</label>
-                                <input
-                                    type="number"
-                                    value={province.wizards}
-                                    onChange={updateProvinceNumber("wizards")}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="manual-section">
-                        <h4 className="manual-section-title">Economy & Resources</h4>
-                        <div className="control-grid">
-                            <div>
-                                <label>Gold</label>
-                                <input
-                                    type="number"
-                                    value={province.gold}
-                                    onChange={updateProvinceNumber("gold")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Food</label>
-                                <input
-                                    type="number"
-                                    value={province.food}
-                                    onChange={updateProvinceNumber("food")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Runes</label>
-                                <input
-                                    type="number"
-                                    value={province.runes}
-                                    onChange={updateProvinceNumber("runes")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Horses</label>
-                                <input
-                                    type="number"
-                                    value={province.horses}
-                                    onChange={updateProvinceNumber("horses")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Prisoners</label>
-                                <input
-                                    type="number"
-                                    value={province.prisoners}
-                                    onChange={updateProvinceNumber("prisoners")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Networth</label>
-                                <input
-                                    type="number"
-                                    value={province.networth}
-                                    onChange={updateProvinceNumber("networth")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Trade balance</label>
-                                <input
-                                    type="number"
-                                    value={province.tradeBalance}
-                                    onChange={updateProvinceNumber("tradeBalance")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Training credits</label>
-                                <input
-                                    type="number"
-                                    value={province.trainingCredits}
-                                    onChange={updateProvinceNumber("trainingCredits")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Building credits</label>
-                                <input
-                                    type="number"
-                                    value={province.buildingCredits}
-                                    onChange={updateProvinceNumber("buildingCredits")}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Wage rate (%)</label>
-                                <input
-                                    type="number"
-                                    value={province.wageRate * 100}
-                                    onChange={(e) => {
-                                        const value = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            wageRate: Number.isFinite(value) ? value / 100 : prev.wageRate,
-                                            intelWagePercent: Number.isFinite(value)
-                                                ? value
-                                                : prev.intelWagePercent,
-                                        }));
-                                    }}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Draft target (%)</label>
-                                <input
-                                    type="number"
-                                    value={province.draftTargetPercent}
-                                    onChange={updateProvinceNumber("draftTargetPercent")}
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="manual-section">
-                        <h4 className="manual-section-title">Buildings</h4>
-                        <div className="buildings-input-grid">
-                            {BUILDING_LIST.map((b) => (
-                                <div key={b.id}>
-                                    <label>{b.display}</label>
-                                    <input
-                                        type="number"
-                                        value={province.buildings[b.id] ?? 0}
-                                        onChange={updateBuilding(b.id)}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-
                 <h2 className="section-title">Current Snapshot</h2>
 
                 <div className="card throne-card">
@@ -757,7 +467,7 @@ function App() {
                                     ? ` (Honor ${province.honorLevel})`
                                     : ""}
                             </span>
-                                <span className={"pill"}>
+                                <span className="pill">
                                 {province.race} / {province.personality}
                             </span>
                                 <span className="pill">
@@ -780,6 +490,128 @@ function App() {
                     {/* Snapshot comparison table */}
                     <div className="card-columns snapshot-sections">
 
+                        <section className="snapshot-section snapshot-section--throne">
+                            <h3 className="snapshot-section-title-small">Basics</h3>
+
+                            <table className="buildings-table snapshot-metrics-table">
+                                <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th style={{textAlign: "right"}}>Baseline</th>
+                                    <th style={{textAlign: "right"}}>Current</th>
+                                    <th style={{textAlign: "right"}}>Edit</th>
+                                    <th style={{textAlign: "right"}}>Δ</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <SnapshotMetric
+                                    label="Province name"
+                                    baseline={{primary: baselineProvince.name, numeric: null}}
+                                    current={{primary: province.name, numeric: null}}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input wide"
+                                            type="text"
+                                            value={province.name}
+                                            onChange={updateProvinceText("name")}
+                                        />
+                                    }
+                                />
+
+                                <SnapshotMetric
+                                    label="Ruler name"
+                                    baseline={{primary: baselineProvince.rulerName, numeric: null}}
+                                    current={{primary: province.rulerName, numeric: null}}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input wide"
+                                            type="text"
+                                            value={province.rulerName}
+                                            onChange={updateProvinceText("rulerName")}
+                                        />
+                                    }
+                                />
+
+                                <SnapshotMetric
+                                    label="KD location"
+                                    baseline={{primary: baselineProvince.location, numeric: null}}
+                                    current={{primary: province.location, numeric: null}}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="text"
+                                            value={province.location}
+                                            onChange={updateProvinceText("location")}
+                                        />
+                                    }
+                                />
+
+                                <SnapshotMetric
+                                    label="Honor level"
+                                    baseline={simpleMetricCell(baselineProvince.honorLevel, (v) => v.toString())}
+                                    current={simpleMetricCell(province.honorLevel, (v) => v.toString())}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.honorLevel}
+                                            onChange={updateProvinceNumber("honorLevel")}
+                                        />
+                                    }
+                                    showPercentDelta={false}
+                                />
+
+                                <SnapshotMetric
+                                    label="Race"
+                                    baseline={{primary: baselineProvince.race, numeric: null}}
+                                    current={{primary: province.race, numeric: null}}
+                                    editor={
+                                        <select
+                                            className="snapshot-inline-select wide"
+                                            value={province.race}
+                                            onChange={(e) =>
+                                                setProvince((prev) => ({
+                                                    ...prev,
+                                                    race: e.target.value as Province["race"],
+                                                }))
+                                            }
+                                        >
+                                            {RACE_LIST.map((race) => (
+                                                <option key={race.id} value={race.id}>
+                                                    {race.display}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    }
+                                />
+
+                                <SnapshotMetric
+                                    label="Personality"
+                                    baseline={{primary: baselineProvince.personality, numeric: null}}
+                                    current={{primary: province.personality, numeric: null}}
+                                    editor={
+                                        <select
+                                            className="snapshot-inline-select wide"
+                                            value={province.personality}
+                                            onChange={(e) =>
+                                                setProvince((prev) => ({
+                                                    ...prev,
+                                                    personality: e.target.value as Province["personality"],
+                                                }))
+                                            }
+                                        >
+                                            {PERSONALITY_LIST.map((p) => (
+                                                <option key={p.id} value={p.id}>
+                                                    {p.display}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    }
+                                />
+                                </tbody>
+                            </table>
+                        </section>
+
                         {/* ECONOMY */}
                         <section className="snapshot-section snapshot-section--economy">
                             <h3 className="snapshot-section-title-small">Economy</h3>
@@ -790,6 +622,7 @@ function App() {
                                     <th>Metric</th>
                                     <th style={{textAlign: "right"}}>Baseline</th>
                                     <th style={{textAlign: "right"}}>Current</th>
+                                    <th style={{textAlign: "right"}}>Edit</th>
                                     <th style={{textAlign: "right"}}>Δ</th>
                                 </tr>
                                 </thead>
@@ -804,6 +637,14 @@ function App() {
                                         province.acres,
                                         (v) => v.toLocaleString()
                                     )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.acres}
+                                            onChange={updateAcres}
+                                        />
+                                    }
                                     formatDelta={(d) => d.toLocaleString()}
                                     showPercentDelta={false}
                                 />
@@ -818,6 +659,14 @@ function App() {
                                         province.peasants,
                                         (v) => v.toLocaleString()
                                     )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.peasants}
+                                            onChange={updateProvinceNumber("peasants")}
+                                        />
+                                    }
                                 />
 
                                 <SnapshotMetric
@@ -974,18 +823,21 @@ function App() {
                                     <td>Daily runes produced</td>
                                     <td style={{textAlign: "right"}}>—</td>
                                     <td style={{textAlign: "right"}}>— (TODO)</td>
+                                    <td style={{textAlign: "right"}}>—</td>
                                     <td style={{textAlign: "right"}}></td>
                                 </tr>
                                 <tr>
                                     <td>Daily runes decayed</td>
                                     <td style={{textAlign: "right"}}>—</td>
                                     <td style={{textAlign: "right"}}>— (TODO)</td>
+                                    <td style={{textAlign: "right"}}>—</td>
                                     <td style={{textAlign: "right"}}></td>
                                 </tr>
                                 <tr>
                                     <td>Net runes (daily)</td>
                                     <td style={{textAlign: "right"}}>—</td>
                                     <td style={{textAlign: "right"}}>— (TODO)</td>
+                                    <td style={{textAlign: "right"}}>—</td>
                                     <td style={{textAlign: "right"}}></td>
                                 </tr>
                                 </tbody>
@@ -1002,6 +854,7 @@ function App() {
                                     <th>Metric</th>
                                     <th style={{textAlign: "right"}}>Baseline</th>
                                     <th style={{textAlign: "right"}}>Current</th>
+                                    <th style={{textAlign: "right" }}>Edit</th>
                                     <th style={{textAlign: "right"}}>Δ</th>
                                 </tr>
                                 </thead>
@@ -1142,12 +995,14 @@ function App() {
                                     <td>Base attack time</td>
                                     <td style={{textAlign: "right"}}>—</td>
                                     <td style={{textAlign: "right"}}>— (TODO)</td>
+                                    <td style={{textAlign: "right"}}>—</td>
                                     <td style={{textAlign: "right"}}></td>
                                 </tr>
                                 <tr>
                                     <td>War attack time</td>
                                     <td style={{textAlign: "right"}}>—</td>
                                     <td style={{textAlign: "right"}}>— (TODO)</td>
+                                    <td style={{textAlign: "right"}}>—</td>
                                     <td style={{textAlign: "right"}}></td>
                                 </tr>
 
@@ -1191,7 +1046,7 @@ function App() {
                                     <th style={{textAlign: "right"}}>Base %</th>
                                     <th style={{textAlign: "right"}}>Base qty</th>
                                     <th style={{textAlign: "right"}}>Curr %</th>
-                                    <th style={{textAlign: "right"}}>Curr qty</th>
+                                    <th style={{textAlign: "right"}}>Edit qty</th>
                                     <th style={{textAlign: "right"}}>Δ %</th>
                                 </tr>
                                 </thead>
@@ -1226,7 +1081,12 @@ function App() {
                                                 {currPct.toFixed(1)}%
                                             </td>
                                             <td style={{textAlign: "right"}}>
-                                                {currQty.toLocaleString()}
+                                                <input
+                                                    className="snapshot-inline-input"
+                                                    type="number"
+                                                    value={currQty}
+                                                    onChange={updateBuilding(b.id)}
+                                                />
                                             </td>
                                             <td
                                                 style={{
@@ -1308,6 +1168,7 @@ function App() {
                                     <th>Component</th>
                                     <th style={{textAlign: "right"}}>Base NW</th>
                                     <th style={{textAlign: "right"}}>Curr NW</th>
+                                    <th style={{textAlign: "right"}}>Edit</th>
                                     <th style={{textAlign: "right"}}>Δ NW</th>
                                 </tr>
                                 </thead>
@@ -1366,22 +1227,6 @@ function App() {
                             </table>
                         </section>
                     </div>
-                </div>
-
-                <h2 className="section-title">Inputs & Overrides</h2>
-                <div className="card">
-                    <div className="card-title">Snapshot overrides</div>
-
-                    <ManualInputsPanel
-                        intelRow={snapshotIntelRow}
-                        manualOverrides={manualOverrides}
-                        onChange={(key, value) =>
-                            setManualOverrides((prev) => ({
-                                ...prev,
-                                [key]: value,
-                            }))
-                        }
-                    />
                 </div>
             </div>
         </>

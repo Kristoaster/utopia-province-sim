@@ -615,3 +615,27 @@ body {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     z-index: 10;
 }
+
+.snapshot-metric-edit {
+    text-align: right;
+    white-space: nowrap;
+}
+
+.snapshot-inline-input,
+.snapshot-inline-select {
+    width: 88px;
+    padding: 0.2rem 0.35rem;
+    border-radius: 0.3rem;
+    border: 1px solid #334155;
+    background: #020617;
+    color: #e5e7eb;
+    font-size: 0.75rem;
+}
+
+.snapshot-inline-input.wide {
+    width: 140px;
+}
+
+.snapshot-inline-select.wide {
+    width: 140px;
+}
