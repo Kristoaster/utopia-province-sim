@@ -1,6 +1,8 @@
 // src/utopia/calc/food.ts
 import type { Province } from "../types.ts";
 import { BUILDINGS, BARREN_FOOD_PER_ACRE } from "../data/buildings";
+import { FOOD } from "../data/constants.ts";
+import { RACES } from "../current/races";
 import { calculateBE } from "./be.ts";
 
 export interface FoodResult {
@@ -10,6 +12,8 @@ export interface FoodResult {
         total: number;
     };
     consumption: {
+        basePopulationConsumption: number;
+        raceConsumptionMultiplier: number;
         populationConsumption: number;
     };
     netPerTick: number;
@@ -19,23 +23,21 @@ export interface FoodResult {
 export function calculateFood(prov: Province): FoodResult {
     const beResult = calculateBE(prov);
     const be = beResult.be;
+    const race = RACES[prov.race];
 
     const farms = prov.buildings.FARMS ?? 0;
     const farmDef = BUILDINGS.FARMS;
 
-    // Farms: 60 bushels per day, affected by BE
     const farmsProduction =
         farms *
         (farmDef.flat?.food?.perBuildingPerTick ?? 60) *
         be;
 
-    // Barren: 2 bushels per acre per day, unaffected by BE
     const barrenProduction =
         prov.barrenAcres * BARREN_FOOD_PER_ACRE;
 
     const totalProduction = farmsProduction + barrenProduction;
 
-    // Consumption: 0.25 bushels per person per tick
     const totalPop =
         prov.peasants +
         prov.soldiers +
@@ -45,7 +47,14 @@ export function calculateFood(prov: Province): FoodResult {
         prov.thieves +
         prov.wizards;
 
-    const populationConsumption = totalPop * 0.25;
+    const basePopulationConsumption =
+        totalPop * FOOD.CONSUMPTION_PER_POP;
+
+    const foodConsumptionMod = race?.mods.foodConsumption ?? 0;
+    const raceConsumptionMultiplier = Math.max(0, 1 + foodConsumptionMod);
+
+    const populationConsumption =
+        basePopulationConsumption * raceConsumptionMultiplier;
 
     const netPerTick = totalProduction - populationConsumption;
     const projectedNextStock = prov.food + netPerTick;
@@ -57,6 +66,8 @@ export function calculateFood(prov: Province): FoodResult {
             total: totalProduction,
         },
         consumption: {
+            basePopulationConsumption,
+            raceConsumptionMultiplier,
             populationConsumption,
         },
         netPerTick,

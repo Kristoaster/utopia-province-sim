@@ -1,24 +1,23 @@
 // src/utopia/calc/military.ts
 import type { Province } from "../types.ts";
-import { getRace } from "../current/races";
-import { getPersonality } from "../current/personalities";
-
+import { RACES } from "../current/races";
+import { PERSONALITIES } from "../current/personalities";
+import { BUILDINGS } from "../data/buildings";
 import { calculateBE } from "./be.ts";
 
 export interface MilitaryResult {
     rawOffense: number;
     rawDefense: number;
-    ome: number;       // offense multiplier
-    dme: number;       // defense multiplier
+    ome: number;
+    dme: number;
     modOffense: number;
     modDefense: number;
 }
 
 export function calculateMilitary(prov: Province): MilitaryResult {
-    const race = getRace(prov.race);
-    const pers = getPersonality(prov.personality);
+    const race = RACES[prov.race];
+    const pers = PERSONALITIES[prov.personality];
 
-    // If race is missing for any reason, fall back to zeros instead of crashing
     if (!race) {
         return {
             rawOffense: 0,
@@ -32,7 +31,9 @@ export function calculateMilitary(prov: Province): MilitaryResult {
 
     const units = race.units;
 
-    // ---- 1) Raw offense & defense from units ----
+    const eliteDefBonus = pers?.mods.eliteDefBonus ?? 0;
+    const defSpecDefBonus = pers?.mods.defSpecDefBonus ?? 0;
+
     const rawOffense =
         prov.soldiers * units.soldier.off +
         prov.offSpecs * units.offSpec.off +
@@ -40,35 +41,57 @@ export function calculateMilitary(prov: Province): MilitaryResult {
 
     const rawDefense =
         prov.soldiers * units.soldier.def +
-        prov.defSpecs * units.defSpec.def +
-        prov.elites * units.elite.def;
+        prov.defSpecs * (units.defSpec.def + defSpecDefBonus) +
+        prov.elites * (units.elite.def + eliteDefBonus);
 
-    // ---- 2) OME/DME from TG/Forts + BE + race/pers mods ----
     const acres = prov.acres || 1;
 
     const tgCount = prov.buildings.TRAINING_GROUNDS ?? 0;
     const fortsCount = prov.buildings.FORTS ?? 0;
 
-    const tgPercent = (tgCount / acres) * 100;       // % of land as TGs
-    const fortsPercent = (fortsCount / acres) * 100; // % of land as Forts
+    const tgPercent = (tgCount / acres) * 100;
+    const fortsPercent = (fortsCount / acres) * 100;
 
-    const { be } = calculateBE(prov); // e.g. 1.00 for 100%, 1.10 for 110% BE
+    const { be } = calculateBE(prov);
 
-    // Assume: 1.5% OME per 1% TG, scaled by BE
-    const omeBonusFromBuildings = (tgPercent * 1.5 * be) / 100;
-    const dmeBonusFromBuildings = (fortsPercent * 1.5 * be) / 100;
+    const tgEffect = BUILDINGS.TRAINING_GROUNDS.percent?.ome;
+    const fortsEffect = BUILDINGS.FORTS.percent?.dme;
+
+    let omeBonusFromBuildings = 0;
+    if (tgEffect) {
+        const scaled =
+            tgPercent *
+            tgEffect.base *
+            (tgEffect.affectedByBE ? be : 1);
+
+        omeBonusFromBuildings = Math.min(scaled, tgEffect.max) / 100;
+    }
+
+    let dmeBonusFromBuildings = 0;
+    if (fortsEffect) {
+        const scaled =
+            fortsPercent *
+            fortsEffect.base *
+            (fortsEffect.affectedByBE ? be : 1);
+
+        dmeBonusFromBuildings = Math.min(scaled, fortsEffect.max) / 100;
+    }
 
     const omeFromBuildings = 1 + omeBonusFromBuildings;
-    const dme = 1 + dmeBonusFromBuildings;
+    const dmeFromBuildings = 1 + dmeBonusFromBuildings;
 
-    // Race + personality OME (e.g. Dark Elf +10%, Warrior +15%)
     const raceOmeBonus = race.mods.ome ?? 0;
     const persOmeBonus = pers?.mods.ome ?? 0;
+    const raceDmeBonus = race.mods.dme ?? 0;
 
     const ome =
         omeFromBuildings *
         (1 + raceOmeBonus) *
         (1 + persOmeBonus);
+
+    const dme =
+        dmeFromBuildings *
+        (1 + raceDmeBonus);
 
     const modOffense = rawOffense * ome;
     const modDefense = rawDefense * dme;
