@@ -3,7 +3,7 @@
 import type { Province, BuildingId } from "../types.ts";
 import { BUILDINGS } from "../data/buildings";
 import { BE as BE_CONST } from "../data/constants.ts";
-import { RACES } from "../age113/races";
+import { RACES } from "../current/races";
 
 export interface BEResult {
     be: number;

@@ -1,7 +1,7 @@
 // src/utopia/calc/income.ts
 import type { Province } from "../types.ts";
 import { ECONOMY, JOBS } from "../data/constants.ts";
-import { RACES } from "../age113/races";
+import { RACES } from "../current/races";
 import { calculateBE } from "./be.ts";
 
 export interface IncomeResult {

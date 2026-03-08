@@ -8,8 +8,8 @@ import React, {
 } from "react";
 import "./App.css";
 import type { Province, ScienceCategoryId } from "./utopia/types";
-import { RACE_LIST } from "./utopia/age113/races";
-import { PERSONALITY_LIST } from "./utopia/age113/personalities";
+import { RACE_LIST } from "./utopia/current/races";
+import { PERSONALITY_LIST } from "./utopia/current/personalities";
 import { BUILDING_LIST } from "./utopia/data/buildings";
 import { calculateBE } from "./utopia/calc/be.ts";
 import { calculateIncome } from "./utopia/calc/income.ts";

@@ -1,56 +1,7 @@
 // src/utopia/age113/races.ts
 
-import type { RaceId } from "../types";
-
-export interface RaceUnits {
-    soldier: { off: number; def: number };
-    offSpec: { off: number; def: number; cost?: number; nw?: number };
-    defSpec: { off: number; def: number; cost?: number; nw?: number };
-    elite: { off: number; def: number; cost: number; nw: number };
-}
-
-export interface Race {
-    id: RaceId;
-    display: string;
-    mods: {
-        income?: number; // income bonus (we'll use later)
-        be?: number;     // BE bonus (like Dwarf)
-        pop?: number;
-        birthRate?: number;
-        foodConsumption?: number // +0.5 = +50%; -1 = no food needed
-        wpa?: number;
-        tpa?: number;
-        runeProduction?: number;
-        runeCost?: number;
-        attackTime?: number;
-        militaryCasualties?: number;
-        draftCost?: number;
-        trainingCost?: number;
-        trainingTime?: number;
-        bookProduction?: number;
-        thieveryEffectiveness?: number;
-        horseOffenseBonus?: number;
-        mercCost?: number;
-        exploreCost?: number;
-        buildCost?: number;
-        gains?: number;
-        gainsWar?: number;
-        ome?: number;
-        wages?: number;
-        thiefCost?: number;
-    };
-    restrictions: {
-        noBarracks?: boolean;
-        noStables?: boolean;
-        noWarHorses?: boolean;
-        noTrainingGrounds?: boolean;
-        noDungeons?: boolean;
-        onlyThieveryIntel?: boolean;
-    };
-    spellbook: string[];
-    uniqueAbility: string;
-    units: RaceUnits;
-}
+import type { RaceId } from "../../types";
+import type { Race } from "../shared/races";
 
 export const RACES: Record<RaceId, Race> = {
     AVIAN: {

@@ -5,7 +5,7 @@ import {
     BARREN_EXTRA_POP,
 } from "../data/buildings.ts";
 import type { BuildingId, Province } from "../types.ts";
-import { RACES } from "../age113/races";
+import { RACES } from "../current/races";
 
 export function calculateMaxPopulation(prov: Province): number {
     // Completed buildings = sum of all building counts

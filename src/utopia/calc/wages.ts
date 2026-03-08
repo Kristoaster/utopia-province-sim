@@ -1,7 +1,7 @@
 // src/utopia/calc/wages.ts
 import type { Province } from "../types.ts";
 import { WAGES } from "../data/constants.ts";
-import { RACES } from "../age113/races";
+import { RACES } from "../current/races";
 import { BUILDINGS } from "../data/buildings";
 import { calculateBE } from "./be.ts";
 
