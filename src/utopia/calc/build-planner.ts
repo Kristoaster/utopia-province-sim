@@ -1,7 +1,7 @@
 // src/utopia/calc/build-planner.ts
 import type { Province, BuildingId } from "../types.ts";
 import { BUILDINGS } from "../data/buildings.ts";
-import { RACES } from "../current/races";
+import { getRace } from "../current/races";
 import { calculateIncome } from "./income.ts";
 import { calculateWages } from "./wages.ts";
 import { calculateFood } from "./food.ts";
@@ -89,7 +89,7 @@ export function generateSuggestedBuild(
     prov: Province,
     goals: BuildGoals
 ): BuildPlan {
-    const race = RACES[prov.race];
+    const race = getRace(prov.race);
 
     const currentBuildings: Partial<Record<BuildingId, number>> = {
         ...prov.buildings,

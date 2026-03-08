@@ -1,8 +1,8 @@
 // src/utopia/intel-parse.ts
 import Papa from "papaparse";
 import type { Province, RaceId, PersonalityId, BuildingId } from "./types";
-import { RACES } from "./current/races";
-import { PERSONALITIES } from "./current/personalities";
+import { getRace } from "./current/races";
+import { getPersonality } from "./current/personalities";
 import { SCIENCE_CATEGORIES, createEmptyScience, estimateScienceBooksFromEffect } from "./data/science";
 
 type IntelRow = Record<string, string>;
@@ -26,21 +26,17 @@ function parsePercent(value: string | undefined): number {
 function mapRaceId(name: string | undefined): RaceId {
     const fallback: RaceId = "HUMAN";
     if (!name) return fallback;
-    const key = name.trim().toUpperCase().replace(/\s+/g, "_");
-    if (key in RACES) {
-        return key as RaceId;
-    }
-    return fallback;
+
+    const key = name.trim().toUpperCase().replace(/\s+/g, "_") as RaceId;
+    return getRace(key) ? key : fallback;
 }
 
 function mapPersonalityId(name: string | undefined): PersonalityId {
     const fallback: PersonalityId = "TACTICIAN";
     if (!name) return fallback;
-    const key = name.trim().toUpperCase().replace(/\s+/g, "_");
-    if (key in PERSONALITIES) {
-        return key as PersonalityId;
-    }
-    return fallback;
+
+    const key = name.trim().toUpperCase().replace(/\s+/g, "_") as PersonalityId;
+    return getPersonality(key) ? key : fallback;
 }
 
 function rowToProvince(row: IntelRow): Province | null {

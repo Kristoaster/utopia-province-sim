@@ -3,7 +3,7 @@
 import type { Province, BuildingId } from "../types.ts";
 import { BUILDINGS } from "../data/buildings";
 import { BE as BE_CONST } from "../data/constants.ts";
-import { RACES } from "../current/races";
+import { getRace } from "../current/races";
 
 export interface BEResult {
     be: number;
@@ -39,7 +39,7 @@ export function calculateBE(prov: Province): BEResult {
             ? Math.min(availableWorkers / optimalWorkers, 1)
             : 1;
 
-    const race = RACES[prov.race];
+    const race = getRace(prov.race);
     const raceBeBonus = race?.mods.be ?? 0; // e.g. Dwarf +0.25, Faery -0.05
 
     // BE = 0.5 * (1 + jobFillRatio) * (1 + raceBeBonus)

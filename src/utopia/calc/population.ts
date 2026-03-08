@@ -5,7 +5,7 @@ import {
     BARREN_EXTRA_POP,
 } from "../data/buildings.ts";
 import type { BuildingId, Province } from "../types.ts";
-import { RACES } from "../current/races";
+import { getRace } from "../current/races";
 
 export function calculateMaxPopulation(prov: Province): number {
     // Completed buildings = sum of all building counts
@@ -35,7 +35,7 @@ export function calculateMaxPopulation(prov: Province): number {
     const rawLivingSpace = builtCapacity + barrenCapacity + homesExtra;
 
     // Race pop bonus (e.g. Halfling +15% pop)
-    const race = RACES[prov.race];
+    const race = getRace(prov.race);
     const racePopBonus = race?.mods.pop ?? 0;
 
     const maxPopulation = rawLivingSpace * (1 + racePopBonus);

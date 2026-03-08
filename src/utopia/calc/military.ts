@@ -1,7 +1,7 @@
 // src/utopia/calc/military.ts
 import type { Province } from "../types.ts";
-import { RACES } from "../current/races";
-import { PERSONALITIES } from "../current/personalities";
+import { getRace } from "../current/races";
+import { getPersonality } from "../current/personalities";
 
 import { calculateBE } from "./be.ts";
 
@@ -15,8 +15,8 @@ export interface MilitaryResult {
 }
 
 export function calculateMilitary(prov: Province): MilitaryResult {
-    const race = RACES[prov.race];
-    const pers = PERSONALITIES[prov.personality];
+    const race = getRace(prov.race);
+    const pers = getPersonality(prov.personality);
 
     // If race is missing for any reason, fall back to zeros instead of crashing
     if (!race) {

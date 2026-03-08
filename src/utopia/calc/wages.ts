@@ -1,7 +1,7 @@
 // src/utopia/calc/wages.ts
 import type { Province } from "../types.ts";
 import { WAGES } from "../data/constants.ts";
-import { RACES } from "../current/races";
+import { getRace } from "../current/races";
 import { BUILDINGS } from "../data/buildings";
 import { calculateBE } from "./be.ts";
 
@@ -33,7 +33,7 @@ export function calculateWages(prov: Province): WagesResult {
     const wageRate = prov.wageRate; // 1.0 = 100%
 
     // --- Race wages mod ---
-    const race = RACES[prov.race];
+    const race = getRace(prov.race);
     const raceWagesMod = race?.mods.wages ?? 0; // e.g. Dark Elf +0.20 wages
     const raceWagesMultiplier = 1 + raceWagesMod;
 

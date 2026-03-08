@@ -1,7 +1,7 @@
 // src/utopia/calc/income.ts
 import type { Province } from "../types.ts";
 import { ECONOMY, JOBS } from "../data/constants.ts";
-import { RACES } from "../current/races";
+import { getRace } from "../current/races";
 import { calculateBE } from "./be.ts";
 
 export interface IncomeResult {
@@ -18,7 +18,7 @@ export interface IncomeResult {
 }
 
 export function calculateIncome(prov: Province): IncomeResult {
-    const race = RACES[prov.race];
+    const race = getRace(prov.race);
     const { be } = calculateBE(prov);
 
     // --- Employment (Economy page) ---
