@@ -3,7 +3,7 @@ import Papa from "papaparse";
 import type { Province, RaceId, PersonalityId, BuildingId } from "./types";
 import { RACES } from "./age113/races";
 import { PERSONALITIES } from "./age113/personalities";
-import { SCIENCE_CATEGORIES, createEmptyScience } from "./data/science";
+import { SCIENCE_CATEGORIES, createEmptyScience, estimateScienceBooksFromEffect } from "./data/science";
 
 type IntelRow = Record<string, string>;
 
@@ -133,9 +133,11 @@ function rowToProvince(row: IntelRow): Province | null {
     const science = createEmptyScience();
 
     for (const category of SCIENCE_CATEGORIES) {
+        const effect = parsePercent(row[category.exportHeader]);
+
         science[category.id] = {
-            books: 0,
-            effect: parsePercent(row[category.exportHeader]),
+            books: estimateScienceBooksFromEffect(effect, acres),
+            effect,
         };
     }
 

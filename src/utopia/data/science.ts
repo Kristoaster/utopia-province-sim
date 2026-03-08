@@ -28,6 +28,33 @@ export const SCIENCE_CATEGORIES: ScienceCategoryDef[] = [
     { id: "finesse", label: "Finesse", exportHeader: "Fines" },
 ];
 
+/**
+ * Temporary placeholder formula.
+ * Easy to tune later.
+ *
+ * Example:
+ * 10% science on 1,000 acres -> 100,000 books
+ * because 10 * 1000 * 10 = 100,000
+ */
+export const TEMP_BOOKS_PER_PERCENT_PER_ACRE = 10;
+
+export function estimateScienceBooksFromEffect(
+    effectPercent: number,
+    acres: number
+): number {
+    const safeEffect = Number.isFinite(effectPercent)
+        ? Math.max(0, effectPercent)
+        : 0;
+
+    const safeAcres = Number.isFinite(acres)
+        ? Math.max(0, acres)
+        : 0;
+
+    return Math.round(
+        safeEffect * safeAcres * TEMP_BOOKS_PER_PERCENT_PER_ACRE
+    );
+}
+
 export function createEmptyScience(): ProvinceScience {
     return SCIENCE_CATEGORIES.reduce((acc, category) => {
         acc[category.id] = { books: 0, effect: 0 };

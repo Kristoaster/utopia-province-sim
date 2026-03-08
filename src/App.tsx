@@ -22,7 +22,7 @@ import {
     simpleMetricCell,
 } from "./features/snapshot/snapshotDisplay";
 import type { SnapshotMetricCell } from "./features/snapshot/snapshotDisplay";
-import { SCIENCE_CATEGORIES, createEmptyScience } from "./utopia/data/science";
+import { SCIENCE_CATEGORIES, createEmptyScience, estimateScienceBooksFromEffect } from "./utopia/data/science";
 
 const initialProvince: Province = {
     name: "Province",
@@ -360,23 +360,27 @@ function App() {
                 });
             };
 
-    const updateScienceValue =
-        (categoryId: ScienceCategoryId, field: "books" | "effect") =>
+    const updateScienceEffect =
+        (categoryId: ScienceCategoryId) =>
             (e: React.ChangeEvent<HTMLInputElement>) => {
                 const value = Number(e.target.value);
 
-                setProvince((prev) => ({
-                    ...prev,
-                    science: {
-                        ...prev.science,
-                        [categoryId]: {
-                            ...prev.science[categoryId],
-                            [field]: Number.isFinite(value)
-                                ? value
-                                : prev.science[categoryId][field],
+                setProvince((prev) => {
+                    const nextEffect = Number.isFinite(value)
+                        ? value
+                        : prev.science[categoryId].effect;
+
+                    return {
+                        ...prev,
+                        science: {
+                            ...prev.science,
+                            [categoryId]: {
+                                effect: nextEffect,
+                                books: estimateScienceBooksFromEffect(nextEffect, prev.acres),
+                            },
                         },
-                    },
-                }));
+                    };
+                });
             };
 
     const updateAcres = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -394,6 +398,14 @@ function App() {
                 acres,
                 builtAcres,
                 barrenAcres: Math.max(acres - builtAcres, 0),
+                science: SCIENCE_CATEGORIES.reduce((acc, category) => {
+                    const effect = prev.science[category.id].effect;
+                    acc[category.id] = {
+                        effect,
+                        books: estimateScienceBooksFromEffect(effect, acres),
+                    };
+                    return acc;
+                }, {} as Province["science"]),
             };
         });
     };
@@ -1384,18 +1396,27 @@ function App() {
                                     <th style={{textAlign: "right"}}>Base %</th>
                                     <th style={{textAlign: "right"}}>Curr books</th>
                                     <th style={{textAlign: "right"}}>Curr %</th>
-                                    <th style={{textAlign: "right"}}>Edit books</th>
                                     <th style={{textAlign: "right"}}>Edit %</th>
                                     <th style={{textAlign: "right"}}>Δ</th>
                                 </tr>
                                 </thead>
                                 <tbody>
                                 {SCIENCE_CATEGORIES.map((category) => {
-                                    const base = baselineProvince.science[category.id];
-                                    const curr = province.science[category.id];
+                                    const baseEffect = baselineProvince.science[category.id].effect;
+                                    const currEffect = province.science[category.id].effect;
 
-                                    const booksDiff = curr.books - base.books;
-                                    const effectDiff = curr.effect - base.effect;
+                                    const baseBooks = estimateScienceBooksFromEffect(
+                                        baseEffect,
+                                        baselineProvince.acres
+                                    );
+
+                                    const currBooks = estimateScienceBooksFromEffect(
+                                        currEffect,
+                                        province.acres
+                                    );
+
+                                    const booksDiff = currBooks - baseBooks;
+                                    const effectDiff = currEffect - baseEffect;
 
                                     const booksClass =
                                         booksDiff > 0 ? "value-good" : booksDiff < 0 ? "value-bad" : "";
@@ -1408,28 +1429,19 @@ function App() {
                                             <td>{category.label}</td>
 
                                             <td style={{textAlign: "right"}}>
-                                                {base.books.toLocaleString()}
+                                                {baseBooks.toLocaleString()}
                                             </td>
 
                                             <td style={{textAlign: "right"}}>
-                                                {base.effect.toFixed(2)}%
+                                                {baseEffect.toFixed(2)}%
                                             </td>
 
                                             <td style={{textAlign: "right"}}>
-                                                {curr.books.toLocaleString()}
+                                                {currBooks.toLocaleString()}
                                             </td>
 
                                             <td style={{textAlign: "right"}}>
-                                                {curr.effect.toFixed(2)}%
-                                            </td>
-
-                                            <td style={{textAlign: "right"}}>
-                                                <input
-                                                    className="snapshot-inline-input"
-                                                    type="number"
-                                                    value={curr.books}
-                                                    onChange={updateScienceValue(category.id, "books")}
-                                                />
+                                                {currEffect.toFixed(2)}%
                                             </td>
 
                                             <td style={{textAlign: "right"}}>
@@ -1437,8 +1449,8 @@ function App() {
                                                     className="snapshot-inline-input"
                                                     type="number"
                                                     step="0.01"
-                                                    value={curr.effect}
-                                                    onChange={updateScienceValue(category.id, "effect")}
+                                                    value={currEffect}
+                                                    onChange={updateScienceEffect(category.id)}
                                                 />
                                             </td>
 
