@@ -23,6 +23,7 @@ import {
 } from "./features/snapshot/snapshotDisplay";
 import type { SnapshotMetricCell } from "./features/snapshot/snapshotDisplay";
 import { SCIENCE_CATEGORIES, createEmptyScience, estimateScienceBooksFromEffect } from "./utopia/data/science";
+import { HONOR_RANKS, getHonorRankLabel } from "./utopia/data/honor";
 
 const initialProvince: Province = {
     name: "Province",
@@ -511,10 +512,7 @@ function App() {
                             </div>
                             <div className="throne-pills">
                             <span className="pill">
-                                Ruler: {province.rulerName}
-                                {province.honorLevel
-                                    ? ` (Honor ${province.honorLevel})`
-                                    : ""}
+                                Ruler: {province.rulerName} • Honor: {getHonorRankLabel(province.honorLevel)}
                             </span>
                                 <span className="pill">
                                 {province.race} / {province.personality}
@@ -596,17 +594,34 @@ function App() {
                                 />
 
                                 <SnapshotMetric
-                                    label="Honor level"
-                                    baseline={simpleMetricCell(baselineProvince.honorLevel, (v) => v.toString())}
-                                    current={simpleMetricCell(province.honorLevel, (v) => v.toString())}
+                                    label="Honor"
+                                    baseline={{
+                                        primary: getHonorRankLabel(baselineProvince.honorLevel),
+                                        numeric: baselineProvince.honorLevel,
+                                    }}
+                                    current={{
+                                        primary: getHonorRankLabel(province.honorLevel),
+                                        numeric: province.honorLevel,
+                                    }}
                                     editor={
-                                        <input
-                                            className="snapshot-inline-input"
-                                            type="number"
+                                        <select
+                                            className="snapshot-inline-select wide"
                                             value={province.honorLevel}
-                                            onChange={updateProvinceNumber("honorLevel")}
-                                        />
+                                            onChange={(e) =>
+                                                setProvince((prev) => ({
+                                                    ...prev,
+                                                    honorLevel: Number(e.target.value),
+                                                }))
+                                            }
+                                        >
+                                            {HONOR_RANKS.map((rank, index) => (
+                                                <option key={rank} value={index}>
+                                                    {rank}
+                                                </option>
+                                            ))}
+                                        </select>
                                     }
+                                    formatDelta={(d) => `${Math.abs(d)} rank${Math.abs(d) === 1 ? "" : "s"}`}
                                     showPercentDelta={false}
                                 />
 
