@@ -24,6 +24,7 @@ export interface ParsedFieldSource {
     kind: FieldSourceKind;
     intelColumns: string[];    // columns to read from IS export, if any
     allowsManualInput: boolean;
+    hasCalculatedValue: boolean;
 }
 
 /**
@@ -61,6 +62,7 @@ export function parseFieldSource(rawSource: string): ParsedFieldSource {
         kind,
         intelColumns,
         allowsManualInput,
+        hasCalculatedValue: isCalculated,
     };
 }
 

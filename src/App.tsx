@@ -1,8 +1,6 @@
 // src/App.tsx
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import "./App.css";
-// import type { BuildGoals, BuildPlan } from "./utopia/calc/build-planner.ts";
-// import { generateSuggestedBuild } from "./utopia/calc/build-planner.ts";
 import type { Province } from "./utopia/types";
 import { RACE_LIST } from "./utopia/age113/races";
 import { PERSONALITY_LIST } from "./utopia/age113/personalities";
@@ -23,11 +21,9 @@ import {
     toMetricCell,
     simpleMetricCell,
 } from "./features/snapshot/snapshotDisplay";
-// import { ManualInputsPanel } from "./features/snapshot/ManualInputsPanel";
-// import type {
-//     ManualOverrides,
-//     IntelRow as SnapshotIntelRow,
-// } from "./features/snapshot/snapshotModel";
+import type { SnapshotMetricCell } from "./features/snapshot/snapshotDisplay";
+import { ManualInputsPanel } from "./features/snapshot/ManualInputsPanel";
+import type { ManualOverrides } from "./features/snapshot/snapshotModel";
 
 const initialProvince: Province = {
     name: "Province",
@@ -92,7 +88,6 @@ function computeProvinceMetrics(prov: Province) {
     const beResult = calculateBE(prov);
     const incomeResult = calculateIncome(prov);
     const wagesResult = calculateWages(prov);
-    const netIncome = incomeResult.finalIncome - wagesResult.totalWages;
     const foodResult = calculateFood(prov);
     const militaryResult = calculateMilitary(prov);
     const maxPopulation = calculateMaxPopulation(prov);
@@ -106,55 +101,21 @@ function computeProvinceMetrics(prov: Province) {
         prov.thieves +
         prov.wizards;
 
-    const armyPop =
-        prov.soldiers +
-        prov.offSpecs +
-        prov.defSpecs +
-        prov.elites;
+    const dailyIncome = incomeResult.finalIncome * 24;
+    const dailyWages = wagesResult.totalWages * 24;
+    const dailyNetIncome =
+        (incomeResult.finalIncome - wagesResult.totalWages) * 24;
 
-    const thiefPop = prov.thieves;
-    const wizardPop = prov.wizards;
-
-    const jobsUnfilled = Math.max(
-        0,
-        beResult.jobs.optimalWorkers - beResult.jobs.filledJobs
-    );
-
-    const employmentPct =
-        beResult.jobs.optimalWorkers > 0
-            ? (beResult.jobs.filledJobs / beResult.jobs.optimalWorkers) * 100
-            : 100;
-
-    const baseBuildCostPerAcre = 0.05 * (prov.acres + 10000);
-    const baseRazeCostPerAcre = 300 + 0.05 * prov.acres;
-
-    const TICKS_PER_DAY = 24;
-
-    const dailyIncome = incomeResult.finalIncome * TICKS_PER_DAY;
-    const dailyWages = wagesResult.totalWages * TICKS_PER_DAY;
-    const dailyNetIncome = netIncome * TICKS_PER_DAY;
-
-    const dailyFoodProduced = foodResult.production.total * TICKS_PER_DAY;
+    const dailyFoodProduced = foodResult.production.total * 24;
     const dailyFoodConsumed =
-        foodResult.consumption.populationConsumption * TICKS_PER_DAY;
-    const dailyFoodNet = foodResult.netPerTick * TICKS_PER_DAY;
+        foodResult.consumption.populationConsumption * 24;
+    const dailyFoodNet = foodResult.netPerTick * 24;
 
     return {
         beResult,
-        incomeResult,
-        wagesResult,
-        netIncome,
-        foodResult,
         militaryResult,
         maxPopulation,
         totalPop,
-        armyPop,
-        thiefPop,
-        wizardPop,
-        jobsUnfilled,
-        employmentPct,
-        baseBuildCostPerAcre,
-        baseRazeCostPerAcre,
         dailyIncome,
         dailyWages,
         dailyNetIncome,
@@ -164,19 +125,12 @@ function computeProvinceMetrics(prov: Province) {
     };
 }
 
-type SnapshotMetricCell = {
-    primary: string;
-    secondary?: string | null;
-    numeric: number | null;
-};
-
 type SnapshotMetricProps = {
     label: string;
     baseline: SnapshotMetricCell;
     current: SnapshotMetricCell;
     formatDelta?: (delta: number) => string;
     showPercentDelta?: boolean;
-    currentClassNameOverride?: string;
 };
 
 const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
@@ -185,7 +139,6 @@ const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
                                                            current,
                                                            formatDelta,
                                                            showPercentDelta = true,
-                                                           currentClassNameOverride,
                                                        }) => {
     const hasBothNumbers =
         baseline.numeric !== null && current.numeric !== null;
@@ -226,10 +179,6 @@ const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
         }
     }
 
-    if (currentClassNameOverride) {
-        currentClassName += " " + currentClassNameOverride;
-    }
-
     return (
         <tr>
             <td className="snapshot-metric-label">{label}</td>
@@ -259,6 +208,12 @@ const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
 
 type IntelSource = "CSV" | "MANUAL";
 
+const cloneProvince = (prov: Province): Province => ({
+    ...prov,
+    buildings: { ...prov.buildings },
+    rawIntel: prov.rawIntel ? { ...prov.rawIntel } : undefined,
+});
+
 function App() {
     const [province, setProvince] = useState<Province>(initialProvince);
     const [baselineProvince, setBaselineProvince] =
@@ -268,51 +223,36 @@ function App() {
         null
     );
 
-    // const [manualOverrides, setManualOverrides] = useState<ManualOverrides>({});
+    const [manualOverrides, setManualOverrides] = useState<ManualOverrides>({});
 
     const [intelSource, setIntelSource] = useState<IntelSource>("CSV");
 
-    // const [goals, setGoals] = useState<BuildGoals>({
-    //     minNetIncome: 0,
-    //     noStarvation: true,
-    //     minTPA: 2,
-    //     minWPA: 2,
-    //     minGuildsPercent: 10,
-    //     minTDsPercent: 10,
-    //     maxRebuildPercent: 40,
-    //     focus: "HYBRID",
-    // });
+    const snapshotIntelRow = province.rawIntel ?? null;
 
-    // const [, setBuildPlan] = useState<BuildPlan | null>(null);
+    const baselineMetrics = useMemo(
+        () => computeProvinceMetrics(baselineProvince),
+        [baselineProvince]
+    );
 
-    // const handleGenerateSuggestion = () => {
-    //     const plan = generateSuggestedBuild(province, goals);
-    //     setBuildPlan(plan);
-    // };
+    const currentMetrics = useMemo(
+        () => computeProvinceMetrics(province),
+        [province]
+    );
 
-    // type ProvinceWithIntel = Province & { rawIntel?: SnapshotIntelRow };
+    const baselineNwpa = useMemo(() => toMetricCell(resolveNwpa(baselineProvince)), [baselineProvince]);
+    const currentNwpa = useMemo(() => toMetricCell(resolveNwpa(province)), [province]);
 
-    // const provinceWithIntel = province as ProvinceWithIntel;
-    // const snapshotIntelRow: SnapshotIntelRow | null =
-    //     provinceWithIntel.rawIntel ?? null;
+    const baselinePpa = useMemo(() => toMetricCell(resolvePpa(baselineProvince)), [baselineProvince]);
+    const currentPpa = useMemo(() => toMetricCell(resolvePpa(province)), [province]);
 
-    const baselineMetrics = computeProvinceMetrics(baselineProvince);
-    const currentMetrics = computeProvinceMetrics(province);
+    const baselineGcpa = useMemo(() => toMetricCell(resolveGcpa(baselineProvince)), [baselineProvince]);
+    const currentGcpa = useMemo(() => toMetricCell(resolveGcpa(province)), [province]);
 
-    const baselineNwpa = toMetricCell(resolveNwpa(baselineProvince));
-    const currentNwpa = toMetricCell(resolveNwpa(province));
+    const baselineRawTpa = useMemo(() => toMetricCell(resolveRawTpa(baselineProvince)), [baselineProvince]);
+    const currentRawTpa = useMemo(() => toMetricCell(resolveRawTpa(province)), [province]);
 
-    const baselinePpa = toMetricCell(resolvePpa(baselineProvince));
-    const currentPpa = toMetricCell(resolvePpa(province));
-
-    const baselineGcpa = toMetricCell(resolveGcpa(baselineProvince));
-    const currentGcpa = toMetricCell(resolveGcpa(province));
-
-    const baselineRawTpa = toMetricCell(resolveRawTpa(baselineProvince));
-    const currentRawTpa = toMetricCell(resolveRawTpa(province));
-
-    const baselineRawWpa = toMetricCell(resolveRawWpa(baselineProvince));
-    const currentRawWpa = toMetricCell(resolveRawWpa(province));
+    const baselineRawWpa = useMemo(() => toMetricCell(resolveRawWpa(baselineProvince)), [baselineProvince]);
+    const currentRawWpa = useMemo(() => toMetricCell(resolveRawWpa(province)), [province]);
 
     const {
         beResult,
@@ -327,6 +267,13 @@ function App() {
         dailyFoodNet,
     } = currentMetrics;
 
+    const loadProvince = (prov: Province) => {
+        const cloned = cloneProvince(prov);
+        setProvince(cloned);
+        setBaselineProvince(cloneProvince(cloned));
+        setManualOverrides({});
+    };
+
     // --- Intel upload handler ---
     const handleIntelUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -340,17 +287,7 @@ function App() {
             if (provinces.length > 0) {
                 setIntelProvinces(provinces);
                 setSelectedIntelIndex(0);
-
-                const first = provinces[0];
-
-                setProvince(first);
-                setBaselineProvince({
-                    ...first,
-                    buildings: { ...first.buildings },
-                });
-
-                // setBuildPlan(null);
-                // setManualOverrides({});
+                loadProvince(provinces[0]);
             } else {
                 alert("No valid provinces found in intel file.");
             }
@@ -363,6 +300,79 @@ function App() {
         setBaselineProvince({
             ...province,
             buildings: { ...province.buildings },
+        });
+    };
+
+    const handleStartManual = () => {
+        const fresh = cloneProvince(initialProvince);
+        setProvince(fresh);
+        setBaselineProvince(cloneProvince(fresh));
+        setIntelProvinces([]);
+        setSelectedIntelIndex(null);
+        setManualOverrides({});
+    };
+
+    const updateProvinceText =
+        (key: keyof Province) =>
+            (e: React.ChangeEvent<HTMLInputElement>) => {
+                const value = e.target.value;
+                setProvince((prev) => ({
+                    ...prev,
+                    [key]: value,
+                }));
+            };
+
+    const updateProvinceNumber =
+        (key: keyof Province) =>
+            (e: React.ChangeEvent<HTMLInputElement>) => {
+                const value = Number(e.target.value);
+                setProvince((prev) => ({
+                    ...prev,
+                    [key]: Number.isFinite(value) ? value : prev[key],
+                }));
+            };
+
+    const updateBuilding =
+        (buildingId: keyof Province["buildings"]) =>
+            (e: React.ChangeEvent<HTMLInputElement>) => {
+                const value = Number(e.target.value) || 0;
+
+                setProvince((prev) => {
+                    const buildings = {
+                        ...prev.buildings,
+                        [buildingId]: value,
+                    };
+
+                    const builtAcres = Object.values(buildings).reduce(
+                        (sum, v) => sum + (v || 0),
+                        0
+                    );
+
+                    return {
+                        ...prev,
+                        buildings,
+                        builtAcres,
+                        barrenAcres: Math.max(prev.acres - builtAcres, 0),
+                    };
+                });
+            };
+
+    const updateAcres = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = Number(e.target.value);
+
+        setProvince((prev) => {
+            const acres = Number.isFinite(value) ? value : prev.acres;
+            const builtAcres = Object.values(prev.buildings).reduce(
+                (sum, v) => sum + (v || 0),
+                0
+            );
+
+            return {
+                ...prev,
+                acres,
+                builtAcres,
+                barrenAcres: Math.max(acres - builtAcres, 0),
+            };
         });
     };
 
@@ -384,82 +394,81 @@ function App() {
 
                 {/* Intel loader at top */}
                 <div className="card">
-                <div className="card-title">Load intel</div>
+                    <div className="card-title">Load intel</div>
 
-                {/* Source Selector */}
-                <div
-                    className="control-grid"
-                    style={{ marginBottom: "0.5rem" }}
-                >
-                    <div>
-                        <label>Intel source</label>
-                        <select
-                            value={intelSource}
-                            onChange={(e) =>
-                                setIntelSource(e.target.value as IntelSource)
-                            }
-                        >
-                            <option value="CSV">CSV export from Intel Site</option>
-                            <option value="MANUAL">Manual entry</option>
-                        </select>
-                    </div>
+                    {/* Source Selector */}
+                    <div
+                        className="control-grid"
+                        style={{marginBottom: "0.5rem"}}
+                    >
+                        <div>
+                            <label>Intel source</label>
+                            <select
+                                value={intelSource}
+                                onChange={(e) => {
+                                    const next = e.target.value as IntelSource;
+                                    setIntelSource(next);
 
-                    {intelSource === "CSV" && (
-                        <>
-                            <div>
-                                <label>Load intel CSV - New Intel site - ALL tab - download CSV</label>
-                                <input
-                                    type="file"
-                                    accept=".csv"
-                                    onChange={handleIntelUpload}
-                                />
-                            </div>
+                                    if (next === "MANUAL") {
+                                        handleStartManual();
+                                    }
+                                }}
+                            >
+                                <option value="CSV">CSV export from Intel Site</option>
+                                <option value="MANUAL">Manual entry</option>
+                            </select>
+                        </div>
 
-                            {intelProvinces.length > 1 && (
+                        {intelSource === "CSV" && (
+                            <>
                                 <div>
-                                    <label>Province from intel</label>
-                                    <select
-                                        value={selectedIntelIndex ?? ""}
-                                        onChange={(e) => {
-                                            const idx = Number(e.target.value);
-                                            setSelectedIntelIndex(idx);
-                                            const chosen = intelProvinces[idx];
-                                            if (chosen) {
-                                                setProvince(chosen);
-                                                setBaselineProvince({
-                                                    ...chosen,
-                                                    buildings: { ...chosen.buildings },
-                                                });
-                                                // setBuildPlan(null);
-                                                // setManualOverrides({});
-                                            }
-                                        }}
-                                    >
-                                        {intelProvinces.map((prov, idx) => (
-                                            <option key={prov.name + idx} value={idx}>
-                                                {prov.name} ({prov.race} / {prov.personality})
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <label>Load intel CSV - New Intel site - ALL tab - download CSV</label>
+                                    <input
+                                        type="file"
+                                        accept=".csv"
+                                        onChange={handleIntelUpload}
+                                    />
                                 </div>
-                            )}
-                        </>
-                    )}
 
-                    {intelSource === "MANUAL" && (
-                        <>
-                            {/* Basic identity */}
+                                {intelProvinces.length > 1 && (
+                                    <div>
+                                        <label>Province from intel</label>
+                                        <select
+                                            value={selectedIntelIndex ?? ""}
+                                            onChange={(e) => {
+                                                const idx = Number(e.target.value);
+                                                setSelectedIntelIndex(idx);
+                                                const chosen = intelProvinces[idx];
+                                                if (chosen) {
+                                                    loadProvince(chosen);
+                                                }
+                                            }}
+                                        >
+                                            {intelProvinces.map((prov, idx) => (
+                                                <option key={prov.name + idx} value={idx}>
+                                                    {prov.name} ({prov.race} / {prov.personality})
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                <div className="card">
+                    <div className="card-title">Simulation inputs</div>
+
+                    <div className="manual-section">
+                        <h4 className="manual-section-title">Identity</h4>
+                        <div className="control-grid">
                             <div>
                                 <label>Province name</label>
                                 <input
                                     type="text"
                                     value={province.name}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            name: e.target.value,
-                                        }))
-                                    }
+                                    onChange={updateProvinceText("name")}
                                 />
                             </div>
 
@@ -468,26 +477,16 @@ function App() {
                                 <input
                                     type="text"
                                     value={province.rulerName}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            rulerName: e.target.value,
-                                        }))
-                                    }
+                                    onChange={updateProvinceText("rulerName")}
                                 />
                             </div>
 
                             <div>
-                                <label>KD location (e.g. 4:11)</label>
+                                <label>KD location</label>
                                 <input
                                     type="text"
                                     value={province.location}
-                                    onChange={(e) =>
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            location: e.target.value,
-                                        }))
-                                    }
+                                    onChange={updateProvinceText("location")}
                                 />
                             </div>
 
@@ -495,18 +494,11 @@ function App() {
                                 <label>Honor level</label>
                                 <input
                                     type="number"
-                                    value={province.honorLevel || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            honorLevel: Number.isFinite(v) ? v : prev.honorLevel,
-                                        }));
-                                    }}
+                                    value={province.honorLevel}
+                                    onChange={updateProvinceNumber("honorLevel")}
                                 />
                             </div>
 
-                            {/* Race / Personality */}
                             <div>
                                 <label>Race</label>
                                 <select
@@ -544,65 +536,32 @@ function App() {
                                     ))}
                                 </select>
                             </div>
+                        </div>
+                    </div>
 
-                            {/* Land + peasants */}
+                    <div className="manual-section">
+                        <h4 className="manual-section-title">Population & Military</h4>
+                        <div className="control-grid">
                             <div>
                                 <label>Land (acres)</label>
-                                <input
-                                    type="number"
-                                    value={province.acres || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => {
-                                            const acres = Number.isFinite(v) ? v : prev.acres;
-                                            const next = { ...prev, acres };
-                                            const builtFromBuildings = Object.values(
-                                                next.buildings
-                                            ).reduce(
-                                                (sum, val) => sum + (val || 0),
-                                                0
-                                            );
-                                            return {
-                                                ...next,
-                                                builtAcres: builtFromBuildings,
-                                                barrenAcres: Math.max(
-                                                    acres - builtFromBuildings,
-                                                    0
-                                                ),
-                                            };
-                                        });
-                                    }}
-                                />
+                                <input type="number" value={province.acres} onChange={updateAcres}/>
                             </div>
 
                             <div>
                                 <label>Peasants</label>
                                 <input
                                     type="number"
-                                    value={province.peasants || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            peasants: Number.isFinite(v) ? v : prev.peasants,
-                                        }));
-                                    }}
+                                    value={province.peasants}
+                                    onChange={updateProvinceNumber("peasants")}
                                 />
                             </div>
 
-                            {/* Military units */}
                             <div>
                                 <label>Soldiers</label>
                                 <input
                                     type="number"
-                                    value={province.soldiers || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            soldiers: Number.isFinite(v) ? v : prev.soldiers,
-                                        }));
-                                    }}
+                                    value={province.soldiers}
+                                    onChange={updateProvinceNumber("soldiers")}
                                 />
                             </div>
 
@@ -610,14 +569,8 @@ function App() {
                                 <label>Off specs</label>
                                 <input
                                     type="number"
-                                    value={province.offSpecs || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            offSpecs: Number.isFinite(v) ? v : prev.offSpecs,
-                                        }));
-                                    }}
+                                    value={province.offSpecs}
+                                    onChange={updateProvinceNumber("offSpecs")}
                                 />
                             </div>
 
@@ -625,14 +578,8 @@ function App() {
                                 <label>Def specs</label>
                                 <input
                                     type="number"
-                                    value={province.defSpecs || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            defSpecs: Number.isFinite(v) ? v : prev.defSpecs,
-                                        }));
-                                    }}
+                                    value={province.defSpecs}
+                                    onChange={updateProvinceNumber("defSpecs")}
                                 />
                             </div>
 
@@ -640,14 +587,8 @@ function App() {
                                 <label>Elites</label>
                                 <input
                                     type="number"
-                                    value={province.elites || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            elites: Number.isFinite(v) ? v : prev.elites,
-                                        }));
-                                    }}
+                                    value={province.elites}
+                                    onChange={updateProvinceNumber("elites")}
                                 />
                             </div>
 
@@ -655,14 +596,8 @@ function App() {
                                 <label>Thieves</label>
                                 <input
                                     type="number"
-                                    value={province.thieves || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            thieves: Number.isFinite(v) ? v : prev.thieves,
-                                        }));
-                                    }}
+                                    value={province.thieves}
+                                    onChange={updateProvinceNumber("thieves")}
                                 />
                             </div>
 
@@ -670,45 +605,94 @@ function App() {
                                 <label>Wizards</label>
                                 <input
                                     type="number"
-                                    value={province.wizards || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            wizards: Number.isFinite(v) ? v : prev.wizards,
-                                        }));
-                                    }}
+                                    value={province.wizards}
+                                    onChange={updateProvinceNumber("wizards")}
                                 />
                             </div>
+                        </div>
+                    </div>
 
-                            {/* Economy + misc */}
+                    <div className="manual-section">
+                        <h4 className="manual-section-title">Economy & Resources</h4>
+                        <div className="control-grid">
                             <div>
-                                <label>Gold (gc)</label>
+                                <label>Gold</label>
                                 <input
                                     type="number"
-                                    value={province.gold || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            gold: Number.isFinite(v) ? v : prev.gold,
-                                        }));
-                                    }}
+                                    value={province.gold}
+                                    onChange={updateProvinceNumber("gold")}
                                 />
                             </div>
 
                             <div>
-                                <label>Food (bushels)</label>
+                                <label>Food</label>
                                 <input
                                     type="number"
-                                    value={province.food || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            food: Number.isFinite(v) ? v : prev.food,
-                                        }));
-                                    }}
+                                    value={province.food}
+                                    onChange={updateProvinceNumber("food")}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Runes</label>
+                                <input
+                                    type="number"
+                                    value={province.runes}
+                                    onChange={updateProvinceNumber("runes")}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Horses</label>
+                                <input
+                                    type="number"
+                                    value={province.horses}
+                                    onChange={updateProvinceNumber("horses")}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Prisoners</label>
+                                <input
+                                    type="number"
+                                    value={province.prisoners}
+                                    onChange={updateProvinceNumber("prisoners")}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Networth</label>
+                                <input
+                                    type="number"
+                                    value={province.networth}
+                                    onChange={updateProvinceNumber("networth")}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Trade balance</label>
+                                <input
+                                    type="number"
+                                    value={province.tradeBalance}
+                                    onChange={updateProvinceNumber("tradeBalance")}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Training credits</label>
+                                <input
+                                    type="number"
+                                    value={province.trainingCredits}
+                                    onChange={updateProvinceNumber("trainingCredits")}
+                                />
+                            </div>
+
+                            <div>
+                                <label>Building credits</label>
+                                <input
+                                    type="number"
+                                    value={province.buildingCredits}
+                                    onChange={updateProvinceNumber("buildingCredits")}
                                 />
                             </div>
 
@@ -718,14 +702,12 @@ function App() {
                                     type="number"
                                     value={province.wageRate * 100}
                                     onChange={(e) => {
-                                        const v = Number(e.target.value);
+                                        const value = Number(e.target.value);
                                         setProvince((prev) => ({
                                             ...prev,
-                                            wageRate: Number.isFinite(v)
-                                                ? v / 100
-                                                : prev.wageRate,
-                                            intelWagePercent: Number.isFinite(v)
-                                                ? v
+                                            wageRate: Number.isFinite(value) ? value / 100 : prev.wageRate,
+                                            intelWagePercent: Number.isFinite(value)
+                                                ? value
                                                 : prev.intelWagePercent,
                                         }));
                                     }}
@@ -737,1043 +719,671 @@ function App() {
                                 <input
                                     type="number"
                                     value={province.draftTargetPercent}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            draftTargetPercent: Number.isFinite(v)
-                                                ? v
-                                                : prev.draftTargetPercent,
-                                        }));
-                                    }}
+                                    onChange={updateProvinceNumber("draftTargetPercent")}
                                 />
                             </div>
-
-                            <div>
-                                <label>War horses</label>
-                                <input
-                                    type="number"
-                                    value={province.horses || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            horses: Number.isFinite(v) ? v : prev.horses,
-                                        }));
-                                    }}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Prisoners</label>
-                                <input
-                                    type="number"
-                                    value={province.prisoners || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            prisoners: Number.isFinite(v) ? v : prev.prisoners,
-                                        }));
-                                    }}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Networth</label>
-                                <input
-                                    type="number"
-                                    value={province.networth || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            networth: Number.isFinite(v) ? v : prev.networth,
-                                        }));
-                                    }}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Trade balance</label>
-                                <input
-                                    type="number"
-                                    value={province.tradeBalance || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            tradeBalance: Number.isFinite(v)
-                                                ? v
-                                                : prev.tradeBalance,
-                                        }));
-                                    }}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Training credits</label>
-                                <input
-                                    type="number"
-                                    value={province.trainingCredits || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            trainingCredits: Number.isFinite(v)
-                                                ? v
-                                                : prev.trainingCredits,
-                                        }));
-                                    }}
-                                />
-                            </div>
-
-                            <div>
-                                <label>Building credits</label>
-                                <input
-                                    type="number"
-                                    value={province.buildingCredits || ""}
-                                    onChange={(e) => {
-                                        const v = Number(e.target.value);
-                                        setProvince((prev) => ({
-                                            ...prev,
-                                            buildingCredits: Number.isFinite(v)
-                                                ? v
-                                                : prev.buildingCredits,
-                                        }));
-                                    }}
-                                />
-                            </div>
-                        </>
-                    )}
-                </div>
-            </div>
-
-            <h2 className="section-title">Current Snapshot</h2>
-
-            <div className="card throne-card">
-                <div className="throne-header">
-                    <div>
-                        <div className="throne-name">{province.name}</div>
-                        <div className="throne-sub">
                         </div>
-                        <div className="throne-pills">
+                    </div>
+
+                    <div className="manual-section">
+                        <h4 className="manual-section-title">Buildings</h4>
+                        <div className="buildings-input-grid">
+                            {BUILDING_LIST.map((b) => (
+                                <div key={b.id}>
+                                    <label>{b.display}</label>
+                                    <input
+                                        type="number"
+                                        value={province.buildings[b.id] ?? 0}
+                                        onChange={updateBuilding(b.id)}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <h2 className="section-title">Current Snapshot</h2>
+
+                <div className="card throne-card">
+                    <div className="throne-header">
+                        <div>
+                            <div className="throne-name">{province.name}</div>
+                            <div className="throne-sub">
+                            </div>
+                            <div className="throne-pills">
                             <span className="pill">
                                 Ruler: {province.rulerName}
                                 {province.honorLevel
                                     ? ` (Honor ${province.honorLevel})`
                                     : ""}
                             </span>
-                            <span className={"pill"}>
+                                <span className={"pill"}>
                                 {province.race} / {province.personality}
                             </span>
-                            <span className="pill">
+                                <span className="pill">
                                 KD {province.location}
                             </span>
+                            </div>
                         </div>
-                    </div>
 
-                    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                        <button type="button" onClick={handleSaveSnapshot}>
-                            Save snapshot as baseline
-                        </button>
-                        <span style={{ fontSize: "0.7rem", color: "#cbd5f5" }}>
+                        <div style={{display: "flex", flexDirection: "column", gap: "0.35rem"}}>
+                            <button type="button" onClick={handleSaveSnapshot}>
+                                Save snapshot as baseline
+                            </button>
+                            <span style={{fontSize: "0.7rem", color: "#cbd5f5"}}>
                             Saves the <strong>New</strong> values as the new
                             comparison baseline.
                         </span>
+                        </div>
+                    </div>
+
+                    {/* Snapshot comparison table */}
+                    <div className="card-columns snapshot-sections">
+
+                        {/* ECONOMY */}
+                        <section className="snapshot-section snapshot-section--economy">
+                            <h3 className="snapshot-section-title-small">Economy</h3>
+
+                            <table className="buildings-table snapshot-metrics-table">
+                                <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th style={{textAlign: "right"}}>Baseline</th>
+                                    <th style={{textAlign: "right"}}>Current</th>
+                                    <th style={{textAlign: "right"}}>Δ</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <SnapshotMetric
+                                    label="Land"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.acres,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.acres,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    formatDelta={(d) => d.toLocaleString()}
+                                    showPercentDelta={false}
+                                />
+
+                                <SnapshotMetric
+                                    label="Peasants"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.peasants,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.peasants,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="PPA"
+                                    baseline={baselinePpa}
+                                    current={currentPpa}
+                                    formatDelta={(d) => d.toFixed(4)}
+                                />
+
+                                <SnapshotMetric
+                                    label="GC / Acre"
+                                    baseline={baselineGcpa}
+                                    current={currentGcpa}
+                                    formatDelta={(d) => d.toFixed(4)}
+                                />
+
+                                <SnapshotMetric
+                                    label="Building Efficiency"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.beResult.be * 100,
+                                        (v) => `${v.toFixed(2)}%`
+                                    )}
+                                    current={simpleMetricCell(
+                                        currentMetrics.beResult.be * 100,
+                                        (v) => `${v.toFixed(2)}%`
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Total population"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.totalPop,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        totalPop,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Max population"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.maxPopulation,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        maxPopulation,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Available jobs"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.beResult.jobs.totalJobs,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        beResult.jobs.totalJobs,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Workers needed for max efficiency"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.beResult.jobs.optimalWorkers,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        beResult.jobs.optimalWorkers,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Daily income"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.dailyIncome,
+                                        (v) => `${v.toFixed(0)}`
+                                    )}
+                                    current={simpleMetricCell(
+                                        dailyIncome,
+                                        (v) => `${v.toFixed(0)}`
+                                    )}
+                                    formatDelta={(d) => `${d.toFixed(0)}`}
+                                />
+
+                                <SnapshotMetric
+                                    label="Daily wages"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.dailyWages,
+                                        (v) => `${v.toFixed(0)}`
+                                    )}
+                                    current={simpleMetricCell(
+                                        dailyWages,
+                                        (v) => `${v.toFixed(0)}`
+                                    )}
+                                    formatDelta={(d) => `${d.toFixed(0)}`}
+                                />
+
+                                <SnapshotMetric
+                                    label="Net gc (daily)"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.dailyNetIncome,
+                                        (v) => `${v.toFixed(0)}`
+                                    )}
+                                    current={simpleMetricCell(
+                                        dailyNetIncome,
+                                        (v) => `${v.toFixed(0)}`
+                                    )}
+                                    formatDelta={(d) => `${d.toFixed(0)}`}
+                                />
+
+                                <SnapshotMetric
+                                    label="Daily food produced"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.dailyFoodProduced,
+                                        (v) => v.toFixed(1)
+                                    )}
+                                    current={simpleMetricCell(
+                                        dailyFoodProduced,
+                                        (v) => v.toFixed(1)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Daily food consumed"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.dailyFoodConsumed,
+                                        (v) => v.toFixed(1)
+                                    )}
+                                    current={simpleMetricCell(
+                                        dailyFoodConsumed,
+                                        (v) => v.toFixed(1)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Net food (daily)"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.dailyFoodNet,
+                                        (v) => v.toFixed(1)
+                                    )}
+                                    current={simpleMetricCell(
+                                        dailyFoodNet,
+                                        (v) => v.toFixed(1)
+                                    )}
+                                    formatDelta={(d) => d.toFixed(1)}
+                                />
+
+                                <tr>
+                                    <td>Daily runes produced</td>
+                                    <td style={{textAlign: "right"}}>—</td>
+                                    <td style={{textAlign: "right"}}>— (TODO)</td>
+                                    <td style={{textAlign: "right"}}></td>
+                                </tr>
+                                <tr>
+                                    <td>Daily runes decayed</td>
+                                    <td style={{textAlign: "right"}}>—</td>
+                                    <td style={{textAlign: "right"}}>— (TODO)</td>
+                                    <td style={{textAlign: "right"}}></td>
+                                </tr>
+                                <tr>
+                                    <td>Net runes (daily)</td>
+                                    <td style={{textAlign: "right"}}>—</td>
+                                    <td style={{textAlign: "right"}}>— (TODO)</td>
+                                    <td style={{textAlign: "right"}}></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </section>
+
+                        {/* MILITARY */}
+                        <section className="snapshot-section snapshot-section--military">
+                            <h3 className="snapshot-section-title-small">Military</h3>
+
+                            <table className="buildings-table snapshot-metrics-table">
+                                <thead>
+                                <tr>
+                                    <th>Metric</th>
+                                    <th style={{textAlign: "right"}}>Baseline</th>
+                                    <th style={{textAlign: "right"}}>Current</th>
+                                    <th style={{textAlign: "right"}}>Δ</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <SnapshotMetric
+                                    label="Draft target"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.draftTargetPercent,
+                                        (v) => `${v.toFixed(1)}%`
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.draftTargetPercent,
+                                        (v) => `${v.toFixed(1)}%`
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Wage rate"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.wageRate * 100,
+                                        (v) => `${v.toFixed(0)}%`
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.wageRate * 100,
+                                        (v) => `${v.toFixed(0)}%`
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Offensive military efficiency"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.ome * 100,
+                                        (v) => `${v.toFixed(1)}%`
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.ome * 100,
+                                        (v) => `${v.toFixed(1)}%`
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Defensive military efficiency"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.dme * 100,
+                                        (v) => `${v.toFixed(1)}%`
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.dme * 100,
+                                        (v) => `${v.toFixed(1)}%`
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Off specs"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.offSpecs,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.offSpecs,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Def specs"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.defSpecs,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.defSpecs,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Elites"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.elites,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.elites,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="War horses"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.horses,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.horses,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Prisoners"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.prisoners,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.prisoners,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Total mod offense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.modOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.modOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Total mod defense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.modDefense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.modDefense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <tr>
+                                    <td>Base attack time</td>
+                                    <td style={{textAlign: "right"}}>—</td>
+                                    <td style={{textAlign: "right"}}>— (TODO)</td>
+                                    <td style={{textAlign: "right"}}></td>
+                                </tr>
+                                <tr>
+                                    <td>War attack time</td>
+                                    <td style={{textAlign: "right"}}>—</td>
+                                    <td style={{textAlign: "right"}}>— (TODO)</td>
+                                    <td style={{textAlign: "right"}}></td>
+                                </tr>
+
+                                <SnapshotMetric
+                                    label="Thieves (#)"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.thieves,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.thieves,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Raw TPA"
+                                    baseline={baselineRawTpa}
+                                    current={currentRawTpa}
+                                    formatDelta={(d) => d.toFixed(4)}
+                                />
+
+                                <SnapshotMetric
+                                    label="Raw WPA"
+                                    baseline={baselineRawWpa}
+                                    current={currentRawWpa}
+                                    formatDelta={(d) => d.toFixed(4)}
+                                />
+                                </tbody>
+                            </table>
+                        </section>
+
+
+                        {/* BUILDINGS / GROWTH */}
+                        <section className="snapshot-section snapshot-section--buildings">
+                            <h3 className="snapshot-section-title-small">Buildings</h3>
+                            <table className="buildings-table snapshot-metrics-table">
+                                <thead>
+                                <tr>
+                                    <th>Building type</th>
+                                    <th style={{textAlign: "right"}}>Base %</th>
+                                    <th style={{textAlign: "right"}}>Base qty</th>
+                                    <th style={{textAlign: "right"}}>Curr %</th>
+                                    <th style={{textAlign: "right"}}>Curr qty</th>
+                                    <th style={{textAlign: "right"}}>Δ %</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {BUILDING_LIST.map((b) => {
+                                    const baseProv = baselineProvince;
+                                    const baseQty = baseProv.buildings[b.id] ?? 0;
+                                    const currQty = province.buildings[b.id] ?? 0;
+
+                                    const basePct =
+                                        baseProv.acres
+                                            ? (baseQty / baseProv.acres) * 100
+                                            : 0;
+                                    const currPct =
+                                        province.acres > 0
+                                            ? (currQty / province.acres) * 100
+                                            : 0;
+
+                                    const diffPct = currPct - basePct;
+                                    const showDiff = Math.abs(diffPct) > 1e-4;
+
+                                    return (
+                                        <tr key={b.id}>
+                                            <td>{b.display}</td>
+                                            <td style={{textAlign: "right"}}>
+                                                {basePct.toFixed(1)}%
+                                            </td>
+                                            <td style={{textAlign: "right"}}>
+                                                {baseQty.toLocaleString()}
+                                            </td>
+                                            <td style={{textAlign: "right"}}>
+                                                {currPct.toFixed(1)}%
+                                            </td>
+                                            <td style={{textAlign: "right"}}>
+                                                {currQty.toLocaleString()}
+                                            </td>
+                                            <td
+                                                style={{
+                                                    textAlign: "right",
+                                                    color: showDiff
+                                                        ? diffPct > 0
+                                                            ? "#4ade80"
+                                                            : "#f97373"
+                                                        : undefined,
+                                                }}
+                                            >
+                                                {showDiff
+                                                    ? `${diffPct > 0 ? "+" : ""}${diffPct.toFixed(
+                                                        1
+                                                    )}%`
+                                                    : ""}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                                </tbody>
+                            </table>
+                        </section>
+
+                        {/* SCIENCE */}
+                        <section className="snapshot-section snapshot-section--science">
+                            <h3 className="snapshot-section-title-small">Science</h3>
+                            <table className="buildings-table snapshot-metrics-table science-table">
+                                <thead>
+                                <tr>
+                                    <th>Science type</th>
+                                    <th style={{textAlign: "right"}}>Base books</th>
+                                    <th style={{textAlign: "right"}}>Base %</th>
+                                    <th style={{textAlign: "right"}}>Curr books</th>
+                                    <th style={{textAlign: "right"}}>Curr %</th>
+                                    <th style={{textAlign: "right"}}>Δ %</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {[
+                                    "Alchemy",
+                                    "Tools",
+                                    "Housing",
+                                    "Production",
+                                    "Bookkeeping",
+                                    "Artisan",
+                                    "Strategy",
+                                    "Siege",
+                                    "Tactics",
+                                    "Valor",
+                                    "Heroism",
+                                    "Resilience",
+                                    "Crime",
+                                    "Channeling",
+                                    "Shielding",
+                                    "Cunning",
+                                    "Sorcery",
+                                    "Finesse",
+                                ].map((name) => (
+                                    <tr key={name}>
+                                        <td>{name}</td>
+                                        <td style={{textAlign: "right"}}>—</td>
+                                        <td style={{textAlign: "right"}}>—</td>
+                                        <td style={{textAlign: "right"}}>—</td>
+                                        <td style={{textAlign: "right"}}>—</td>
+                                        <td style={{textAlign: "right"}}>—</td>
+                                    </tr>
+                                ))}
+                                </tbody>
+                            </table>
+                        </section>
+
+                        {/* NETWORTH BREAKDOWN (skeleton) */}
+                        <section className="snapshot-section snapshot-section--net">
+                            <h3 className="snapshot-section-title-small">Networth</h3>
+                            <table className="buildings-table snapshot-metrics-table">
+                                <thead>
+                                <tr>
+                                    <th>Component</th>
+                                    <th style={{textAlign: "right"}}>Base NW</th>
+                                    <th style={{textAlign: "right"}}>Curr NW</th>
+                                    <th style={{textAlign: "right"}}>Δ NW</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {[
+                                    "Peasants",
+                                    "Offspecs",
+                                    "Defspecs",
+                                    "Elites",
+                                    "War horses",
+                                    "Prisoners",
+                                    "Thieves",
+                                    "Wizards",
+                                    "Books",
+                                    "Buildings",
+                                    "Barren",
+                                ].map((comp) => (
+                                    <tr key={comp}>
+                                        <td>{comp} NW</td>
+                                        <td style={{textAlign: "right"}}>—</td>
+                                        <td style={{textAlign: "right"}}>—</td>
+                                        <td style={{textAlign: "right"}}>—</td>
+                                    </tr>
+                                ))}
+
+                                <SnapshotMetric
+                                    label="NW / Acre"
+                                    baseline={baselineNwpa}
+                                    current={currentNwpa}
+                                    formatDelta={(d) => d.toFixed(4)}
+                                />
+
+                                <tr>
+                                    <td>
+                                        <strong>Total NW</strong>
+                                    </td>
+                                    <td style={{textAlign: "right"}}>
+                                        {baselineProvince.networth.toLocaleString()}
+                                    </td>
+                                    <td style={{textAlign: "right"}}>
+                                        {province.networth.toLocaleString()}
+                                    </td>
+                                    <td style={{textAlign: "right"}}>
+                                        {(() => {
+                                            const diff =
+                                                province.networth -
+                                                baselineProvince.networth;
+                                            if (diff === 0) return "";
+                                            return `${
+                                                diff > 0 ? "+" : ""
+                                            }${diff.toLocaleString()}`;
+                                        })()}
+                                    </td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </section>
                     </div>
                 </div>
 
-                {/* Snapshot comparison table */}
-                <div className="card-columns snapshot-sections">
+                <h2 className="section-title">Inputs & Overrides</h2>
+                <div className="card">
+                    <div className="card-title">Snapshot overrides</div>
 
-                    {/* ECONOMY */}
-                    <section className="snapshot-section snapshot-section--economy">
-                        <h3 className="snapshot-section-title-small">Economy</h3>
-
-                        <table className="buildings-table snapshot-metrics-table">
-                            <thead>
-                            <tr>
-                                <th>Metric</th>
-                                <th style={{textAlign: "right"}}>Baseline</th>
-                                <th style={{textAlign: "right"}}>Current</th>
-                                <th style={{textAlign: "right"}}>Δ</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <SnapshotMetric
-                                label="Land"
-                                baseline={simpleMetricCell(
-                                    baselineProvince.acres,
-                                    (v) => v.toLocaleString()
-                                )}
-                                current={simpleMetricCell(
-                                    province.acres,
-                                    (v) => v.toLocaleString()
-                                )}
-                                formatDelta={(d) => d.toLocaleString()}
-                                showPercentDelta={false}
-                            />
-
-                            <SnapshotMetric
-                                label="Peasants"
-                                baseline={simpleMetricCell(
-                                    baselineProvince.peasants,
-                                    (v) => v.toLocaleString()
-                                )}
-                                current={simpleMetricCell(
-                                    province.peasants,
-                                    (v) => v.toLocaleString()
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="PPA"
-                                baseline={baselinePpa}
-                                current={currentPpa}
-                                formatDelta={(d) => d.toFixed(4)}
-                            />
-
-                            <SnapshotMetric
-                                label="GC / Acre"
-                                baseline={baselineGcpa}
-                                current={currentGcpa}
-                                formatDelta={(d) => d.toFixed(4)}
-                            />
-
-                            <SnapshotMetric
-                                label="Building Efficiency"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.beResult.be * 100,
-                                    (v) => `${v.toFixed(2)}%`
-                                )}
-                                current={simpleMetricCell(
-                                    currentMetrics.beResult.be * 100,
-                                    (v) => `${v.toFixed(2)}%`
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Total population"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.totalPop,
-                                    (v) => v.toLocaleString()
-                                )}
-                                current={simpleMetricCell(
-                                    totalPop,
-                                    (v) => v.toLocaleString()
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Max population"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.maxPopulation,
-                                    (v) => v.toLocaleString()
-                                )}
-                                current={simpleMetricCell(
-                                    maxPopulation,
-                                    (v) => v.toLocaleString()
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Available jobs"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.beResult.jobs.totalJobs,
-                                    (v) => v.toFixed(0)
-                                )}
-                                current={simpleMetricCell(
-                                    beResult.jobs.totalJobs,
-                                    (v) => v.toFixed(0)
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Workers needed for max efficiency"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.beResult.jobs.optimalWorkers,
-                                    (v) => v.toFixed(0)
-                                )}
-                                current={simpleMetricCell(
-                                    beResult.jobs.optimalWorkers,
-                                    (v) => v.toFixed(0)
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Daily income"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.dailyIncome,
-                                    (v) => `${v.toFixed(0)}`
-                                )}
-                                current={simpleMetricCell(
-                                    dailyIncome,
-                                    (v) => `${v.toFixed(0)}`
-                                )}
-                                formatDelta={(d) => `${d.toFixed(0)}`}
-                            />
-
-                            <SnapshotMetric
-                                label="Daily wages"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.dailyWages,
-                                    (v) => `${v.toFixed(0)}`
-                                )}
-                                current={simpleMetricCell(
-                                    dailyWages,
-                                    (v) => `${v.toFixed(0)}`
-                                )}
-                                formatDelta={(d) => `${d.toFixed(0)}`}
-                            />
-
-                            <SnapshotMetric
-                                label="Net gc (daily)"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.dailyNetIncome,
-                                    (v) => `${v.toFixed(0)}`
-                                )}
-                                current={simpleMetricCell(
-                                    dailyNetIncome,
-                                    (v) => `${v.toFixed(0)}`
-                                )}
-                                formatDelta={(d) => `${d.toFixed(0)}`}
-                            />
-
-                            <SnapshotMetric
-                                label="Daily food produced"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.dailyFoodProduced,
-                                    (v) => v.toFixed(1)
-                                )}
-                                current={simpleMetricCell(
-                                    dailyFoodProduced,
-                                    (v) => v.toFixed(1)
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Daily food consumed"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.dailyFoodConsumed,
-                                    (v) => v.toFixed(1)
-                                )}
-                                current={simpleMetricCell(
-                                    dailyFoodConsumed,
-                                    (v) => v.toFixed(1)
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Net food (daily)"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.dailyFoodNet,
-                                    (v) => v.toFixed(1)
-                                )}
-                                current={simpleMetricCell(
-                                    dailyFoodNet,
-                                    (v) => v.toFixed(1)
-                                )}
-                                formatDelta={(d) => d.toFixed(1)}
-                            />
-
-                            <tr>
-                                <td>Daily runes produced</td>
-                                <td style={{textAlign: "right"}}>—</td>
-                                <td style={{textAlign: "right"}}>— (TODO)</td>
-                                <td style={{textAlign: "right"}}></td>
-                            </tr>
-                            <tr>
-                                <td>Daily runes decayed</td>
-                                <td style={{textAlign: "right"}}>—</td>
-                                <td style={{textAlign: "right"}}>— (TODO)</td>
-                                <td style={{textAlign: "right"}}></td>
-                            </tr>
-                            <tr>
-                                <td>Net runes (daily)</td>
-                                <td style={{textAlign: "right"}}>—</td>
-                                <td style={{textAlign: "right"}}>— (TODO)</td>
-                                <td style={{textAlign: "right"}}></td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </section>
-
-                    {/* MILITARY */}
-                    <section className="snapshot-section snapshot-section--military">
-                        <h3 className="snapshot-section-title-small">Military</h3>
-
-                        <table className="buildings-table snapshot-metrics-table">
-                            <thead>
-                            <tr>
-                                <th>Metric</th>
-                                <th style={{textAlign: "right"}}>Baseline</th>
-                                <th style={{textAlign: "right"}}>Current</th>
-                                <th style={{textAlign: "right"}}>Δ</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <SnapshotMetric
-                                label="Draft target"
-                                baseline={simpleMetricCell(
-                                    baselineProvince.draftTargetPercent,
-                                    (v) => `${v.toFixed(1)}%`
-                                )}
-                                current={simpleMetricCell(
-                                    province.draftTargetPercent,
-                                    (v) => `${v.toFixed(1)}%`
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Wage rate"
-                                baseline={simpleMetricCell(
-                                    baselineProvince.wageRate * 100,
-                                    (v) => `${v.toFixed(0)}%`
-                                )}
-                                current={simpleMetricCell(
-                                    province.wageRate * 100,
-                                    (v) => `${v.toFixed(0)}%`
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Offensive military efficiency"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.militaryResult.ome * 100,
-                                    (v) => `${v.toFixed(1)}%`
-                                )}
-                                current={simpleMetricCell(
-                                    militaryResult.ome * 100,
-                                    (v) => `${v.toFixed(1)}%`
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Defensive military efficiency"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.militaryResult.dme * 100,
-                                    (v) => `${v.toFixed(1)}%`
-                                )}
-                                current={simpleMetricCell(
-                                    militaryResult.dme * 100,
-                                    (v) => `${v.toFixed(1)}%`
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Off specs"
-                                baseline={simpleMetricCell(
-                                    baselineProvince.offSpecs,
-                                    (v) => v.toLocaleString()
-                                )}
-                                current={simpleMetricCell(
-                                    province.offSpecs,
-                                    (v) => v.toLocaleString()
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Def specs"
-                                baseline={simpleMetricCell(
-                                    baselineProvince.defSpecs,
-                                    (v) => v.toLocaleString()
-                                )}
-                                current={simpleMetricCell(
-                                    province.defSpecs,
-                                    (v) => v.toLocaleString()
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Elites"
-                                baseline={simpleMetricCell(
-                                    baselineProvince.elites,
-                                    (v) => v.toLocaleString()
-                                )}
-                                current={simpleMetricCell(
-                                    province.elites,
-                                    (v) => v.toLocaleString()
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="War horses"
-                                baseline={simpleMetricCell(
-                                    baselineProvince.horses,
-                                    (v) => v.toLocaleString()
-                                )}
-                                current={simpleMetricCell(
-                                    province.horses,
-                                    (v) => v.toLocaleString()
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Prisoners"
-                                baseline={simpleMetricCell(
-                                    baselineProvince.prisoners,
-                                    (v) => v.toLocaleString()
-                                )}
-                                current={simpleMetricCell(
-                                    province.prisoners,
-                                    (v) => v.toLocaleString()
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Total mod offense"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.militaryResult.modOffense,
-                                    (v) => v.toFixed(0)
-                                )}
-                                current={simpleMetricCell(
-                                    militaryResult.modOffense,
-                                    (v) => v.toFixed(0)
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Total mod defense"
-                                baseline={simpleMetricCell(
-                                    baselineMetrics.militaryResult.modDefense,
-                                    (v) => v.toFixed(0)
-                                )}
-                                current={simpleMetricCell(
-                                    militaryResult.modDefense,
-                                    (v) => v.toFixed(0)
-                                )}
-                            />
-
-                            <tr>
-                                <td>Base attack time</td>
-                                <td style={{textAlign: "right"}}>—</td>
-                                <td style={{textAlign: "right"}}>— (TODO)</td>
-                                <td style={{textAlign: "right"}}></td>
-                            </tr>
-                            <tr>
-                                <td>War attack time</td>
-                                <td style={{textAlign: "right"}}>—</td>
-                                <td style={{textAlign: "right"}}>— (TODO)</td>
-                                <td style={{textAlign: "right"}}></td>
-                            </tr>
-
-                            <SnapshotMetric
-                                label="Thieves (#)"
-                                baseline={simpleMetricCell(
-                                    baselineProvince.thieves,
-                                    (v) => v.toLocaleString()
-                                )}
-                                current={simpleMetricCell(
-                                    province.thieves,
-                                    (v) => v.toLocaleString()
-                                )}
-                            />
-
-                            <SnapshotMetric
-                                label="Raw TPA"
-                                baseline={baselineRawTpa}
-                                current={currentRawTpa}
-                                formatDelta={(d) => d.toFixed(4)}
-                            />
-
-                            <SnapshotMetric
-                                label="Raw WPA"
-                                baseline={baselineRawWpa}
-                                current={currentRawWpa}
-                                formatDelta={(d) => d.toFixed(4)}
-                            />
-                            </tbody>
-                        </table>
-                    </section>
-
-
-                    {/* BUILDINGS / GROWTH */}
-                    <section className="snapshot-section snapshot-section--buildings">
-                        <h3 className="snapshot-section-title-small">Buildings</h3>
-                        <table className="buildings-table snapshot-metrics-table">
-                            <thead>
-                            <tr>
-                                <th>Building type</th>
-                                <th style={{textAlign: "right"}}>Base %</th>
-                                <th style={{textAlign: "right"}}>Base qty</th>
-                                <th style={{textAlign: "right"}}>Curr %</th>
-                                <th style={{textAlign: "right"}}>Curr qty</th>
-                                <th style={{textAlign: "right"}}>Δ %</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {BUILDING_LIST.map((b) => {
-                                const baseProv = baselineProvince;
-                                const baseQty = baseProv.buildings[b.id] ?? 0;
-                                const currQty = province.buildings[b.id] ?? 0;
-
-                                const basePct =
-                                    baseProv.acres
-                                        ? (baseQty / baseProv.acres) * 100
-                                        : 0;
-                                const currPct =
-                                    province.acres > 0
-                                        ? (currQty / province.acres) * 100
-                                        : 0;
-
-                                const diffPct = currPct - basePct;
-                                const showDiff = Math.abs(diffPct) > 1e-4;
-
-                                return (
-                                    <tr key={b.id}>
-                                        <td>{b.display}</td>
-                                        <td style={{textAlign: "right"}}>
-                                            {basePct.toFixed(1)}%
-                                        </td>
-                                        <td style={{textAlign: "right"}}>
-                                            {baseQty.toLocaleString()}
-                                        </td>
-                                        <td style={{textAlign: "right"}}>
-                                            {currPct.toFixed(1)}%
-                                        </td>
-                                        <td style={{textAlign: "right"}}>
-                                            {currQty.toLocaleString()}
-                                        </td>
-                                        <td
-                                            style={{
-                                                textAlign: "right",
-                                                color: showDiff
-                                                    ? diffPct > 0
-                                                        ? "#4ade80"
-                                                        : "#f97373"
-                                                    : undefined,
-                                            }}
-                                        >
-                                            {showDiff
-                                                ? `${diffPct > 0 ? "+" : ""}${diffPct.toFixed(
-                                                    1
-                                                )}%`
-                                                : ""}
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                            </tbody>
-                        </table>
-                    </section>
-
-                    {/* SCIENCE */}
-                    <section className="snapshot-section snapshot-section--science">
-                        <h3 className="snapshot-section-title-small">Science</h3>
-                        <table className="buildings-table snapshot-metrics-table science-table">
-                            <thead>
-                            <tr>
-                                <th>Science type</th>
-                                <th style={{textAlign: "right"}}>Base books</th>
-                                <th style={{ textAlign: "right" }}>Base %</th>
-                                <th style={{ textAlign: "right" }}>Curr books</th>
-                                <th style={{ textAlign: "right" }}>Curr %</th>
-                                <th style={{ textAlign: "right" }}>Δ %</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {[
-                                "Alchemy",
-                                "Tools",
-                                "Housing",
-                                "Production",
-                                "Bookkeeping",
-                                "Artisan",
-                                "Strategy",
-                                "Siege",
-                                "Tactics",
-                                "Valor",
-                                "Heroism",
-                                "Resilience",
-                                "Crime",
-                                "Channeling",
-                                "Shielding",
-                                "Cunning",
-                                "Sorcery",
-                                "Finesse",
-                            ].map((name) => (
-                                <tr key={name}>
-                                    <td>{name}</td>
-                                    <td style={{ textAlign: "right" }}>—</td>
-                                    <td style={{ textAlign: "right" }}>—</td>
-                                    <td style={{ textAlign: "right" }}>—</td>
-                                    <td style={{ textAlign: "right" }}>—</td>
-                                    <td style={{ textAlign: "right" }}>—</td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                    </section>
-
-                    {/* NETWORTH BREAKDOWN (skeleton) */}
-                    <section className="snapshot-section snapshot-section--net">
-                        <h3 className="snapshot-section-title-small">Networth</h3>
-                        <table className="buildings-table snapshot-metrics-table">
-                            <thead>
-                            <tr>
-                                <th>Component</th>
-                                <th style={{ textAlign: "right" }}>Base NW</th>
-                                <th style={{ textAlign: "right" }}>Curr NW</th>
-                                <th style={{ textAlign: "right" }}>Δ NW</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {[
-                                "Peasants",
-                                "Offspecs",
-                                "Defspecs",
-                                "Elites",
-                                "War horses",
-                                "Prisoners",
-                                "Thieves",
-                                "Wizards",
-                                "Books",
-                                "Buildings",
-                                "Barren",
-                            ].map((comp) => (
-                                <tr key={comp}>
-                                    <td>{comp} NW</td>
-                                    <td style={{ textAlign: "right" }}>—</td>
-                                    <td style={{ textAlign: "right" }}>—</td>
-                                    <td style={{ textAlign: "right" }}>—</td>
-                                </tr>
-                            ))}
-
-                            <SnapshotMetric
-                                label="NW / Acre"
-                                baseline={baselineNwpa}
-                                current={currentNwpa}
-                                formatDelta={(d) => d.toFixed(4)}
-                            />
-
-                            <tr>
-                                <td>
-                                    <strong>Total NW</strong>
-                                </td>
-                                <td style={{ textAlign: "right" }}>
-                                    {baselineProvince.networth.toLocaleString()}
-                                </td>
-                                <td style={{ textAlign: "right" }}>
-                                    {province.networth.toLocaleString()}
-                                </td>
-                                <td style={{ textAlign: "right" }}>
-                                    {(() => {
-                                        const diff =
-                                            province.networth -
-                                            baselineProvince.networth;
-                                        if (diff === 0) return "";
-                                        return `${
-                                            diff > 0 ? "+" : ""
-                                        }${diff.toLocaleString()}`;
-                                    })()}
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </section>
+                    <ManualInputsPanel
+                        intelRow={snapshotIntelRow}
+                        manualOverrides={manualOverrides}
+                        onChange={(key, value) =>
+                            setManualOverrides((prev) => ({
+                                ...prev,
+                                [key]: value,
+                            }))
+                        }
+                    />
                 </div>
             </div>
-
-            {/*/!* GOALS & OPTIMIZER *!/*/}
-            {/*<h2 className="section-title">Planning & Optimization</h2>*/}
-            {/*<div className="card">*/}
-            {/*    <div className="card-title">Goals & suggested build</div>*/}
-            {/*    <div className="control-grid">*/}
-            {/*        <div>*/}
-            {/*            <label>Target TPA (min)</label>*/}
-            {/*            <input*/}
-            {/*                type="number"*/}
-            {/*                step="0.1"*/}
-            {/*                value={goals.minTPA ?? ""}*/}
-            {/*                onChange={(e) =>*/}
-            {/*                    setGoals((prev) => ({*/}
-            {/*                        ...prev,*/}
-            {/*                        minTPA:*/}
-            {/*                            e.target.value === ""*/}
-            {/*                                ? undefined*/}
-            {/*                                : Number(e.target.value) || 0,*/}
-            {/*                    }))*/}
-            {/*                }*/}
-            {/*            />*/}
-            {/*        </div>*/}
-
-            {/*        <div>*/}
-            {/*            <label>Target WPA (min)</label>*/}
-            {/*            <input*/}
-            {/*                type="number"*/}
-            {/*                step="0.1"*/}
-            {/*                value={goals.minWPA ?? ""}*/}
-            {/*                onChange={(e) =>*/}
-            {/*                    setGoals((prev) => ({*/}
-            {/*                        ...prev,*/}
-            {/*                        minWPA:*/}
-            {/*                            e.target.value === ""*/}
-            {/*                                ? undefined*/}
-            {/*                                : Number(e.target.value) || 0,*/}
-            {/*                    }))*/}
-            {/*                }*/}
-            {/*            />*/}
-            {/*        </div>*/}
-
-            {/*        <div>*/}
-            {/*            <label>Min net income / tick (gc)</label>*/}
-            {/*            <input*/}
-            {/*                type="number"*/}
-            {/*                value={goals.minNetIncome ?? ""}*/}
-            {/*                onChange={(e) =>*/}
-            {/*                    setGoals((prev) => ({*/}
-            {/*                        ...prev,*/}
-            {/*                        minNetIncome:*/}
-            {/*                            e.target.value === ""*/}
-            {/*                                ? undefined*/}
-            {/*                                : Number(e.target.value) || 0,*/}
-            {/*                    }))*/}
-            {/*                }*/}
-            {/*            />*/}
-            {/*        </div>*/}
-
-            {/*        <div>*/}
-            {/*            <label>Max land to rebuild (%)</label>*/}
-            {/*            <input*/}
-            {/*                type="number"*/}
-            {/*                value={goals.maxRebuildPercent ?? ""}*/}
-            {/*                onChange={(e) =>*/}
-            {/*                    setGoals((prev) => ({*/}
-            {/*                        ...prev,*/}
-            {/*                        maxRebuildPercent:*/}
-            {/*                            e.target.value === ""*/}
-            {/*                                ? undefined*/}
-            {/*                                : Number(e.target.value) || 0,*/}
-            {/*                    }))*/}
-            {/*                }*/}
-            {/*            />*/}
-            {/*        </div>*/}
-
-            {/*        <div>*/}
-            {/*            <label>Build focus</label>*/}
-            {/*            <select*/}
-            {/*                value={goals.focus}*/}
-            {/*                onChange={(e) =>*/}
-            {/*                    setGoals((prev) => ({*/}
-            {/*                        ...prev,*/}
-            {/*                        focus: e.target.value as BuildGoals["focus"],*/}
-            {/*                    }))*/}
-            {/*                }*/}
-            {/*            >*/}
-            {/*                <option value="HYBRID">Hybrid</option>*/}
-            {/*                <option value="INCOME">Income</option>*/}
-            {/*                <option value="OFFENSE">Attacker</option>*/}
-            {/*                <option value="TM">T/M</option>*/}
-            {/*            </select>*/}
-            {/*        </div>*/}
-
-            {/*        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>*/}
-            {/*            <label>*/}
-            {/*                <input*/}
-            {/*                    type="checkbox"*/}
-            {/*                    checked={goals.noStarvation ?? false}*/}
-            {/*                    onChange={(e) =>*/}
-            {/*                        setGoals((prev) => ({*/}
-            {/*                            ...prev,*/}
-            {/*                            noStarvation: e.target.checked,*/}
-            {/*                        }))*/}
-            {/*                    }*/}
-            {/*                />{" "}*/}
-            {/*                Avoid starvation*/}
-            {/*            </label>*/}
-            {/*        </div>*/}
-
-            {/*        <div>*/}
-            {/*            <label>&nbsp;</label>*/}
-            {/*            <button type="button" onClick={handleGenerateSuggestion}>*/}
-            {/*                Generate suggested build*/}
-            {/*            </button>*/}
-            {/*        </div>*/}
-            {/*    </div>*/}
-            {/*</div>*/}
-
-
-            {/*/!* PROVINCE INPUTS (Intel + manual) *!/*/}
-            {/*<h2 className="section-title">Inputs & Overrides</h2>*/}
-            {/*<div className="card">*/}
-            {/*    <div className="card-title">Province inputs</div>*/}
-
-            {/*    <details style={{ marginTop: "0.75rem" }}>*/}
-            {/*        <summary style={{ cursor: "pointer", fontWeight: 600 }}>*/}
-            {/*            Manual Inputs / Overrides*/}
-            {/*        </summary>*/}
-
-            {/*        <div style={{ marginTop: "0.75rem" }}>*/}
-            {/*            <p className="help-text">*/}
-            {/*                Values here override intel for calculations. Leave a field blank to keep the*/}
-            {/*                intel value.*/}
-            {/*            </p>*/}
-
-            {/*            /!* Identity *!/*/}
-            {/*            <div className="manual-section">*/}
-            {/*                <h4 className="manual-section-title">Identity</h4>*/}
-            {/*                <div className="control-grid">*/}
-            {/*                    <div>*/}
-            {/*                        <label>Province name</label>*/}
-            {/*                        <input*/}
-            {/*                            type="text"*/}
-            {/*                            value={province.name}*/}
-            {/*                            onChange={(e) =>*/}
-            {/*                                setProvince((prev) => ({ ...prev, name: e.target.value }))*/}
-            {/*                            }*/}
-            {/*                        />*/}
-            {/*                    </div>*/}
-
-            {/*                    <div>*/}
-            {/*                        <label>Race</label>*/}
-            {/*                        <select*/}
-            {/*                            value={province.race}*/}
-            {/*                            onChange={(e) =>*/}
-            {/*                                setProvince((prev) => ({*/}
-            {/*                                    ...prev,*/}
-            {/*                                    race: e.target.value as Province["race"],*/}
-            {/*                                }))*/}
-            {/*                            }*/}
-            {/*                        >*/}
-            {/*                            {RACE_LIST.map((race) => (*/}
-            {/*                                <option key={race.id} value={race.id}>*/}
-            {/*                                    {race.display}*/}
-            {/*                                </option>*/}
-            {/*                            ))}*/}
-            {/*                        </select>*/}
-            {/*                    </div>*/}
-
-            {/*                    <div>*/}
-            {/*                        <label>Personality</label>*/}
-            {/*                        <select*/}
-            {/*                            value={province.personality}*/}
-            {/*                            onChange={(e) =>*/}
-            {/*                                setProvince((prev) => ({*/}
-            {/*                                    ...prev,*/}
-            {/*                                    personality: e.target.value as Province["personality"],*/}
-            {/*                                }))*/}
-            {/*                            }*/}
-            {/*                        >*/}
-            {/*                            {PERSONALITY_LIST.map((pers) => (*/}
-            {/*                                <option key={pers.id} value={pers.id}>*/}
-            {/*                                    {pers.display}*/}
-            {/*                                </option>*/}
-            {/*                            ))}*/}
-            {/*                        </select>*/}
-            {/*                    </div>*/}
-
-            {/*                    <div>*/}
-            {/*                        <label>Kingdom location (x:y)</label>*/}
-            {/*                        <input*/}
-            {/*                            type="text"*/}
-            {/*                            value={province.location}*/}
-            {/*                            onChange={(e) =>*/}
-            {/*                                setProvince((prev) => ({ ...prev, location: e.target.value }))*/}
-            {/*                            }*/}
-            {/*                        />*/}
-            {/*                    </div>*/}
-
-            {/*                    <div>*/}
-            {/*                        <label>Ruler name</label>*/}
-            {/*                        <input*/}
-            {/*                            type="text"*/}
-            {/*                            value={province.rulerName}*/}
-            {/*                            onChange={(e) =>*/}
-            {/*                                setProvince((prev) => ({ ...prev, rulerName: e.target.value }))*/}
-            {/*                            }*/}
-            {/*                        />*/}
-            {/*                    </div>*/}
-
-            {/*                    <div>*/}
-            {/*                        <label>Honor level</label>*/}
-            {/*                        <input*/}
-            {/*                            type="number"*/}
-            {/*                            value={province.honorLevel}*/}
-            {/*                            onChange={(e) =>*/}
-            {/*                                setProvince((prev) => ({*/}
-            {/*                                    ...prev,*/}
-            {/*                                    honorLevel: Number(e.target.value) || 0,*/}
-            {/*                                }))*/}
-            {/*                            }*/}
-            {/*                        />*/}
-            {/*                    </div>*/}
-            {/*                </div>*/}
-            {/*            </div>*/}
-
-            {/*            /!* Population & Military *!/*/}
-            {/*            <div className="manual-section">*/}
-            {/*                <h4 className="manual-section-title">Population & Military</h4>*/}
-            {/*                <div className="control-grid">*/}
-            {/*                    /!* TODO: wire your existing numeric inputs for peasants/soldiers/etc here *!/*/}
-            {/*                </div>*/}
-            {/*            </div>*/}
-
-            {/*            /!* Economy & Resources *!/*/}
-            {/*            <div className="manual-section">*/}
-            {/*                <h4 className="manual-section-title">Economy & Resources</h4>*/}
-            {/*                <div className="control-grid">*/}
-            {/*                    /!* TODO: wire gold, food, runes, horses, prisoners, wageRate *!/*/}
-            {/*                </div>*/}
-            {/*            </div>*/}
-
-            {/*            /!* Intel-only fields *!/*/}
-            {/*            <div className="manual-section">*/}
-            {/*                <h4 className="manual-section-title">Intel-only fields</h4>*/}
-            {/*                <div className="control-grid">*/}
-            {/*                    /!* TODO: intelOffenseHome, intelDefenseHome, intelWagePercent, draftTargetPercent *!/*/}
-            {/*                </div>*/}
-            {/*            </div>*/}
-
-            {/*            /!* Snapshot-based manual overrides *!/*/}
-            {/*            <div className="manual-section">*/}
-            {/*                <h4 className="manual-section-title">Snapshot overrides</h4>*/}
-            {/*                <ManualInputsPanel*/}
-            {/*                    intelRow={snapshotIntelRow}*/}
-            {/*                    manualOverrides={manualOverrides}*/}
-            {/*                    onChange={(key, value) =>*/}
-            {/*                        setManualOverrides((prev) => ({*/}
-            {/*                            ...prev,*/}
-            {/*                            [key]: value,*/}
-            {/*                        }))*/}
-            {/*                    }*/}
-            {/*                />*/}
-            {/*            </div>*/}
-            {/*        </div>*/}
-            {/*    </details>*/}
-
-            {/*    /!* Buildings manual entry *!/*/}
-            {/*    <hr />*/}
-            {/*    <div style={{ marginTop: "0.5rem" }}>*/}
-            {/*        <div*/}
-            {/*            className="card-title"*/}
-            {/*            style={{ fontSize: "0.8rem", marginBottom: "0.25rem" }}*/}
-            {/*        >*/}
-            {/*            Buildings (acres)*/}
-            {/*        </div>*/}
-            {/*        <div className="buildings-input-grid">*/}
-            {/*            {BUILDING_LIST.map((b) => (*/}
-            {/*                <div key={b.id}>*/}
-            {/*                    <label>{b.display}</label>*/}
-            {/*                    <input*/}
-            {/*                        type="number"*/}
-            {/*                        value={province.buildings[b.id] ?? 0}*/}
-            {/*                        onChange={(e) =>*/}
-            {/*                            setProvince((prev) => ({*/}
-            {/*                                ...prev,*/}
-            {/*                                buildings: {*/}
-            {/*                                    ...prev.buildings,*/}
-            {/*                                    [b.id]: Number(e.target.value) || 0,*/}
-            {/*                                },*/}
-            {/*                            }))*/}
-            {/*                        }*/}
-            {/*                    />*/}
-            {/*                </div>*/}
-            {/*            ))}*/}
-            {/*        </div>*/}
-            {/*    </div>*/}
-            {/*</div>*/}
-        </div>
         </>
     );
 }
