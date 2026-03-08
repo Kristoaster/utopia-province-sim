@@ -3,6 +3,7 @@ import Papa from "papaparse";
 import type { Province, RaceId, PersonalityId, BuildingId } from "./types";
 import { RACES } from "./age113/races";
 import { PERSONALITIES } from "./age113/personalities";
+import { SCIENCE_CATEGORIES, createEmptyScience } from "./data/science";
 
 type IntelRow = Record<string, string>;
 
@@ -129,6 +130,15 @@ function rowToProvince(row: IntelRow): Province | null {
     );
     const barrenAcres = Math.max(0, acres - builtAcres);
 
+    const science = createEmptyScience();
+
+    for (const category of SCIENCE_CATEGORIES) {
+        science[category.id] = {
+            books: 0,
+            effect: parsePercent(row[category.exportHeader]),
+        };
+    }
+
     const province: Province = {
         name: row["Name"] || "Unnamed Province",
         race,
@@ -150,6 +160,8 @@ function rowToProvince(row: IntelRow): Province | null {
         elites,
         thieves,
         wizards,
+
+        science,
 
         gold,
         wageRate: intelWagePercent ? intelWagePercent / 100 : 1.0,

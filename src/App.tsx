@@ -1,7 +1,7 @@
 // src/App.tsx
 import React, { useMemo, useState } from "react";
 import "./App.css";
-import type { Province } from "./utopia/types";
+import type { Province, ScienceCategoryId } from "./utopia/types";
 import { RACE_LIST } from "./utopia/age113/races";
 import { PERSONALITY_LIST } from "./utopia/age113/personalities";
 import { BUILDING_LIST } from "./utopia/data/buildings";
@@ -22,6 +22,7 @@ import {
     simpleMetricCell,
 } from "./features/snapshot/snapshotDisplay";
 import type { SnapshotMetricCell } from "./features/snapshot/snapshotDisplay";
+import { SCIENCE_CATEGORIES, createEmptyScience } from "./utopia/data/science";
 
 const initialProvince: Province = {
     name: "Province",
@@ -65,6 +66,8 @@ const initialProvince: Province = {
         DUNGEONS: 0,
     },
 
+    science: createEmptyScience(),
+
     gold: 0,
     wageRate: 1.0,
     food: 0,
@@ -80,6 +83,7 @@ const initialProvince: Province = {
     intelDefenseHome: 0,
     intelWagePercent: 100,
     draftTargetPercent: 60,
+
 };
 
 function computeProvinceMetrics(prov: Province) {
@@ -215,6 +219,10 @@ type IntelSource = "CSV" | "MANUAL";
 const cloneProvince = (prov: Province): Province => ({
     ...prov,
     buildings: { ...prov.buildings },
+    science: SCIENCE_CATEGORIES.reduce((acc, category) => {
+        acc[category.id] = { ...prov.science[category.id] };
+        return acc;
+    }, {} as Province["science"]),
     rawIntel: prov.rawIntel ? { ...prov.rawIntel } : undefined,
 });
 
@@ -352,6 +360,25 @@ function App() {
                 });
             };
 
+    const updateScienceValue =
+        (categoryId: ScienceCategoryId, field: "books" | "effect") =>
+            (e: React.ChangeEvent<HTMLInputElement>) => {
+                const value = Number(e.target.value);
+
+                setProvince((prev) => ({
+                    ...prev,
+                    science: {
+                        ...prev.science,
+                        [categoryId]: {
+                            ...prev.science[categoryId],
+                            [field]: Number.isFinite(value)
+                                ? value
+                                : prev.science[categoryId][field],
+                        },
+                    },
+                }));
+            };
+
     const updateAcres = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = Number(e.target.value);
 
@@ -369,6 +396,16 @@ function App() {
                 barrenAcres: Math.max(acres - builtAcres, 0),
             };
         });
+    };
+
+    const updateWageRatePercent = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = Number(e.target.value);
+
+        setProvince((prev) => ({
+            ...prev,
+            wageRate: Number.isFinite(value) ? value / 100 : prev.wageRate,
+            intelWagePercent: Number.isFinite(value) ? value : prev.intelWagePercent,
+        }));
     };
 
     return (
@@ -677,10 +714,110 @@ function App() {
                                 />
 
                                 <SnapshotMetric
+                                    label="Gold"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.gold,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.gold,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.gold}
+                                            onChange={updateProvinceNumber("gold")}
+                                        />
+                                    }
+                                />
+
+                                <SnapshotMetric
                                     label="GC / Acre"
                                     baseline={baselineGcpa}
                                     current={currentGcpa}
                                     formatDelta={(d) => d.toFixed(4)}
+                                />
+
+                                <SnapshotMetric
+                                    label="Food"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.food,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.food,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.food}
+                                            onChange={updateProvinceNumber("food")}
+                                        />
+                                    }
+                                />
+
+                                <SnapshotMetric
+                                    label="Runes"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.runes,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.runes,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.runes}
+                                            onChange={updateProvinceNumber("runes")}
+                                        />
+                                    }
+                                />
+
+                                <SnapshotMetric
+                                    label="Trade balance"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.tradeBalance,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.tradeBalance,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.tradeBalance}
+                                            onChange={updateProvinceNumber("tradeBalance")}
+                                        />
+                                    }
+                                />
+
+                                <SnapshotMetric
+                                    label="Building credits"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.buildingCredits,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.buildingCredits,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.buildingCredits}
+                                            onChange={updateProvinceNumber("buildingCredits")}
+                                        />
+                                    }
                                 />
 
                                 <SnapshotMetric
@@ -854,7 +991,7 @@ function App() {
                                     <th>Metric</th>
                                     <th style={{textAlign: "right"}}>Baseline</th>
                                     <th style={{textAlign: "right"}}>Current</th>
-                                    <th style={{textAlign: "right" }}>Edit</th>
+                                    <th style={{textAlign: "right"}}>Edit</th>
                                     <th style={{textAlign: "right"}}>Δ</th>
                                 </tr>
                                 </thead>
@@ -869,6 +1006,14 @@ function App() {
                                         province.draftTargetPercent,
                                         (v) => `${v.toFixed(1)}%`
                                     )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.draftTargetPercent}
+                                            onChange={updateProvinceNumber("draftTargetPercent")}
+                                        />
+                                    }
                                 />
 
                                 <SnapshotMetric
@@ -881,6 +1026,14 @@ function App() {
                                         province.wageRate * 100,
                                         (v) => `${v.toFixed(0)}%`
                                     )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.wageRate * 100}
+                                            onChange={updateWageRatePercent}
+                                        />
+                                    }
                                 />
 
                                 <SnapshotMetric
@@ -908,6 +1061,46 @@ function App() {
                                 />
 
                                 <SnapshotMetric
+                                    label="Training credits"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.trainingCredits,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.trainingCredits,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.trainingCredits}
+                                            onChange={updateProvinceNumber("trainingCredits")}
+                                        />
+                                    }
+                                />
+
+                                <SnapshotMetric
+                                    label="Soldiers"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.soldiers,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.soldiers,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.soldiers}
+                                            onChange={updateProvinceNumber("soldiers")}
+                                        />
+                                    }
+                                />
+
+                                <SnapshotMetric
                                     label="Off specs"
                                     baseline={simpleMetricCell(
                                         baselineProvince.offSpecs,
@@ -917,6 +1110,14 @@ function App() {
                                         province.offSpecs,
                                         (v) => v.toLocaleString()
                                     )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.offSpecs}
+                                            onChange={updateProvinceNumber("offSpecs")}
+                                        />
+                                    }
                                 />
 
                                 <SnapshotMetric
@@ -929,6 +1130,14 @@ function App() {
                                         province.defSpecs,
                                         (v) => v.toLocaleString()
                                     )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.defSpecs}
+                                            onChange={updateProvinceNumber("defSpecs")}
+                                        />
+                                    }
                                 />
 
                                 <SnapshotMetric
@@ -941,6 +1150,14 @@ function App() {
                                         province.elites,
                                         (v) => v.toLocaleString()
                                     )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.elites}
+                                            onChange={updateProvinceNumber("elites")}
+                                        />
+                                    }
                                 />
 
                                 <SnapshotMetric
@@ -953,6 +1170,14 @@ function App() {
                                         province.horses,
                                         (v) => v.toLocaleString()
                                     )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.horses}
+                                            onChange={updateProvinceNumber("horses")}
+                                        />
+                                    }
                                 />
 
                                 <SnapshotMetric
@@ -965,6 +1190,14 @@ function App() {
                                         province.prisoners,
                                         (v) => v.toLocaleString()
                                     )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.prisoners}
+                                            onChange={updateProvinceNumber("prisoners")}
+                                        />
+                                    }
                                 />
 
                                 <SnapshotMetric
@@ -1016,6 +1249,14 @@ function App() {
                                         province.thieves,
                                         (v) => v.toLocaleString()
                                     )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.thieves}
+                                            onChange={updateProvinceNumber("thieves")}
+                                        />
+                                    }
                                 />
 
                                 <SnapshotMetric
@@ -1023,6 +1264,26 @@ function App() {
                                     baseline={baselineRawTpa}
                                     current={currentRawTpa}
                                     formatDelta={(d) => d.toFixed(4)}
+                                />
+
+                                <SnapshotMetric
+                                    label="Wizards (#)"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.wizards,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.wizards,
+                                        (v) => v.toLocaleString()
+                                    )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.wizards}
+                                            onChange={updateProvinceNumber("wizards")}
+                                        />
+                                    }
                                 />
 
                                 <SnapshotMetric
@@ -1114,6 +1375,7 @@ function App() {
                         {/* SCIENCE */}
                         <section className="snapshot-section snapshot-section--science">
                             <h3 className="snapshot-section-title-small">Science</h3>
+
                             <table className="buildings-table snapshot-metrics-table science-table">
                                 <thead>
                                 <tr>
@@ -1122,39 +1384,81 @@ function App() {
                                     <th style={{textAlign: "right"}}>Base %</th>
                                     <th style={{textAlign: "right"}}>Curr books</th>
                                     <th style={{textAlign: "right"}}>Curr %</th>
-                                    <th style={{textAlign: "right"}}>Δ %</th>
+                                    <th style={{textAlign: "right"}}>Edit books</th>
+                                    <th style={{textAlign: "right"}}>Edit %</th>
+                                    <th style={{textAlign: "right"}}>Δ</th>
                                 </tr>
                                 </thead>
                                 <tbody>
-                                {[
-                                    "Alchemy",
-                                    "Tools",
-                                    "Housing",
-                                    "Production",
-                                    "Bookkeeping",
-                                    "Artisan",
-                                    "Strategy",
-                                    "Siege",
-                                    "Tactics",
-                                    "Valor",
-                                    "Heroism",
-                                    "Resilience",
-                                    "Crime",
-                                    "Channeling",
-                                    "Shielding",
-                                    "Cunning",
-                                    "Sorcery",
-                                    "Finesse",
-                                ].map((name) => (
-                                    <tr key={name}>
-                                        <td>{name}</td>
-                                        <td style={{textAlign: "right"}}>—</td>
-                                        <td style={{textAlign: "right"}}>—</td>
-                                        <td style={{textAlign: "right"}}>—</td>
-                                        <td style={{textAlign: "right"}}>—</td>
-                                        <td style={{textAlign: "right"}}>—</td>
-                                    </tr>
-                                ))}
+                                {SCIENCE_CATEGORIES.map((category) => {
+                                    const base = baselineProvince.science[category.id];
+                                    const curr = province.science[category.id];
+
+                                    const booksDiff = curr.books - base.books;
+                                    const effectDiff = curr.effect - base.effect;
+
+                                    const booksClass =
+                                        booksDiff > 0 ? "value-good" : booksDiff < 0 ? "value-bad" : "";
+
+                                    const effectClass =
+                                        effectDiff > 0 ? "value-good" : effectDiff < 0 ? "value-bad" : "";
+
+                                    return (
+                                        <tr key={category.id}>
+                                            <td>{category.label}</td>
+
+                                            <td style={{textAlign: "right"}}>
+                                                {base.books.toLocaleString()}
+                                            </td>
+
+                                            <td style={{textAlign: "right"}}>
+                                                {base.effect.toFixed(2)}%
+                                            </td>
+
+                                            <td style={{textAlign: "right"}}>
+                                                {curr.books.toLocaleString()}
+                                            </td>
+
+                                            <td style={{textAlign: "right"}}>
+                                                {curr.effect.toFixed(2)}%
+                                            </td>
+
+                                            <td style={{textAlign: "right"}}>
+                                                <input
+                                                    className="snapshot-inline-input"
+                                                    type="number"
+                                                    value={curr.books}
+                                                    onChange={updateScienceValue(category.id, "books")}
+                                                />
+                                            </td>
+
+                                            <td style={{textAlign: "right"}}>
+                                                <input
+                                                    className="snapshot-inline-input"
+                                                    type="number"
+                                                    step="0.01"
+                                                    value={curr.effect}
+                                                    onChange={updateScienceValue(category.id, "effect")}
+                                                />
+                                            </td>
+
+                                            <td style={{textAlign: "right"}}>
+                                                <div className="snapshot-cell-stack">
+                                                    <div className={booksClass}>
+                                                        {booksDiff === 0
+                                                            ? "—"
+                                                            : `${booksDiff > 0 ? "+" : ""}${booksDiff.toLocaleString()}`}
+                                                    </div>
+                                                    <div className={`snapshot-subvalue ${effectClass}`}>
+                                                        {effectDiff === 0
+                                                            ? ""
+                                                            : `${effectDiff > 0 ? "+" : ""}${effectDiff.toFixed(2)}%`}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                                 </tbody>
                             </table>
                         </section>
@@ -1191,6 +1495,7 @@ function App() {
                                         <td style={{textAlign: "right"}}>—</td>
                                         <td style={{textAlign: "right"}}>—</td>
                                         <td style={{textAlign: "right"}}>—</td>
+                                        <td style={{textAlign: "right"}}>—</td>
                                     </tr>
                                 ))}
 
@@ -1212,14 +1517,18 @@ function App() {
                                         {province.networth.toLocaleString()}
                                     </td>
                                     <td style={{textAlign: "right"}}>
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            value={province.networth}
+                                            onChange={updateProvinceNumber("networth")}
+                                        />
+                                    </td>
+                                    <td style={{textAlign: "right"}}>
                                         {(() => {
-                                            const diff =
-                                                province.networth -
-                                                baselineProvince.networth;
+                                            const diff = province.networth - baselineProvince.networth;
                                             if (diff === 0) return "";
-                                            return `${
-                                                diff > 0 ? "+" : ""
-                                            }${diff.toLocaleString()}`;
+                                            return `${diff > 0 ? "+" : ""}${diff.toLocaleString()}`;
                                         })()}
                                     </td>
                                 </tr>

@@ -1,6 +1,5 @@
 // src/utopia/types.ts
 
-// All Age 113 races
 export type RaceId =
     | "AVIAN"
     | "DARK_ELF"
@@ -13,7 +12,6 @@ export type RaceId =
     | "UNDEAD"
     | "GNOME";
 
-// All Age 113 personalities
 export type PersonalityId =
     | "ARTISAN"
     | "CLERIC"
@@ -26,7 +24,6 @@ export type PersonalityId =
     | "NECROMANCER"
     | "GENERAL";
 
-// Minimal building set for now
 export type BuildingId =
     | "HOMES"
     | "FARMS"
@@ -47,16 +44,41 @@ export type BuildingId =
     | "STABLES"
     | "DUNGEONS";
 
-// Represents the current state of a province
+export type ScienceCategoryId =
+    | "alchemy"
+    | "tools"
+    | "housing"
+    | "production"
+    | "bookkeeping"
+    | "artisan"
+    | "strategy"
+    | "siege"
+    | "tactics"
+    | "valor"
+    | "heroism"
+    | "resilience"
+    | "crime"
+    | "channeling"
+    | "shielding"
+    | "cunning"
+    | "sorcery"
+    | "finesse";
+
+export interface ScienceEntry {
+    books: number;
+    effect: number;
+}
+
+export type ProvinceScience = Record<ScienceCategoryId, ScienceEntry>;
+
 export interface Province {
     name: string;
     race: RaceId;
     personality: PersonalityId;
 
-    // NEW: throne-style metadata
-    location: string;   // e.g. "4:4"
-    rulerName: string;  // "Cayn"
-    honorLevel: number; // 1, 2, 3... (we can map to numbers later)
+    location: string;
+    rulerName: string;
+    honorLevel: number;
 
     acres: number;
     builtAcres: number;
@@ -70,13 +92,14 @@ export interface Province {
     thieves: number;
     wizards: number;
 
-    // how many of each building type we have
     buildings: Partial<Record<BuildingId, number>>;
 
-    gold: number;
-    wageRate: number; // 1.0 = 100% wages
+    science: ProvinceScience;
 
-    food: number; // current stored food (bushels)
+    gold: number;
+    wageRate: number;
+
+    food: number;
     runes: number;
     horses: number;
     prisoners: number;
@@ -90,7 +113,5 @@ export interface Province {
     intelWagePercent: number;
     draftTargetPercent: number;
 
-    // Full raw intel data for this province:
-    // every CSV column (header -> raw string value).
     rawIntel?: Record<string, string>;
 }
