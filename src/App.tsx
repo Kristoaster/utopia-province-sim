@@ -14,6 +14,15 @@ import { calculateWages } from "./utopia/calc/wages.ts";
 import { calculateFood } from "./utopia/calc/food.ts";
 import { parseIntelCsv } from "./utopia/intel-parse";
 import { calculateMaxPopulation } from "./utopia/calc/population.ts";
+import {
+    resolveNwpa,
+    resolvePpa,
+    resolveGcpa,
+    resolveRawTpa,
+    resolveRawWpa,
+    toMetricCell,
+    simpleMetricCell,
+} from "./features/snapshot/snapshotDisplay";
 // import { ManualInputsPanel } from "./features/snapshot/ManualInputsPanel";
 // import type {
 //     ManualOverrides,
@@ -155,44 +164,37 @@ function computeProvinceMetrics(prov: Province) {
     };
 }
 
+type SnapshotMetricCell = {
+    primary: string;
+    secondary?: string | null;
+    numeric: number | null;
+};
+
 type SnapshotMetricProps = {
     label: string;
-    baselineValue?: number | null;
-    currentValue: number;
-    /** Format a raw number for display (e.g. add units) */
-    format?: (value: number) => string;
-    /** Optionally format the delta differently, otherwise raw number is shown */
+    baseline: SnapshotMetricCell;
+    current: SnapshotMetricCell;
     formatDelta?: (delta: number) => string;
-    /** Whether to also show % delta when baseline != 0 */
     showPercentDelta?: boolean;
-    /** Extra class to apply to current value (for warn/ok/bad coloring) */
     currentClassNameOverride?: string;
 };
 
 const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
                                                            label,
-                                                           baselineValue,
-                                                           currentValue,
-                                                           format = (v) => v.toFixed(2),
+                                                           baseline,
+                                                           current,
                                                            formatDelta,
                                                            showPercentDelta = true,
                                                            currentClassNameOverride,
                                                        }) => {
-    const hasBaseline =
-        baselineValue !== undefined && baselineValue !== null;
-
-    const baselineDisplay = hasBaseline
-        ? format(baselineValue as number)
-        : "—";
-
-    const currentDisplay = format(currentValue);
+    const hasBothNumbers =
+        baseline.numeric !== null && current.numeric !== null;
 
     let deltaContent: React.ReactNode = null;
     let currentClassName = "snapshot-metric-value";
 
-    if (hasBaseline) {
-        const baseline = baselineValue as number;
-        const diff = currentValue - baseline;
+    if (hasBothNumbers) {
+        const diff = (current.numeric as number) - (baseline.numeric as number);
 
         if (Math.abs(diff) > 1e-6) {
             const isPositive = diff > 0;
@@ -201,23 +203,23 @@ const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
                 : diff.toFixed(2);
 
             const pct =
-                baseline !== 0
-                    ? ((diff / baseline) * 100).toFixed(1)
+                baseline.numeric !== 0
+                    ? ((diff / (baseline.numeric as number)) * 100).toFixed(1)
                     : null;
 
             currentClassName += isPositive ? " value-good" : " value-bad";
 
             deltaContent = (
                 <div className="snapshot-metric-delta-inner">
-                    <span className={isPositive ? "value-good" : "value-bad"}>
-                        {isPositive ? "+" : ""}
-                        {deltaText}
-                    </span>
+          <span className={isPositive ? "value-good" : "value-bad"}>
+            {isPositive ? "+" : ""}
+              {deltaText}
+          </span>
                     {showPercentDelta && pct !== null && (
                         <span className="snapshot-metric-delta-percent">
-                            ({parseFloat(pct) > 0 ? "+" : ""}
+              ({parseFloat(pct) > 0 ? "+" : ""}
                             {pct}%)
-                        </span>
+            </span>
                     )}
                 </div>
             );
@@ -231,14 +233,28 @@ const SnapshotMetric: React.FC<SnapshotMetricProps> = ({
     return (
         <tr>
             <td className="snapshot-metric-label">{label}</td>
+
             <td className="snapshot-metric-value baseline">
-                {baselineDisplay}
+                <div className="snapshot-cell-stack">
+                    <div>{baseline.primary}</div>
+                    {baseline.secondary && (
+                        <div className="snapshot-subvalue">{baseline.secondary}</div>
+                    )}
+                </div>
             </td>
-            <td className={currentClassName}>{currentDisplay}</td>
+
+            <td className={currentClassName}>
+                <div className="snapshot-cell-stack">
+                    <div>{current.primary}</div>
+                    {current.secondary && (
+                        <div className="snapshot-subvalue">{current.secondary}</div>
+                    )}
+                </div>
+            </td>
+
             <td className="snapshot-metric-delta">{deltaContent}</td>
         </tr>
     );
-
 };
 
 type IntelSource = "CSV" | "MANUAL";
@@ -282,6 +298,21 @@ function App() {
 
     const baselineMetrics = computeProvinceMetrics(baselineProvince);
     const currentMetrics = computeProvinceMetrics(province);
+
+    const baselineNwpa = toMetricCell(resolveNwpa(baselineProvince));
+    const currentNwpa = toMetricCell(resolveNwpa(province));
+
+    const baselinePpa = toMetricCell(resolvePpa(baselineProvince));
+    const currentPpa = toMetricCell(resolvePpa(province));
+
+    const baselineGcpa = toMetricCell(resolveGcpa(baselineProvince));
+    const currentGcpa = toMetricCell(resolveGcpa(province));
+
+    const baselineRawTpa = toMetricCell(resolveRawTpa(baselineProvince));
+    const currentRawTpa = toMetricCell(resolveRawTpa(province));
+
+    const baselineRawWpa = toMetricCell(resolveRawWpa(baselineProvince));
+    const currentRawWpa = toMetricCell(resolveRawWpa(province));
 
     const {
         beResult,
@@ -864,128 +895,205 @@ function App() {
                             <thead>
                             <tr>
                                 <th>Metric</th>
-                                <th style={{ textAlign: "right" }}>Baseline</th>
-                                <th style={{ textAlign: "right" }}>Current</th>
-                                <th style={{ textAlign: "right" }}>Δ</th>
+                                <th style={{textAlign: "right"}}>Baseline</th>
+                                <th style={{textAlign: "right"}}>Current</th>
+                                <th style={{textAlign: "right"}}>Δ</th>
                             </tr>
                             </thead>
                             <tbody>
                             <SnapshotMetric
                                 label="Land"
-                                baselineValue={baselineProvince.acres}
-                                currentValue={province.acres}
-                                format={(v) => v.toLocaleString()}
+                                baseline={simpleMetricCell(
+                                    baselineProvince.acres,
+                                    (v) => v.toLocaleString()
+                                )}
+                                current={simpleMetricCell(
+                                    province.acres,
+                                    (v) => v.toLocaleString()
+                                )}
                                 formatDelta={(d) => d.toLocaleString()}
                                 showPercentDelta={false}
                             />
 
                             <SnapshotMetric
                                 label="Peasants"
-                                baselineValue={baselineProvince.peasants}
-                                currentValue={province.peasants}
-                                format={(v) => v.toLocaleString()}
-                                showPercentDelta={true}
+                                baseline={simpleMetricCell(
+                                    baselineProvince.peasants,
+                                    (v) => v.toLocaleString()
+                                )}
+                                current={simpleMetricCell(
+                                    province.peasants,
+                                    (v) => v.toLocaleString()
+                                )}
+                            />
+
+                            <SnapshotMetric
+                                label="PPA"
+                                baseline={baselinePpa}
+                                current={currentPpa}
+                                formatDelta={(d) => d.toFixed(4)}
+                            />
+
+                            <SnapshotMetric
+                                label="GC / Acre"
+                                baseline={baselineGcpa}
+                                current={currentGcpa}
+                                formatDelta={(d) => d.toFixed(4)}
                             />
 
                             <SnapshotMetric
                                 label="Building Efficiency"
-                                baselineValue={baselineMetrics.beResult.be * 100}
-                                currentValue={beResult.be * 100}
-                                format={(v) => `${v.toFixed(2)}%`}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.beResult.be * 100,
+                                    (v) => `${v.toFixed(2)}%`
+                                )}
+                                current={simpleMetricCell(
+                                    currentMetrics.beResult.be * 100,
+                                    (v) => `${v.toFixed(2)}%`
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Total population"
-                                baselineValue={baselineMetrics.totalPop}
-                                currentValue={totalPop}
-                                format={(v) => v.toLocaleString()}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.totalPop,
+                                    (v) => v.toLocaleString()
+                                )}
+                                current={simpleMetricCell(
+                                    totalPop,
+                                    (v) => v.toLocaleString()
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Max population"
-                                baselineValue={baselineMetrics.maxPopulation}
-                                currentValue={maxPopulation}
-                                format={(v) => v.toLocaleString()}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.maxPopulation,
+                                    (v) => v.toLocaleString()
+                                )}
+                                current={simpleMetricCell(
+                                    maxPopulation,
+                                    (v) => v.toLocaleString()
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Available jobs"
-                                baselineValue={baselineMetrics.beResult.jobs.totalJobs}
-                                currentValue={beResult.jobs.totalJobs}
-                                format={(v) => v.toFixed(0)}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.beResult.jobs.totalJobs,
+                                    (v) => v.toFixed(0)
+                                )}
+                                current={simpleMetricCell(
+                                    beResult.jobs.totalJobs,
+                                    (v) => v.toFixed(0)
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Workers needed for max efficiency"
-                                baselineValue={baselineMetrics.beResult.jobs.optimalWorkers}
-                                currentValue={beResult.jobs.optimalWorkers}
-                                format={(v) => v.toFixed(0)}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.beResult.jobs.optimalWorkers,
+                                    (v) => v.toFixed(0)
+                                )}
+                                current={simpleMetricCell(
+                                    beResult.jobs.optimalWorkers,
+                                    (v) => v.toFixed(0)
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Daily income"
-                                baselineValue={baselineMetrics.dailyIncome}
-                                currentValue={dailyIncome}
-                                format={(v) => `${v.toFixed(0)}`}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.dailyIncome,
+                                    (v) => `${v.toFixed(0)}`
+                                )}
+                                current={simpleMetricCell(
+                                    dailyIncome,
+                                    (v) => `${v.toFixed(0)}`
+                                )}
                                 formatDelta={(d) => `${d.toFixed(0)}`}
                             />
 
                             <SnapshotMetric
                                 label="Daily wages"
-                                baselineValue={baselineMetrics.dailyWages}
-                                currentValue={dailyWages}
-                                format={(v) => `${v.toFixed(0)}`}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.dailyWages,
+                                    (v) => `${v.toFixed(0)}`
+                                )}
+                                current={simpleMetricCell(
+                                    dailyWages,
+                                    (v) => `${v.toFixed(0)}`
+                                )}
                                 formatDelta={(d) => `${d.toFixed(0)}`}
                             />
 
                             <SnapshotMetric
                                 label="Net gc (daily)"
-                                baselineValue={baselineMetrics.dailyNetIncome}
-                                currentValue={dailyNetIncome}
-                                format={(v) => `${v.toFixed(0)}`}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.dailyNetIncome,
+                                    (v) => `${v.toFixed(0)}`
+                                )}
+                                current={simpleMetricCell(
+                                    dailyNetIncome,
+                                    (v) => `${v.toFixed(0)}`
+                                )}
                                 formatDelta={(d) => `${d.toFixed(0)}`}
                             />
 
                             <SnapshotMetric
                                 label="Daily food produced"
-                                baselineValue={baselineMetrics.dailyFoodProduced}
-                                currentValue={dailyFoodProduced}
-                                format={(v) => v.toFixed(1)}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.dailyFoodProduced,
+                                    (v) => v.toFixed(1)
+                                )}
+                                current={simpleMetricCell(
+                                    dailyFoodProduced,
+                                    (v) => v.toFixed(1)
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Daily food consumed"
-                                baselineValue={baselineMetrics.dailyFoodConsumed}
-                                currentValue={dailyFoodConsumed}
-                                format={(v) => v.toFixed(1)}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.dailyFoodConsumed,
+                                    (v) => v.toFixed(1)
+                                )}
+                                current={simpleMetricCell(
+                                    dailyFoodConsumed,
+                                    (v) => v.toFixed(1)
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Net food (daily)"
-                                baselineValue={baselineMetrics.dailyFoodNet}
-                                currentValue={dailyFoodNet}
-                                format={(v) => v.toFixed(1)}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.dailyFoodNet,
+                                    (v) => v.toFixed(1)
+                                )}
+                                current={simpleMetricCell(
+                                    dailyFoodNet,
+                                    (v) => v.toFixed(1)
+                                )}
                                 formatDelta={(d) => d.toFixed(1)}
                             />
 
-                            {/* TODO rows for runes */}
                             <tr>
                                 <td>Daily runes produced</td>
-                                <td style={{ textAlign: "right" }}>—</td>
-                                <td style={{ textAlign: "right" }}>— (TODO)</td>
-                                <td style={{ textAlign: "right" }}></td>
+                                <td style={{textAlign: "right"}}>—</td>
+                                <td style={{textAlign: "right"}}>— (TODO)</td>
+                                <td style={{textAlign: "right"}}></td>
                             </tr>
                             <tr>
                                 <td>Daily runes decayed</td>
-                                <td style={{ textAlign: "right" }}>—</td>
-                                <td style={{ textAlign: "right" }}>— (TODO)</td>
-                                <td style={{ textAlign: "right" }}></td>
+                                <td style={{textAlign: "right"}}>—</td>
+                                <td style={{textAlign: "right"}}>— (TODO)</td>
+                                <td style={{textAlign: "right"}}></td>
                             </tr>
                             <tr>
                                 <td>Net runes (daily)</td>
-                                <td style={{ textAlign: "right" }}>—</td>
-                                <td style={{ textAlign: "right" }}>— (TODO)</td>
-                                <td style={{ textAlign: "right" }}></td>
+                                <td style={{textAlign: "right"}}>—</td>
+                                <td style={{textAlign: "right"}}>— (TODO)</td>
+                                <td style={{textAlign: "right"}}></td>
                             </tr>
                             </tbody>
                         </table>
@@ -999,120 +1107,181 @@ function App() {
                             <thead>
                             <tr>
                                 <th>Metric</th>
-                                <th style={{ textAlign: "right" }}>Baseline</th>
-                                <th style={{ textAlign: "right" }}>Current</th>
-                                <th style={{ textAlign: "right" }}>Δ</th>
+                                <th style={{textAlign: "right"}}>Baseline</th>
+                                <th style={{textAlign: "right"}}>Current</th>
+                                <th style={{textAlign: "right"}}>Δ</th>
                             </tr>
                             </thead>
                             <tbody>
                             <SnapshotMetric
                                 label="Draft target"
-                                baselineValue={baselineProvince.draftTargetPercent}
-                                currentValue={province.draftTargetPercent}
-                                format={(v) => `${v.toFixed(1)}%`}
+                                baseline={simpleMetricCell(
+                                    baselineProvince.draftTargetPercent,
+                                    (v) => `${v.toFixed(1)}%`
+                                )}
+                                current={simpleMetricCell(
+                                    province.draftTargetPercent,
+                                    (v) => `${v.toFixed(1)}%`
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Wage rate"
-                                baselineValue={baselineProvince.wageRate * 100}
-                                currentValue={province.wageRate * 100}
-                                format={(v) => `${v.toFixed(0)}%`}
+                                baseline={simpleMetricCell(
+                                    baselineProvince.wageRate * 100,
+                                    (v) => `${v.toFixed(0)}%`
+                                )}
+                                current={simpleMetricCell(
+                                    province.wageRate * 100,
+                                    (v) => `${v.toFixed(0)}%`
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Offensive military efficiency"
-                                baselineValue={baselineMetrics.militaryResult.ome * 100}
-                                currentValue={militaryResult.ome * 100}
-                                format={(v) => `${v.toFixed(1)}%`}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.militaryResult.ome * 100,
+                                    (v) => `${v.toFixed(1)}%`
+                                )}
+                                current={simpleMetricCell(
+                                    militaryResult.ome * 100,
+                                    (v) => `${v.toFixed(1)}%`
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Defensive military efficiency"
-                                baselineValue={baselineMetrics.militaryResult.dme * 100}
-                                currentValue={militaryResult.dme * 100}
-                                format={(v) => `${v.toFixed(1)}%`}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.militaryResult.dme * 100,
+                                    (v) => `${v.toFixed(1)}%`
+                                )}
+                                current={simpleMetricCell(
+                                    militaryResult.dme * 100,
+                                    (v) => `${v.toFixed(1)}%`
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Off specs"
-                                baselineValue={baselineProvince.offSpecs}
-                                currentValue={province.offSpecs}
-                                format={(v) => v.toLocaleString()}
+                                baseline={simpleMetricCell(
+                                    baselineProvince.offSpecs,
+                                    (v) => v.toLocaleString()
+                                )}
+                                current={simpleMetricCell(
+                                    province.offSpecs,
+                                    (v) => v.toLocaleString()
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Def specs"
-                                baselineValue={baselineProvince.defSpecs}
-                                currentValue={province.defSpecs}
-                                format={(v) => v.toLocaleString()}
+                                baseline={simpleMetricCell(
+                                    baselineProvince.defSpecs,
+                                    (v) => v.toLocaleString()
+                                )}
+                                current={simpleMetricCell(
+                                    province.defSpecs,
+                                    (v) => v.toLocaleString()
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Elites"
-                                baselineValue={baselineProvince.elites}
-                                currentValue={province.elites}
-                                format={(v) => v.toLocaleString()}
+                                baseline={simpleMetricCell(
+                                    baselineProvince.elites,
+                                    (v) => v.toLocaleString()
+                                )}
+                                current={simpleMetricCell(
+                                    province.elites,
+                                    (v) => v.toLocaleString()
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="War horses"
-                                baselineValue={baselineProvince.horses}
-                                currentValue={province.horses}
-                                format={(v) => v.toLocaleString()}
+                                baseline={simpleMetricCell(
+                                    baselineProvince.horses,
+                                    (v) => v.toLocaleString()
+                                )}
+                                current={simpleMetricCell(
+                                    province.horses,
+                                    (v) => v.toLocaleString()
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Prisoners"
-                                baselineValue={baselineProvince.prisoners}
-                                currentValue={province.prisoners}
-                                format={(v) => v.toLocaleString()}
+                                baseline={simpleMetricCell(
+                                    baselineProvince.prisoners,
+                                    (v) => v.toLocaleString()
+                                )}
+                                current={simpleMetricCell(
+                                    province.prisoners,
+                                    (v) => v.toLocaleString()
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Total mod offense"
-                                baselineValue={baselineMetrics.militaryResult.modOffense}
-                                currentValue={militaryResult.modOffense}
-                                format={(v) => v.toFixed(0)}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.militaryResult.modOffense,
+                                    (v) => v.toFixed(0)
+                                )}
+                                current={simpleMetricCell(
+                                    militaryResult.modOffense,
+                                    (v) => v.toFixed(0)
+                                )}
                             />
 
                             <SnapshotMetric
                                 label="Total mod defense"
-                                baselineValue={baselineMetrics.militaryResult.modDefense}
-                                currentValue={militaryResult.modDefense}
-                                format={(v) => v.toFixed(0)}
+                                baseline={simpleMetricCell(
+                                    baselineMetrics.militaryResult.modDefense,
+                                    (v) => v.toFixed(0)
+                                )}
+                                current={simpleMetricCell(
+                                    militaryResult.modDefense,
+                                    (v) => v.toFixed(0)
+                                )}
                             />
 
                             <tr>
                                 <td>Base attack time</td>
-                                <td style={{ textAlign: "right" }}>—</td>
-                                <td style={{ textAlign: "right" }}>— (TODO)</td>
-                                <td style={{ textAlign: "right" }}></td>
+                                <td style={{textAlign: "right"}}>—</td>
+                                <td style={{textAlign: "right"}}>— (TODO)</td>
+                                <td style={{textAlign: "right"}}></td>
                             </tr>
                             <tr>
                                 <td>War attack time</td>
-                                <td style={{ textAlign: "right" }}>—</td>
-                                <td style={{ textAlign: "right" }}>— (TODO)</td>
-                                <td style={{ textAlign: "right" }}></td>
+                                <td style={{textAlign: "right"}}>—</td>
+                                <td style={{textAlign: "right"}}>— (TODO)</td>
+                                <td style={{textAlign: "right"}}></td>
                             </tr>
 
                             <SnapshotMetric
                                 label="Thieves (#)"
-                                baselineValue={baselineProvince.thieves}
-                                currentValue={province.thieves}
-                                format={(v) => v.toLocaleString()}
+                                baseline={simpleMetricCell(
+                                    baselineProvince.thieves,
+                                    (v) => v.toLocaleString()
+                                )}
+                                current={simpleMetricCell(
+                                    province.thieves,
+                                    (v) => v.toLocaleString()
+                                )}
                             />
 
                             <SnapshotMetric
-                                label="Thieves per acre"
-                                baselineValue={
-                                    baselineProvince.acres
-                                        ? baselineProvince.thieves / baselineProvince.acres
-                                        : null
-                                }
-                                currentValue={
-                                    province.acres ? province.thieves / province.acres : 0
-                                }
-                                format={(v) => v.toFixed(2)}
+                                label="Raw TPA"
+                                baseline={baselineRawTpa}
+                                current={currentRawTpa}
+                                formatDelta={(d) => d.toFixed(4)}
+                            />
+
+                            <SnapshotMetric
+                                label="Raw WPA"
+                                baseline={baselineRawWpa}
+                                current={currentRawWpa}
+                                formatDelta={(d) => d.toFixed(4)}
                             />
                             </tbody>
                         </table>
@@ -1126,11 +1295,11 @@ function App() {
                             <thead>
                             <tr>
                                 <th>Building type</th>
-                                <th style={{ textAlign: "right" }}>Base %</th>
-                                <th style={{ textAlign: "right" }}>Base qty</th>
-                                <th style={{ textAlign: "right" }}>Curr %</th>
-                                <th style={{ textAlign: "right" }}>Curr qty</th>
-                                <th style={{ textAlign: "right" }}>Δ %</th>
+                                <th style={{textAlign: "right"}}>Base %</th>
+                                <th style={{textAlign: "right"}}>Base qty</th>
+                                <th style={{textAlign: "right"}}>Curr %</th>
+                                <th style={{textAlign: "right"}}>Curr qty</th>
+                                <th style={{textAlign: "right"}}>Δ %</th>
                             </tr>
                             </thead>
                             <tbody>
@@ -1154,16 +1323,16 @@ function App() {
                                 return (
                                     <tr key={b.id}>
                                         <td>{b.display}</td>
-                                        <td style={{ textAlign: "right" }}>
+                                        <td style={{textAlign: "right"}}>
                                             {basePct.toFixed(1)}%
                                         </td>
-                                        <td style={{ textAlign: "right" }}>
+                                        <td style={{textAlign: "right"}}>
                                             {baseQty.toLocaleString()}
                                         </td>
-                                        <td style={{ textAlign: "right" }}>
+                                        <td style={{textAlign: "right"}}>
                                             {currPct.toFixed(1)}%
                                         </td>
-                                        <td style={{ textAlign: "right" }}>
+                                        <td style={{textAlign: "right"}}>
                                             {currQty.toLocaleString()}
                                         </td>
                                         <td
@@ -1196,7 +1365,7 @@ function App() {
                             <thead>
                             <tr>
                                 <th>Science type</th>
-                                <th style={{ textAlign: "right" }}>Base books</th>
+                                <th style={{textAlign: "right"}}>Base books</th>
                                 <th style={{ textAlign: "right" }}>Base %</th>
                                 <th style={{ textAlign: "right" }}>Curr books</th>
                                 <th style={{ textAlign: "right" }}>Curr %</th>
@@ -1270,6 +1439,13 @@ function App() {
                                     <td style={{ textAlign: "right" }}>—</td>
                                 </tr>
                             ))}
+
+                            <SnapshotMetric
+                                label="NW / Acre"
+                                baseline={baselineNwpa}
+                                current={currentNwpa}
+                                formatDelta={(d) => d.toFixed(4)}
+                            />
 
                             <tr>
                                 <td>
