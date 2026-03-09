@@ -20,7 +20,6 @@ import { parseIntelCsv } from "./utopia/intel-parse";
 import { calculateMaxPopulation } from "./utopia/calc/population.ts";
 import {
     resolveNwpa,
-    resolvePpa,
     resolveGcpa,
     resolveRawTpa,
     resolveRawWpa,
@@ -429,9 +428,6 @@ function App() {
     const baselineNwpa = useMemo(() => toMetricCell(resolveNwpa(baselineProvince)), [baselineProvince]);
     const currentNwpa = useMemo(() => toMetricCell(resolveNwpa(province)), [province]);
 
-    const baselinePpa = useMemo(() => toMetricCell(resolvePpa(baselineProvince)), [baselineProvince]);
-    const currentPpa = useMemo(() => toMetricCell(resolvePpa(province)), [province]);
-
     const baselineGcpa = useMemo(() => toMetricCell(resolveGcpa(baselineProvince)), [baselineProvince]);
     const currentGcpa = useMemo(() => toMetricCell(resolveGcpa(province)), [province]);
 
@@ -602,8 +598,7 @@ function App() {
     return (
         <>
             <div className="alpha-banner">
-                🚧 Utopia Province Sim – <strong>alpha build</strong>. Calculations not yet implemented.
-                Need feedback on interface and UI
+                🚧 Utopia Province Sim – <strong>alpha build</strong>. Some calculations and outputs are still incomplete.
             </div>
 
             <div className="page">
@@ -913,13 +908,6 @@ function App() {
                                             onChange={updateProvinceNumber("peasants")}
                                         />
                                     }
-                                />
-
-                                <SnapshotMetric
-                                    label="PPA"
-                                    baseline={baselinePpa}
-                                    current={currentPpa}
-                                    formatDelta={(d) => d.toFixed(4)}
                                 />
 
                                 <SnapshotMetric

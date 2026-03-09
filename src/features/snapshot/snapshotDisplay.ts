@@ -4,14 +4,10 @@ export type SnapshotValueMode = "export-only" | "dual" | "calc-only";
 
 export interface SnapshotResolvedValue {
     mode: SnapshotValueMode;
-
     exportDisplay: string | null;
     exportNumeric: number | null;
-
     calcDisplay: string | null;
     calcNumeric: number | null;
-
-    // Use this for baseline/current delta comparisons
     preferredNumeric: number | null;
 }
 
@@ -65,14 +61,11 @@ function resolveDualValue(params: {
                 : exportDisplay != null
                     ? "export-only"
                     : "calc-only",
-
         exportDisplay,
         exportNumeric,
-
         calcDisplay:
             params.calcNumeric != null ? params.formatCalc(params.calcNumeric) : null,
         calcNumeric: params.calcNumeric,
-
         preferredNumeric: params.calcNumeric ?? exportNumeric,
     };
 }
@@ -82,15 +75,6 @@ export function resolveNwpa(prov: Province): SnapshotResolvedValue {
         prov,
         exportHeader: "NWpa",
         calcNumeric: safeDiv(prov.networth, prov.acres),
-        formatCalc: (v) => v.toFixed(4),
-    });
-}
-
-export function resolvePpa(prov: Province): SnapshotResolvedValue {
-    return resolveDualValue({
-        prov,
-        exportHeader: "Ppa",
-        calcNumeric: safeDiv(prov.peasants, prov.acres),
         formatCalc: (v) => v.toFixed(4),
     });
 }
