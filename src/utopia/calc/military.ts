@@ -6,7 +6,16 @@ import { BUILDINGS } from "../data/buildings";
 import { calculateBE } from "./be.ts";
 
 export interface MilitaryResult {
-    rawUnitOffense: number;
+    soldierRawOffense: number;
+    soldierRawDefense: number;
+    offSpecRawOffense: number;
+    offSpecModOffense: number;
+    defSpecRawDefense: number;
+    defSpecModDefense: number;
+    eliteRawOffense: number;
+    eliteModOffense: number;
+    eliteRawDefense: number;
+    eliteModDefense: number;
     rawHorseOffense: number;
     rawPrisonerOffense: number;
     rawOffense: number;
@@ -50,7 +59,16 @@ export function calculateMilitary(prov: Province): MilitaryResult {
 
     if (!race) {
         return {
-            rawUnitOffense: 0,
+            soldierRawOffense: 0,
+            soldierRawDefense: 0,
+            offSpecRawOffense: 0,
+            offSpecModOffense: 0,
+            defSpecRawDefense: 0,
+            defSpecModDefense: 0,
+            eliteRawOffense: 0,
+            eliteModOffense: 0,
+            eliteRawDefense: 0,
+            eliteModDefense: 0,
             rawHorseOffense: 0,
             rawPrisonerOffense: 0,
             rawOffense: 0,
@@ -70,14 +88,15 @@ export function calculateMilitary(prov: Province): MilitaryResult {
     const eliteDefBonus = pers?.mods.eliteDefBonus ?? 0;
     const defSpecDefBonus = pers?.mods.defSpecDefBonus ?? 0;
 
-    const rawUnitOffense =
-        prov.soldiers * units.soldier.off +
-        prov.offSpecs * units.offSpec.off +
-        prov.elites * units.elite.off;
+    const soldierRawOffense = prov.soldiers * units.soldier.off;
+    const soldierRawDefense = prov.soldiers * units.soldier.def;
 
-    const rawDefense =
-        prov.soldiers * units.soldier.def +
-        prov.defSpecs * (units.defSpec.def + defSpecDefBonus) +
+    const offSpecRawOffense = prov.offSpecs * units.offSpec.off;
+    const defSpecRawDefense =
+        prov.defSpecs * (units.defSpec.def + defSpecDefBonus);
+
+    const eliteRawOffense = prov.elites * units.elite.off;
+    const eliteRawDefense =
         prov.elites * (units.elite.def + eliteDefBonus);
 
     const horseOffensePerHorse = getHorseOffensePerHorse(prov);
@@ -87,9 +106,16 @@ export function calculateMilitary(prov: Province): MilitaryResult {
     const rawPrisonerOffense = prov.prisoners * prisonerOffensePerPrisoner;
 
     const rawOffense =
-        rawUnitOffense +
+        soldierRawOffense +
+        offSpecRawOffense +
+        eliteRawOffense +
         rawHorseOffense +
         rawPrisonerOffense;
+
+    const rawDefense =
+        soldierRawDefense +
+        defSpecRawDefense +
+        eliteRawDefense;
 
     const horseCapacity = getHorseCapacity(prov);
     const horseCapHit = prov.horses > horseCapacity;
@@ -157,11 +183,25 @@ export function calculateMilitary(prov: Province): MilitaryResult {
         dmeFromBuildings *
         (1 + raceDmeBonus);
 
+    const offSpecModOffense = offSpecRawOffense * ome;
+    const defSpecModDefense = defSpecRawDefense * dme;
+    const eliteModOffense = eliteRawOffense * ome;
+    const eliteModDefense = eliteRawDefense * dme;
+
     const modOffense = rawOffense * ome;
     const modDefense = rawDefense * dme;
 
     return {
-        rawUnitOffense,
+        soldierRawOffense,
+        soldierRawDefense,
+        offSpecRawOffense,
+        offSpecModOffense,
+        defSpecRawDefense,
+        defSpecModDefense,
+        eliteRawOffense,
+        eliteModOffense,
+        eliteRawDefense,
+        eliteModDefense,
         rawHorseOffense,
         rawPrisonerOffense,
         rawOffense,

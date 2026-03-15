@@ -79,15 +79,6 @@ export function resolveNwpa(prov: Province): SnapshotResolvedValue {
     });
 }
 
-export function resolveGcpa(prov: Province): SnapshotResolvedValue {
-    return resolveDualValue({
-        prov,
-        exportHeader: "GCpa",
-        calcNumeric: safeDiv(prov.gold, prov.acres),
-        formatCalc: (v) => v.toFixed(4),
-    });
-}
-
 export function resolveRawTpa(prov: Province): SnapshotResolvedValue {
     return resolveDualValue({
         prov,

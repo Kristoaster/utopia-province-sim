@@ -8,7 +8,6 @@ import { BUILDING_LIST } from "./utopia/data/buildings";
 import { parseIntelCsv } from "./utopia/intel-parse";
 import {
     resolveNwpa,
-    resolveGcpa,
     resolveRawTpa,
     resolveRawWpa,
     toMetricCell,
@@ -52,9 +51,6 @@ function App() {
 
     const baselineNwpa = useMemo(() => toMetricCell(resolveNwpa(baselineProvince)), [baselineProvince]);
     const currentNwpa = useMemo(() => toMetricCell(resolveNwpa(province)), [province]);
-
-    const baselineGcpa = useMemo(() => toMetricCell(resolveGcpa(baselineProvince)), [baselineProvince]);
-    const currentGcpa = useMemo(() => toMetricCell(resolveGcpa(province)), [province]);
 
     const baselineRawTpa = useMemo(() => toMetricCell(resolveRawTpa(baselineProvince)), [baselineProvince]);
     const currentRawTpa = useMemo(() => toMetricCell(resolveRawTpa(province)), [province]);
@@ -554,13 +550,6 @@ function App() {
                                 />
 
                                 <SnapshotMetric
-                                    label="GC / Acre"
-                                    baseline={baselineGcpa}
-                                    current={currentGcpa}
-                                    formatDelta={(d) => d.toFixed(4)}
-                                />
-
-                                <SnapshotMetric
                                     label="Food"
                                     baseline={simpleMetricCell(
                                         baselineProvince.food,
@@ -1021,13 +1010,121 @@ function App() {
                                 />
 
                                 <SnapshotMetric
-                                    label="Raw unit offense"
+                                    label="Soldier raw offense"
                                     baseline={simpleMetricCell(
-                                        baselineMetrics.militaryResult.rawUnitOffense,
+                                        baselineMetrics.militaryResult.soldierRawOffense,
                                         (v) => v.toFixed(0)
                                     )}
                                     current={simpleMetricCell(
-                                        militaryResult.rawUnitOffense,
+                                        militaryResult.soldierRawOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Soldier raw defense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.soldierRawDefense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.soldierRawDefense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Off spec raw offense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.offSpecRawOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.offSpecRawOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Off spec mod offense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.offSpecModOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.offSpecModOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Def spec raw defense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.defSpecRawDefense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.defSpecRawDefense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Def spec mod defense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.defSpecModDefense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.defSpecModDefense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Elite raw offense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.eliteRawOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.eliteRawOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Elite mod offense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.eliteModOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.eliteModOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Elite raw defense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.eliteRawDefense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.eliteRawDefense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Elite mod defense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.eliteModDefense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.eliteModDefense,
                                         (v) => v.toFixed(0)
                                     )}
                                 />
@@ -1070,6 +1167,18 @@ function App() {
                                 />
 
                                 <SnapshotMetric
+                                    label="Total raw offense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.rawOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.rawOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
                                     label="Total mod offense"
                                     baseline={simpleMetricCell(
                                         baselineMetrics.militaryResult.modOffense,
@@ -1077,6 +1186,18 @@ function App() {
                                     )}
                                     current={simpleMetricCell(
                                         militaryResult.modOffense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                />
+
+                                <SnapshotMetric
+                                    label="Total raw defense"
+                                    baseline={simpleMetricCell(
+                                        baselineMetrics.militaryResult.rawDefense,
+                                        (v) => v.toFixed(0)
+                                    )}
+                                    current={simpleMetricCell(
+                                        militaryResult.rawDefense,
                                         (v) => v.toFixed(0)
                                     )}
                                 />
