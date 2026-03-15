@@ -28,7 +28,6 @@ const GOOD_SPELLS: SpellDefinition[] = [
     {
         display: "Aggression",
         source: "good",
-        universal: true,
         effect: "Your soldiers gain +2 offense.",
     },
     {
@@ -189,6 +188,7 @@ const GOOD_SPELLS: SpellDefinition[] = [
     {
         display: "Shadowlight",
         source: "good",
+        universal: true,
         effect: "Deflects the next thievery operation and reveals the source province.",
     },
     {

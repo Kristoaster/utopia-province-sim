@@ -115,7 +115,7 @@ export function SpellInfo({ spells }: SpellInfoProps) {
                                 <li key={`${spell.name}-${spell.source}`}>
                                     <strong>{spell.name}</strong>{" "}
                                     <span className={`spell-source-badge ${spell.source}`}>
-                                        {spell.source === "good" ? "Good" : "Bad"}
+                                        {spell.source === "good" ? "Self" : "Offensive"}
                                     </span>
                                     <div className="spell-effect-line">
                                         {getSpellEffect(spell.name) ?? "Effect not yet mapped in local spell data."}

@@ -263,6 +263,11 @@ body {
     );
 }
 
+.snapshot-section--throne .buildings-table.snapshot-metrics-table thead th:last-child,
+.snapshot-section--throne .buildings-table.snapshot-metrics-table tbody td:last-child {
+    display: none;
+}
+
 .snapshot-section--economy {
     border-left-color: #22c55e; /* green */
     background: linear-gradient(

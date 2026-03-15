@@ -11,7 +11,6 @@ import {
     createProvinceSpellbook,
     getActiveSpells,
     groupProvinceSpells,
-    previewActiveSpellNames,
     summarizeActiveSpells,
 } from "./utopia/data/spells";
 import { parseIntelCsv } from "./utopia/intel-parse";
@@ -131,7 +130,6 @@ function App() {
 
     const toSpellMetricCell = (spells: Province["activeSpells"]) => ({
         primary: summarizeActiveSpells(spells),
-        secondary: previewActiveSpellNames(spells),
         numeric: getActiveSpells(spells).length,
     });
 
@@ -694,7 +692,7 @@ function App() {
                                         <td colSpan={5} className="spells-panel-cell">
                                             <div className="spells-groups">
                                                 <div className="spells-group">
-                                                    <div className="spells-group-title">Good spells</div>
+                                                    <div className="spells-group-title">Self spells</div>
 
                                                     {spellGroups.good.length === 0 ? (
                                                         <div className="spells-empty">No available good spells.</div>
@@ -718,7 +716,7 @@ function App() {
                                                 </div>
 
                                                 <div className="spells-group">
-                                                    <div className="spells-group-title">Bad spells / ops</div>
+                                                    <div className="spells-group-title">Offensive spells / hostile effects</div>
 
                                                     {spellGroups.bad.length === 0 ? (
                                                         <div className="spells-empty">No hostile effects.</div>
