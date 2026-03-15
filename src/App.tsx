@@ -26,6 +26,7 @@ import { HonorInfo } from "./features/honor/HonorInfo";
 import { initialProvince, cloneProvince } from "./utopia/province-state";
 import { computeProvinceMetrics } from "./utopia/province-metrics";
 import { RaceInfo } from "./features/race/RaceInfo";
+import { PersonalityInfo } from "./features/personality/PersonalityInfo";
 
 type IntelSource = "CSV" | "MANUAL";
 
@@ -452,25 +453,29 @@ function App() {
 
                                 <SnapshotMetric
                                     label="Personality"
-                                    baseline={{primary: baselineProvince.personality, numeric: null}}
-                                    current={{primary: province.personality, numeric: null}}
+                                    baseline={{ primary: baselineProvince.personality, numeric: null }}
+                                    current={{ primary: province.personality, numeric: null }}
                                     editor={
-                                        <select
-                                            className="snapshot-inline-select wide"
-                                            value={province.personality}
-                                            onChange={(e) =>
-                                                setProvince((prev) => ({
-                                                    ...prev,
-                                                    personality: e.target.value as Province["personality"],
-                                                }))
-                                            }
-                                        >
-                                            {PERSONALITY_LIST.map((p) => (
-                                                <option key={p.id} value={p.id}>
-                                                    {p.display}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <div className="entity-edit-cell">
+                                            <select
+                                                className="snapshot-inline-select wide"
+                                                value={province.personality}
+                                                onChange={(e) =>
+                                                    setProvince((prev) => ({
+                                                        ...prev,
+                                                        personality: e.target.value as Province["personality"],
+                                                    }))
+                                                }
+                                            >
+                                                {PERSONALITY_LIST.map((p) => (
+                                                    <option key={p.id} value={p.id}>
+                                                        {p.display}
+                                                    </option>
+                                                ))}
+                                            </select>
+
+                                            <PersonalityInfo personalityId={province.personality} />
+                                        </div>
                                     }
                                 />
                                 </tbody>
