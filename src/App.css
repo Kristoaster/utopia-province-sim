@@ -123,31 +123,6 @@ body {
     border: 1px solid rgba(148, 163, 184, 0.4);
 }
 
-.throne-summary-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 0.5rem;
-}
-
-.stat-label {
-    font-size: 0.75rem;
-    color: #e5e7eb;
-    opacity: 0.8;
-}
-
-.stat-value {
-    font-size: 1rem;
-    font-weight: 600;
-}
-
-/* 2-column layout for main panels */
-
-.content-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 1rem;
-}
-
 /* Rows in info panels */
 
 .field-row {
@@ -236,31 +211,6 @@ body {
 .buildings-table.snapshot-metrics-table td {
     white-space: nowrap;
 }
-
-.buildings-input-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    gap: 0.6rem 0.9rem;
-    margin-top: 0.25rem;
-}
-
-.buildings-input-grid label {
-    font-size: 0.75rem;
-    color: #9ca3af;
-    display: block;
-    margin-bottom: 0.15rem;
-}
-
-.buildings-input-grid input {
-    width: 100%;
-    padding: 0.25rem 0.4rem;
-    border-radius: 0.35rem;
-    border: 1px solid #374151;
-    background: #020617;
-    color: #e5e7eb;
-    font-size: 0.8rem;
-}
-
 .value-good {
     color: #4ade80;
 }
@@ -271,91 +221,6 @@ body {
 
 .value-bad {
     color: #f97373;
-}
-
-.manual-section {
-    margin-top: 0.75rem;
-}
-
-.manual-section-title {
-    margin-bottom: 0.25rem;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    color: #9ca3af;
-}
-
-.help-text {
-    font-size: 0.75rem;
-    color: #9ca3af;
-    margin-bottom: 0.5rem;
-}
-
-/* snapshot inputs inside ManualInputsPanel */
-.manual-panel {
-    margin-top: 0.75rem;
-    border-radius: 0.5rem;
-    border: 1px solid #374151;
-    background-color: #020617;
-}
-
-/* Summary line for the advanced panel */
-.manual-panel > summary {
-    padding: 0.4rem 0.6rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #e5e7eb;
-}
-
-.manual-panel > summary span.subtle {
-    font-size: 0.7rem;
-    font-weight: 400;
-    color: #9ca3af;
-}
-
-/* Body of the panel */
-.manual-panel-inner {
-    padding: 0.5rem 0.6rem 0.7rem;
-    border-top: 1px solid #1f2937;
-}
-
-/* Grid for the individual snapshot fields */
-.snapshot-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-    gap: 0.4rem 0.8rem;
-}
-
-.snapshot-input {
-    padding: 0.25rem 0.4rem;
-    background-color: #020617;
-    border-radius: 0.25rem;
-    border: 1px solid #334155;
-    color: inherit;
-    font-size: 0.75rem;
-}
-
-.snapshot-input:focus {
-    outline: none;
-    border-color: #38bdf8;
-    box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.4);
-}
-
-/* Snapshot overrides – buildings table */
-.snapshot-buildings-table {
-    margin-top: 0.5rem;
-    width: 100%;
-    font-size: 0.75rem;
-}
-
-.snapshot-buildings-table th,
-.snapshot-buildings-table td {
-    padding: 0.15rem 0.3rem;
 }
 
 .snapshot-cell-stack {
@@ -394,15 +259,6 @@ body {
     background: radial-gradient(
             circle at top left,
             rgba(56, 189, 248, 0.18),
-            rgba(15, 23, 42, 0.96)
-    );
-}
-
-.snapshot-section--state {
-    border-left-color: #a855f7; /* purple */
-    background: linear-gradient(
-            90deg,
-            rgba(76, 29, 149, 0.25),
             rgba(15, 23, 42, 0.96)
     );
 }
@@ -461,47 +317,7 @@ body {
     color: #e5e7eb;
 }
 
-/* Cells */
-.snapshot-metric-header > div,
-.snapshot-metric-row > div {
-    padding: 0.25rem 0.4rem;
-    border-right: 1px solid #111827;
-    border-bottom: 1px solid #111827;
-}
-
-/* Header row */
-.snapshot-metric-header {
-    background: rgba(15, 23, 42, 0.98);
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 600;
-    font-size: 0.7rem;
-    color: #9ca3af;
-}
-
-/* Right-align Baseline, Current, Δ headers */
-.snapshot-metric-header > div:nth-child(2),
-.snapshot-metric-header > div:nth-child(3),
-.snapshot-metric-header > div:nth-child(4) {
-    text-align: right;
-}
-
-
-/* Zebra striping for data rows */
-.snapshot-metric-row:nth-child(even) {
-    background: rgba(15, 23, 42, 0.92);
-}
-
-.snapshot-metric-row:nth-child(odd) {
-    background: rgba(17, 24, 39, 0.96);
-}
-
 /* Label + values */
-.snapshot-metric-label {
-    font-size: 0.75rem;
-    color: #e5e7eb;
-}
-
 .snapshot-metric-value {
     text-align: right;
     white-space: nowrap;
@@ -539,44 +355,6 @@ body {
 /* Keep field rows looking the same inside the grid */
 .card-columns .field-row {
     margin: 0;
-}
-
-/* Each metric cell */
-.snapshot-metric {
-    font-size: 0.8rem;
-    padding: 0.45rem 0.5rem;
-    border-right: 1px solid #111827;
-    border-bottom: 1px solid #111827;
-    background: rgba(15, 23, 42, 0.9);
-}
-
-/* Slight row/column alternation to help the eye scan */
-.snapshot-metric:nth-child(odd) {
-    background: rgba(31, 41, 55, 0.95);
-}
-
-.snapshot-metric-label {
-    font-size: 0.7rem;
-    color: #9ca3af;
-    margin-bottom: 0.05rem;
-}
-
-.snapshot-metric-values {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.25rem;
-    font-size: 0.8rem;
-}
-
-.snapshot-metric-baseline {
-    opacity: 0.7;
-}
-
-.snapshot-metric-arrow {
-    opacity: 0.5;
-    font-size: 0.8em;
-    padding: 0 0.1rem;
 }
 
 .snapshot-metric-label {
