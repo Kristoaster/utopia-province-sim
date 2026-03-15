@@ -163,6 +163,7 @@ function rowToProvince(row: IntelRow): Province | null {
 
         gold,
         wageRate: intelWagePercent ? intelWagePercent / 100 : 1.0,
+        beOverride: null,
         food,
 
         runes,

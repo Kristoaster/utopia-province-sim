@@ -47,6 +47,8 @@ export const initialProvince: Province = {
 
     gold: 0,
     wageRate: 1.0,
+    beOverride: null,
+
     food: 0,
     runes: 0,
     horses: 0,

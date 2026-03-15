@@ -1,4 +1,5 @@
 import type { Province } from "../../utopia/types";
+import { calculateBE } from "../../utopia/calc/be";
 
 export type SnapshotValueMode = "export-only" | "dual" | "calc-only";
 
@@ -135,5 +136,26 @@ export function simpleMetricCell(
     return {
         primary: value == null ? "—" : format(value),
         numeric: value,
+    };
+}
+
+export function resolveBuildingEfficiency(prov: Province): SnapshotMetricCell {
+    const result = calculateBE(prov);
+
+    const secondaryParts: string[] = [];
+
+    if (result.source === "override") {
+        if (result.exportBe != null) {
+            secondaryParts.push(`export: ${(result.exportBe * 100).toFixed(1)}%`);
+        }
+        secondaryParts.push(`calc: ${(result.targetBe * 100).toFixed(2)}%`);
+    } else if (result.source === "export") {
+        secondaryParts.push(`calc: ${(result.targetBe * 100).toFixed(2)}%`);
+    }
+
+    return {
+        primary: `${(result.be * 100).toFixed(result.source === "export" ? 1 : 2)}%`,
+        secondary: secondaryParts.length > 0 ? secondaryParts.join(" • ") : null,
+        numeric: result.be * 100,
     };
 }

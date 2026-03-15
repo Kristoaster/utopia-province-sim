@@ -99,6 +99,7 @@ export interface Province {
 
     gold: number;
     wageRate: number;
+    beOverride: number | null;
 
     food: number;
     runes: number;

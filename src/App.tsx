@@ -2,11 +2,12 @@
 import React, { useMemo, useState } from "react";
 import "./App.css";
 import type { Province, ScienceCategoryId } from "./utopia/types";
-import { RACE_LIST } from "./utopia/current/races";
-import { PERSONALITY_LIST } from "./utopia/current/personalities";
+import { RACE_LIST, getRace } from "./utopia/current/races";
+import { PERSONALITY_LIST, getPersonality } from "./utopia/current/personalities";
 import { BUILDING_LIST } from "./utopia/data/buildings";
 import { parseIntelCsv } from "./utopia/intel-parse";
 import {
+    resolveBuildingEfficiency,
     resolveNwpa,
     resolveRawTpa,
     resolveRawWpa,
@@ -50,6 +51,35 @@ function App() {
         () => computeProvinceMetrics(province),
         [province]
     );
+
+    const baselineBe = useMemo(
+        () => resolveBuildingEfficiency(baselineProvince),
+        [baselineProvince]
+    );
+    const currentBe = useMemo(
+        () => resolveBuildingEfficiency(province),
+        [province]
+    );
+    const updateBeOverridePercent = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const raw = e.target.value.trim();
+
+        setProvince((prev) => {
+            if (raw === "") {
+                return {
+                    ...prev,
+                    beOverride: null,
+                };
+            }
+
+            const value = Number(raw);
+            if (!Number.isFinite(value)) return prev;
+
+            return {
+                ...prev,
+                beOverride: value / 100,
+            };
+        });
+    };
 
     const baselineNwpa = useMemo(() => toMetricCell(resolveNwpa(baselineProvince)), [baselineProvince]);
     const currentNwpa = useMemo(() => toMetricCell(resolveNwpa(province)), [province]);
@@ -218,6 +248,12 @@ function App() {
         }));
     };
 
+    const getRaceDisplay = (raceId: Province["race"]) =>
+        getRace(raceId)?.display ?? raceId;
+
+    const getPersonalityDisplay = (personalityId: Province["personality"]) =>
+        getPersonality(personalityId)?.display ?? personalityId;
+
     return (
         <>
             <div className="alpha-banner">
@@ -309,8 +345,8 @@ function App() {
                                 Ruler: {province.rulerName} • Honor: {getHonorRankLabel(province.honorLevel)}
                             </span>
                                 <span className="pill">
-                                {province.race} / {province.personality}
-                            </span>
+                                    {getRaceDisplay(province.race)} / {getPersonalityDisplay(province.personality)}
+                                </span>
                                 <span className="pill">
                                 KD {province.location}
                             </span>
@@ -425,8 +461,8 @@ function App() {
 
                                 <SnapshotMetric
                                     label="Race"
-                                    baseline={{primary: baselineProvince.race, numeric: null}}
-                                    current={{primary: province.race, numeric: null}}
+                                    baseline={{ primary: getRaceDisplay(baselineProvince.race), numeric: null }}
+                                    current={{ primary: getRaceDisplay(province.race), numeric: null }}
                                     editor={
                                         <div className="entity-edit-cell">
                                             <select
@@ -453,8 +489,8 @@ function App() {
 
                                 <SnapshotMetric
                                     label="Personality"
-                                    baseline={{ primary: baselineProvince.personality, numeric: null }}
-                                    current={{ primary: province.personality, numeric: null }}
+                                    baseline={{ primary: getPersonalityDisplay(baselineProvince.personality), numeric: null }}
+                                    current={{ primary: getPersonalityDisplay(province.personality), numeric: null }}
                                     editor={
                                         <div className="entity-edit-cell">
                                             <select
@@ -641,14 +677,37 @@ function App() {
 
                                 <SnapshotMetric
                                     label="Building Efficiency"
-                                    baseline={simpleMetricCell(
-                                        baselineMetrics.beResult.be * 100,
-                                        (v) => `${v.toFixed(2)}%`
-                                    )}
-                                    current={simpleMetricCell(
-                                        currentMetrics.beResult.be * 100,
-                                        (v) => `${v.toFixed(2)}%`
-                                    )}
+                                    baseline={baselineBe}
+                                    current={currentBe}
+                                    editor={
+                                        <div className="be-edit-cell">
+                                            <input
+                                                className="snapshot-inline-input"
+                                                type="number"
+                                                step="0.01"
+                                                value={province.beOverride != null ? province.beOverride * 100 : ""}
+                                                onChange={updateBeOverridePercent}
+                                                placeholder={(currentMetrics.beResult.be * 100).toFixed(2)}
+                                                title="Optional manual BE override"
+                                            />
+                                            <button
+                                                type="button"
+                                                className="snapshot-inline-button"
+                                                onClick={() =>
+                                                    setProvince((prev) => ({
+                                                        ...prev,
+                                                        beOverride: null,
+                                                    }))
+                                                }
+                                                disabled={province.beOverride == null}
+                                                title="Clear override and use export/calculated BE"
+                                            >
+                                                Auto
+                                            </button>
+                                        </div>
+                                    }
+                                    formatDelta={(d) => `${d.toFixed(2)}%`}
+                                    showPercentDelta={false}
                                 />
 
                                 <SnapshotMetric

@@ -560,3 +560,31 @@ body {
     font-size: 0.68rem;
     padding: 0.12rem 0.3rem;
 }
+
+.be-edit-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.snapshot-inline-button {
+    padding: 0.2rem 0.45rem;
+    border-radius: 0.3rem;
+    border: 1px solid #334155;
+    background: #020617;
+    color: #e5e7eb;
+    font-size: 0.72rem;
+    cursor: pointer;
+}
+
+.snapshot-inline-button:hover,
+.snapshot-inline-button:focus {
+    border-color: #38bdf8;
+    color: #ffffff;
+    outline: none;
+}
+
+.snapshot-inline-button:disabled {
+    opacity: 0.55;
+    cursor: default;
+}

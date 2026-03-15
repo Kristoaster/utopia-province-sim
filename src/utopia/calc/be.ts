@@ -1,18 +1,39 @@
 // src/utopia/calc/be.ts
-
 import type { Province, BuildingId } from "../types.ts";
 import { BUILDINGS } from "../data/buildings";
 import { BE as BE_CONST } from "../data/constants.ts";
 import { getRace } from "../current/races";
 
 export interface BEResult {
-    be: number;
+    be: number; // effective BE actually used by the sim
+    targetBe: number; // formula result
+    exportBe: number | null; // rounded BE from intel export if present
+    source: "override" | "export" | "calculated";
     jobs: {
         totalJobs: number;
         optimalWorkers: number;
         availableWorkers: number;
         filledJobs: number;
     };
+}
+
+const BE_HEADER_ALIASES = ["BE", "B.E.", "BE%"];
+
+function getExportBe(prov: Province): number | null {
+    for (const header of BE_HEADER_ALIASES) {
+        const raw = prov.rawIntel?.[header];
+        if (raw == null) continue;
+
+        const cleaned = String(raw).replace(/[,%'"]/g, "").trim();
+        if (!cleaned) continue;
+
+        const value = Number(cleaned);
+        if (Number.isFinite(value)) {
+            return value / 100;
+        }
+    }
+
+    return null;
 }
 
 export function calculateBE(prov: Province): BEResult {
@@ -40,16 +61,32 @@ export function calculateBE(prov: Province): BEResult {
             : 1;
 
     const race = getRace(prov.race);
-    const raceBeBonus = race?.mods.be ?? 0; // e.g. Dwarf +0.25, Faery -0.05
+    const raceBeBonus = race?.mods.be ?? 0;
 
-    // BE = 0.5 * (1 + jobFillRatio) * (1 + raceBeBonus)
-    const be =
+    const targetBe =
         BE_CONST.BASE_A *
         (1 + jobFillRatio) *
         (1 + raceBeBonus);
 
+    const exportBe = getExportBe(prov);
+
+    const source: BEResult["source"] =
+        prov.beOverride != null
+            ? "override"
+            : exportBe != null
+                ? "export"
+                : "calculated";
+
+    const effectiveBe =
+        prov.beOverride ??
+        exportBe ??
+        targetBe;
+
     return {
-        be,
+        be: effectiveBe,
+        targetBe,
+        exportBe,
+        source,
         jobs: {
             totalJobs,
             optimalWorkers,
