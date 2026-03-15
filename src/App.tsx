@@ -1,10 +1,17 @@
 // src/App.tsx
 import React, { useMemo, useState } from "react";
 import "./App.css";
-import type { Province, ScienceCategoryId } from "./utopia/types";
+import type { Province, ProvinceSpell, ScienceCategoryId } from "./utopia/types";
 import { RACE_LIST, getRace } from "./utopia/current/races";
 import { PERSONALITY_LIST, getPersonality } from "./utopia/current/personalities";
 import { BUILDING_LIST } from "./utopia/data/buildings";
+import { RITUAL_LIST, getRitual } from "./utopia/data/rituals";
+import { DRAGON_LIST, getDragon } from "./utopia/data/dragons";
+import {
+    getActiveSpells,
+    previewActiveSpellNames,
+    summarizeActiveSpells,
+} from "./utopia/data/spells";
 import { parseIntelCsv } from "./utopia/intel-parse";
 import {
     resolveBuildingEfficiency,
@@ -28,6 +35,9 @@ import { initialProvince, cloneProvince } from "./utopia/province-state";
 import { computeProvinceMetrics } from "./utopia/province-metrics";
 import { RaceInfo } from "./features/race/RaceInfo";
 import { PersonalityInfo } from "./features/personality/PersonalityInfo";
+import { RitualInfo } from "./features/ritual/RitualInfo";
+import { DragonInfo } from "./features/dragon/DragonInfo";
+import { SpellInfo } from "./features/spells/SpellInfo";
 
 type IntelSource = "CSV" | "MANUAL";
 
@@ -107,6 +117,41 @@ function App() {
         const cloned = cloneProvince(prov);
         setProvince(cloned);
         setBaselineProvince(cloneProvince(cloned));
+    };
+
+    const [spellsExpanded, setSpellsExpanded] = useState(false);
+
+    const getRitualDisplay = (ritualId: Province["ritual"]) =>
+        getRitual(ritualId)?.display ?? "None";
+
+    const getDragonDisplay = (dragonId: Province["dragon"]) =>
+        getDragon(dragonId)?.display ?? "None";
+
+    const toSpellMetricCell = (spells: Province["activeSpells"]) => ({
+        primary: summarizeActiveSpells(spells),
+        secondary: previewActiveSpellNames(spells),
+        numeric: getActiveSpells(spells).length,
+    });
+
+    const baselineSpellCell = useMemo(
+        () => toSpellMetricCell(baselineProvince.activeSpells),
+        [baselineProvince]
+    );
+
+    const currentSpellCell = useMemo(
+        () => toSpellMetricCell(province.activeSpells),
+        [province]
+    );
+
+    const toggleSpellActive = (target: ProvinceSpell) => {
+        setProvince((prev) => ({
+            ...prev,
+            activeSpells: prev.activeSpells.map((spell) =>
+                spell.name === target.name && spell.source === target.source
+                    ? { ...spell, active: !spell.active }
+                    : spell
+            ),
+        }));
     };
 
     // --- Intel upload handler ---
@@ -410,20 +455,6 @@ function App() {
                                 />
 
                                 <SnapshotMetric
-                                    label="KD location"
-                                    baseline={{primary: baselineProvince.location, numeric: null}}
-                                    current={{primary: province.location, numeric: null}}
-                                    editor={
-                                        <input
-                                            className="snapshot-inline-input"
-                                            type="text"
-                                            value={province.location}
-                                            onChange={updateProvinceText("location")}
-                                        />
-                                    }
-                                />
-
-                                <SnapshotMetric
                                     label="Honor"
                                     baseline={{
                                         primary: getHonorRankLabel(baselineProvince.honorLevel),
@@ -452,7 +483,7 @@ function App() {
                                                 ))}
                                             </select>
 
-                                            <HonorInfo honorLevel={province.honorLevel} />
+                                            <HonorInfo honorLevel={province.honorLevel}/>
                                         </div>
                                     }
                                     formatDelta={(d) => `${Math.abs(d)} rank${Math.abs(d) === 1 ? "" : "s"}`}
@@ -461,8 +492,8 @@ function App() {
 
                                 <SnapshotMetric
                                     label="Race"
-                                    baseline={{ primary: getRaceDisplay(baselineProvince.race), numeric: null }}
-                                    current={{ primary: getRaceDisplay(province.race), numeric: null }}
+                                    baseline={{primary: getRaceDisplay(baselineProvince.race), numeric: null}}
+                                    current={{primary: getRaceDisplay(province.race), numeric: null}}
                                     editor={
                                         <div className="entity-edit-cell">
                                             <select
@@ -482,15 +513,18 @@ function App() {
                                                 ))}
                                             </select>
 
-                                            <RaceInfo raceId={province.race} />
+                                            <RaceInfo raceId={province.race}/>
                                         </div>
                                     }
                                 />
 
                                 <SnapshotMetric
                                     label="Personality"
-                                    baseline={{ primary: getPersonalityDisplay(baselineProvince.personality), numeric: null }}
-                                    current={{ primary: getPersonalityDisplay(province.personality), numeric: null }}
+                                    baseline={{
+                                        primary: getPersonalityDisplay(baselineProvince.personality),
+                                        numeric: null
+                                    }}
+                                    current={{primary: getPersonalityDisplay(province.personality), numeric: null}}
                                     editor={
                                         <div className="entity-edit-cell">
                                             <select
@@ -510,10 +544,160 @@ function App() {
                                                 ))}
                                             </select>
 
-                                            <PersonalityInfo personalityId={province.personality} />
+                                            <PersonalityInfo personalityId={province.personality}/>
                                         </div>
                                     }
                                 />
+
+                                <SnapshotMetric
+                                    label="Ritual"
+                                    baseline={{primary: getRitualDisplay(baselineProvince.ritual), numeric: null}}
+                                    current={{primary: getRitualDisplay(province.ritual), numeric: null}}
+                                    editor={
+                                        <div className="entity-edit-cell">
+                                            <select
+                                                className="snapshot-inline-select wide"
+                                                value={province.ritual ?? ""}
+                                                onChange={(e) =>
+                                                    setProvince((prev) => ({
+                                                        ...prev,
+                                                        ritual: e.target.value
+                                                            ? (e.target.value as Province["ritual"])
+                                                            : null,
+                                                        ritualEffectiveness: e.target.value
+                                                            ? prev.ritualEffectiveness
+                                                            : 100,
+                                                    }))
+                                                }
+                                            >
+                                                <option value="">None</option>
+                                                {RITUAL_LIST.map((ritual) => (
+                                                    <option key={ritual.id} value={ritual.id}>
+                                                        {ritual.display}
+                                                    </option>
+                                                ))}
+                                            </select>
+
+                                            {province.ritual && <RitualInfo ritualId={province.ritual}/>}
+                                        </div>
+                                    }
+                                />
+
+                                <SnapshotMetric
+                                    label="Ritual effectiveness"
+                                    baseline={simpleMetricCell(
+                                        baselineProvince.ritual ? baselineProvince.ritualEffectiveness : null,
+                                        (v) => `${v.toFixed(2)}%`
+                                    )}
+                                    current={simpleMetricCell(
+                                        province.ritual ? province.ritualEffectiveness : null,
+                                        (v) => `${v.toFixed(2)}%`
+                                    )}
+                                    editor={
+                                        <input
+                                            className="snapshot-inline-input"
+                                            type="number"
+                                            step="0.01"
+                                            disabled={!province.ritual}
+                                            value={province.ritual ? province.ritualEffectiveness : ""}
+                                            onChange={(e) =>
+                                                setProvince((prev) => ({
+                                                    ...prev,
+                                                    ritualEffectiveness: Number.isFinite(Number(e.target.value))
+                                                        ? Number(e.target.value)
+                                                        : prev.ritualEffectiveness,
+                                                }))
+                                            }
+                                        />
+                                    }
+                                    formatDelta={(d) => `${d.toFixed(2)}%`}
+                                    showPercentDelta={false}
+                                />
+
+                                <SnapshotMetric
+                                    label="Dragon"
+                                    baseline={{primary: getDragonDisplay(baselineProvince.dragon), numeric: null}}
+                                    current={{primary: getDragonDisplay(province.dragon), numeric: null}}
+                                    editor={
+                                        <div className="entity-edit-cell">
+                                            <select
+                                                className="snapshot-inline-select wide"
+                                                value={province.dragon ?? ""}
+                                                onChange={(e) =>
+                                                    setProvince((prev) => ({
+                                                        ...prev,
+                                                        dragon: e.target.value
+                                                            ? (e.target.value as Province["dragon"])
+                                                            : null,
+                                                    }))
+                                                }
+                                            >
+                                                <option value="">None</option>
+                                                {DRAGON_LIST.map((dragon) => (
+                                                    <option key={dragon.id} value={dragon.id}>
+                                                        {dragon.display}
+                                                    </option>
+                                                ))}
+                                            </select>
+
+                                            {province.dragon && <DragonInfo dragonId={province.dragon}/>}
+                                        </div>
+                                    }
+                                />
+
+                                <SnapshotMetric
+                                    label="Current spells"
+                                    baseline={baselineSpellCell}
+                                    current={currentSpellCell}
+                                    editor={
+                                        <div className="entity-edit-cell">
+                                            <button
+                                                type="button"
+                                                className="snapshot-inline-button"
+                                                onClick={() => setSpellsExpanded((prev) => !prev)}
+                                            >
+                                                {spellsExpanded ? "Hide" : "Show"}
+                                            </button>
+
+                                            <SpellInfo spells={province.activeSpells}/>
+                                        </div>
+                                    }
+                                    formatDelta={(d) =>
+                                        `${Math.abs(d).toFixed(0)} spell${Math.abs(d) === 1 ? "" : "s"}`
+                                    }
+                                    showPercentDelta={false}
+                                />
+
+                                {spellsExpanded && (
+                                    <tr>
+                                        <td colSpan={5} className="spells-panel-cell">
+                                            {province.activeSpells.length === 0 ? (
+                                                <div className="spells-empty">
+                                                    No spells loaded from GoodSpells / BadSpells.
+                                                </div>
+                                            ) : (
+                                                <div className="spells-grid">
+                                                    {province.activeSpells.map((spell) => (
+                                                        <label
+                                                            key={`${spell.name}-${spell.source}`}
+                                                            className="spell-toggle"
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={spell.active}
+                                                                onChange={() => toggleSpellActive(spell)}
+                                                            />
+                                                            <span>{spell.name}</span>
+                                                            <span className={`spell-source-badge ${spell.source}`}>
+                                    {spell.source === "good" ? "Good" : "Bad"}
+                                </span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                )}
                                 </tbody>
                             </table>
                         </section>

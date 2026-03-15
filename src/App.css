@@ -588,3 +588,62 @@ body {
     opacity: 0.55;
     cursor: default;
 }
+
+.spells-panel-cell {
+    padding-top: 0.35rem;
+    padding-bottom: 0.5rem;
+}
+
+.spells-empty {
+    font-size: 0.72rem;
+    color: #94a3b8;
+}
+
+.spells-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.4rem 0.8rem;
+    margin-top: 0.2rem;
+}
+
+.spell-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.75rem;
+    color: #e5e7eb;
+}
+
+.spell-toggle input[type="checkbox"] {
+    margin: 0;
+}
+
+.spell-source-badge {
+    display: inline-block;
+    margin-left: 0.35rem;
+    padding: 0.05rem 0.35rem;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: #cbd5e1;
+    vertical-align: middle;
+}
+
+.spell-source-badge.good {
+    border-color: rgba(74, 222, 128, 0.45);
+    color: #86efac;
+}
+
+.spell-source-badge.bad {
+    border-color: rgba(248, 113, 113, 0.45);
+    color: #fca5a5;
+}
+
+.spell-effect-line {
+    margin-top: 0.15rem;
+    font-size: 0.68rem;
+    color: #cbd5e1;
+    line-height: 1.25;
+    white-space: normal;
+}

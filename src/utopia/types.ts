@@ -25,6 +25,31 @@ export type PersonalityId =
     | "WARRIOR"
     | "WAR_HERO";
 
+export type RitualId =
+    | "ASCENDENCY"
+    | "BARRIER"
+    | "EXPEDIENT"
+    | "HASTE"
+    | "HAVOC"
+    | "ONSLAUGHT"
+    | "STALWART";
+
+export type DragonId =
+    | "EMERALD"
+    | "RUBY"
+    | "SAPPHIRE"
+    | "TOPAZ"
+    | "CELESTITE"
+    | "AMETHYST";
+
+export type ProvinceSpellSource = "good" | "bad";
+
+export interface ProvinceSpell {
+    name: string;
+    source: ProvinceSpellSource;
+    active: boolean;
+}
+
 export type BuildingId =
     | "HOMES"
     | "FARMS"
@@ -80,6 +105,11 @@ export interface Province {
     location: string;
     rulerName: string;
     honorLevel: number;
+
+    ritual: RitualId | null;
+    ritualEffectiveness: number; // 100 = base strength
+    dragon: DragonId | null;
+    activeSpells: ProvinceSpell[];
 
     acres: number;
     builtAcres: number;

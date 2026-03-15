@@ -10,6 +10,11 @@ export const initialProvince: Province = {
     rulerName: "",
     honorLevel: 0,
 
+    ritual: null,
+    ritualEffectiveness: 100,
+    dragon: null,
+    activeSpells: [],
+
     acres: 0,
     builtAcres: 0,
     barrenAcres: 0,
@@ -72,6 +77,7 @@ export function cloneProvince(prov: Province): Province {
             acc[category.id] = { ...prov.science[category.id] };
             return acc;
         }, {} as Province["science"]),
+        activeSpells: prov.activeSpells.map((spell) => ({ ...spell })),
         rawIntel: prov.rawIntel ? { ...prov.rawIntel } : undefined,
     };
 }

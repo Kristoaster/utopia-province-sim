@@ -4,6 +4,7 @@ import type { Province, RaceId, PersonalityId, BuildingId } from "./types";
 import { getRace } from "./current/races";
 import { getPersonality } from "./current/personalities";
 import { SCIENCE_CATEGORIES, createEmptyScience, estimateScienceBooksFromEffect } from "./data/science";
+import { parseProvinceSpellsFromIntel } from "./data/spells";
 
 type IntelRow = Record<string, string>;
 
@@ -145,6 +146,11 @@ function rowToProvince(row: IntelRow): Province | null {
         location,
         rulerName,
         honorLevel,
+
+        ritual: null,
+        ritualEffectiveness: 100,
+        dragon: null,
+        activeSpells: parseProvinceSpellsFromIntel(row),
 
         acres,
         buildings,
