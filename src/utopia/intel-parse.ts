@@ -150,7 +150,7 @@ function rowToProvince(row: IntelRow): Province | null {
         ritual: null,
         ritualEffectiveness: 100,
         dragon: null,
-        activeSpells: parseProvinceSpellsFromIntel(row),
+        activeSpells: parseProvinceSpellsFromIntel(row, race, personality),
 
         acres,
         buildings,

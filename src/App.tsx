@@ -8,7 +8,9 @@ import { BUILDING_LIST } from "./utopia/data/buildings";
 import { RITUAL_LIST, getRitual } from "./utopia/data/rituals";
 import { DRAGON_LIST, getDragon } from "./utopia/data/dragons";
 import {
+    createProvinceSpellbook,
     getActiveSpells,
+    groupProvinceSpells,
     previewActiveSpellNames,
     summarizeActiveSpells,
 } from "./utopia/data/spells";
@@ -141,6 +143,11 @@ function App() {
     const currentSpellCell = useMemo(
         () => toSpellMetricCell(province.activeSpells),
         [province]
+    );
+
+    const spellGroups = useMemo(
+        () => groupProvinceSpells(province.activeSpells),
+        [province.activeSpells]
     );
 
     const toggleSpellActive = (target: ProvinceSpell) => {
@@ -499,12 +506,19 @@ function App() {
                                             <select
                                                 className="snapshot-inline-select wide"
                                                 value={province.race}
-                                                onChange={(e) =>
+                                                onChange={(e) => {
+                                                    const nextRace = e.target.value as Province["race"];
+
                                                     setProvince((prev) => ({
                                                         ...prev,
-                                                        race: e.target.value as Province["race"],
-                                                    }))
-                                                }
+                                                        race: nextRace,
+                                                        activeSpells: createProvinceSpellbook(
+                                                            nextRace,
+                                                            prev.personality,
+                                                            prev.activeSpells
+                                                        ),
+                                                    }));
+                                                }}
                                             >
                                                 {RACE_LIST.map((race) => (
                                                     <option key={race.id} value={race.id}>
@@ -530,12 +544,19 @@ function App() {
                                             <select
                                                 className="snapshot-inline-select wide"
                                                 value={province.personality}
-                                                onChange={(e) =>
+                                                onChange={(e) => {
+                                                    const nextPersonality = e.target.value as Province["personality"];
+
                                                     setProvince((prev) => ({
                                                         ...prev,
-                                                        personality: e.target.value as Province["personality"],
-                                                    }))
-                                                }
+                                                        personality: nextPersonality,
+                                                        activeSpells: createProvinceSpellbook(
+                                                            prev.race,
+                                                            nextPersonality,
+                                                            prev.activeSpells
+                                                        ),
+                                                    }));
+                                                }}
                                             >
                                                 {PERSONALITY_LIST.map((p) => (
                                                     <option key={p.id} value={p.id}>
@@ -671,30 +692,55 @@ function App() {
                                 {spellsExpanded && (
                                     <tr>
                                         <td colSpan={5} className="spells-panel-cell">
-                                            {province.activeSpells.length === 0 ? (
-                                                <div className="spells-empty">
-                                                    No spells loaded from GoodSpells / BadSpells.
+                                            <div className="spells-groups">
+                                                <div className="spells-group">
+                                                    <div className="spells-group-title">Good spells</div>
+
+                                                    {spellGroups.good.length === 0 ? (
+                                                        <div className="spells-empty">No available good spells.</div>
+                                                    ) : (
+                                                        <div className="spells-grid">
+                                                            {spellGroups.good.map((spell) => (
+                                                                <label
+                                                                    key={`${spell.name}-${spell.source}`}
+                                                                    className={`spell-toggle ${spell.active ? "active" : "inactive"}`}
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={spell.active}
+                                                                        onChange={() => toggleSpellActive(spell)}
+                                                                    />
+                                                                    <span>{spell.name}</span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            ) : (
-                                                <div className="spells-grid">
-                                                    {province.activeSpells.map((spell) => (
-                                                        <label
-                                                            key={`${spell.name}-${spell.source}`}
-                                                            className="spell-toggle"
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={spell.active}
-                                                                onChange={() => toggleSpellActive(spell)}
-                                                            />
-                                                            <span>{spell.name}</span>
-                                                            <span className={`spell-source-badge ${spell.source}`}>
-                                    {spell.source === "good" ? "Good" : "Bad"}
-                                </span>
-                                                        </label>
-                                                    ))}
+
+                                                <div className="spells-group">
+                                                    <div className="spells-group-title">Bad spells / ops</div>
+
+                                                    {spellGroups.bad.length === 0 ? (
+                                                        <div className="spells-empty">No hostile effects.</div>
+                                                    ) : (
+                                                        <div className="spells-grid">
+                                                            {spellGroups.bad.map((spell) => (
+                                                                <label
+                                                                    key={`${spell.name}-${spell.source}`}
+                                                                    className={`spell-toggle ${spell.active ? "active" : "inactive"}`}
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={spell.active}
+                                                                        onChange={() => toggleSpellActive(spell)}
+                                                                    />
+                                                                    <span>{spell.name}</span>
+                                                                </label>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </div>
-                                            )}
+                                            </div>
                                         </td>
                                     </tr>
                                 )}

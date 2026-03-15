@@ -1,5 +1,6 @@
 import type { Province } from "./types";
 import { SCIENCE_CATEGORIES, createEmptyScience } from "./data/science";
+import { createProvinceSpellbook } from "./data/spells";
 
 export const initialProvince: Province = {
     name: "Province",
@@ -13,7 +14,7 @@ export const initialProvince: Province = {
     ritual: null,
     ritualEffectiveness: 100,
     dragon: null,
-    activeSpells: [],
+    activeSpells: createProvinceSpellbook("HUMAN", "PALADIN"),
 
     acres: 0,
     builtAcres: 0,
