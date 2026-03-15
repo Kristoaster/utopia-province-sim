@@ -689,7 +689,7 @@ function App() {
 
                                 {spellsExpanded && (
                                     <tr>
-                                        <td colSpan={5} className="spells-panel-cell">
+                                        <td colSpan={4} className="spells-panel-cell">
                                             <div className="spells-groups">
                                                 <div className="spells-group">
                                                     <div className="spells-group-title">Self spells</div>
