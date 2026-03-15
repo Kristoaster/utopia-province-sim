@@ -472,3 +472,91 @@ body {
     font-size: 0.62rem;
     padding: 0.1rem 0.25rem;
 }
+
+.entity-edit-cell {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.entity-info {
+    display: inline-flex;
+    align-items: center;
+}
+
+.entity-info-trigger {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    border: 1px solid #475569;
+    background: #020617;
+    color: #cbd5e1;
+    cursor: pointer;
+    font-size: 0.75rem;
+    line-height: 1;
+    padding: 0;
+}
+
+.entity-info-trigger:hover,
+.entity-info-trigger:focus {
+    border-color: #38bdf8;
+    color: #ffffff;
+    outline: none;
+}
+
+.entity-info-popover {
+    position: fixed;
+    z-index: 1000;
+    width: min(420px, calc(100vw - 16px));
+    padding: 0.75rem;
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
+    background: #020617;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    max-height: calc(100vh - 16px);
+    overflow: auto;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    overflow-x: hidden;
+}
+
+.entity-info-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin-bottom: 0.6rem;
+}
+
+.entity-info-section + .entity-info-section {
+    margin-top: 0.65rem;
+}
+
+.entity-info-section-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #93c5fd;
+    margin-bottom: 0.2rem;
+}
+
+.entity-info-list {
+    margin: 0;
+    padding-left: 1rem;
+}
+
+.entity-info-list li {
+    margin: 0.12rem 0;
+}
+
+.entity-info-table {
+    margin-top: 0.25rem;
+}
+
+.entity-info-table th,
+.entity-info-table td {
+    font-size: 0.68rem;
+    padding: 0.12rem 0.3rem;
+}

@@ -25,6 +25,7 @@ import {
 import { HonorInfo } from "./features/honor/HonorInfo";
 import { initialProvince, cloneProvince } from "./utopia/province-state";
 import { computeProvinceMetrics } from "./utopia/province-metrics";
+import { RaceInfo } from "./features/race/RaceInfo";
 
 type IntelSource = "CSV" | "MANUAL";
 
@@ -426,22 +427,26 @@ function App() {
                                     baseline={{primary: baselineProvince.race, numeric: null}}
                                     current={{primary: province.race, numeric: null}}
                                     editor={
-                                        <select
-                                            className="snapshot-inline-select wide"
-                                            value={province.race}
-                                            onChange={(e) =>
-                                                setProvince((prev) => ({
-                                                    ...prev,
-                                                    race: e.target.value as Province["race"],
-                                                }))
-                                            }
-                                        >
-                                            {RACE_LIST.map((race) => (
-                                                <option key={race.id} value={race.id}>
-                                                    {race.display}
-                                                </option>
-                                            ))}
-                                        </select>
+                                        <div className="entity-edit-cell">
+                                            <select
+                                                className="snapshot-inline-select wide"
+                                                value={province.race}
+                                                onChange={(e) =>
+                                                    setProvince((prev) => ({
+                                                        ...prev,
+                                                        race: e.target.value as Province["race"],
+                                                    }))
+                                                }
+                                            >
+                                                {RACE_LIST.map((race) => (
+                                                    <option key={race.id} value={race.id}>
+                                                        {race.display}
+                                                    </option>
+                                                ))}
+                                            </select>
+
+                                            <RaceInfo raceId={province.race} />
+                                        </div>
                                     }
                                 />
 
