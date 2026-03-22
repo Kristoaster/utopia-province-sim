@@ -145,5 +145,22 @@ export interface Province {
     intelWagePercent: number;
     draftTargetPercent: number;
 
+    mana?: number;
+    stealth?: number;
+    generals?: number;
+    availableGenerals?: number;
+    militaryEfficiency?: number;
+    offenseEfficiency?: number;
+    defenseEfficiency?: number;
+    buildingEfficiencyReported?: number;
+    availableWorkers?: number;
+    availableJobs?: number;
+    workersNeededForMaxBE?: number;
+    draftRateName?: string;
+    scienceGeneration?: number;
+    nextScientistCategory?: string;
+    ritualDaysRemaining?: number;
+    ritualDestroyedPct?: number;
+
     rawIntel?: Record<string, string>;
 }

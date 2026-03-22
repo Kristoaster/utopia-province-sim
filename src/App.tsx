@@ -39,8 +39,9 @@ import { PersonalityInfo } from "./features/personality/PersonalityInfo";
 import { RitualInfo } from "./features/ritual/RitualInfo";
 import { DragonInfo } from "./features/dragon/DragonInfo";
 import { SpellInfo } from "./features/spells/SpellInfo";
+import { applyCapturesToProvince, parseCaptureJson } from "./utopia/capture/parse-capture";
 
-type IntelSource = "CSV" | "MANUAL";
+type IntelSource = "CSV" | "CAPTURE" | "MANUAL";
 
 function App() {
     const [province, setProvince] = useState<Province>(initialProvince);
@@ -157,6 +158,23 @@ function App() {
                     : spell
             ),
         }));
+    };
+
+    const handleCaptureUpload = async (
+        e: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const files = Array.from(e.target.files ?? []);
+        if (files.length === 0) return;
+
+        const texts = await Promise.all(files.map((file) => file.text()));
+        const captures = texts.map(parseCaptureJson);
+
+        const nextProvince = applyCapturesToProvince(
+            cloneProvince(province),
+            captures
+        );
+
+        setProvince(nextProvince);
     };
 
     // --- Intel upload handler ---
@@ -329,6 +347,25 @@ function App() {
                         style={{marginBottom: "0.5rem"}}
                     >
                         <div>
+                            <label>
+                                <input
+                                    type="radio"
+                                    name="intelSource"
+                                    value="CAPTURE"
+                                    checked={intelSource === "CAPTURE"}
+                                    onChange={() => setIntelSource("CAPTURE")}
+                                />
+                                Capture JSON
+                            </label>
+
+                            {intelSource === "CAPTURE" && (
+                                <input
+                                    type="file"
+                                    accept=".json,application/json"
+                                    multiple
+                                    onChange={handleCaptureUpload}
+                                />
+                            )}
                             <label>Intel source</label>
                             <select
                                 value={intelSource}

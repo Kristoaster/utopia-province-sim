@@ -68,6 +68,23 @@ export const initialProvince: Province = {
     intelDefenseHome: 0,
     intelWagePercent: 100,
     draftTargetPercent: 60,
+
+    mana: 100,
+    stealth: 100,
+    generals: 4,
+    availableGenerals: 4,
+    militaryEfficiency: 100,
+    offenseEfficiency: 100,
+    defenseEfficiency: 100,
+    buildingEfficiencyReported: 100,
+    availableWorkers: 0,
+    availableJobs: 0,
+    workersNeededForMaxBE: 0,
+    draftRateName: "None",
+    scienceGeneration: 0,
+    nextScientistCategory: "Economy",
+    ritualDaysRemaining: 0,
+    ritualDestroyedPct: 0,
 };
 
 export function cloneProvince(prov: Province): Province {
