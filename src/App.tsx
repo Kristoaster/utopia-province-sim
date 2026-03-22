@@ -174,7 +174,8 @@ function App() {
             captures
         );
 
-        setProvince(nextProvince);
+        loadProvince(nextProvince);
+        e.target.value = "";
     };
 
     // --- Intel upload handler ---
@@ -344,28 +345,9 @@ function App() {
                     {/* Source Selector */}
                     <div
                         className="control-grid"
-                        style={{marginBottom: "0.5rem"}}
+                        style={{ marginBottom: "0.5rem" }}
                     >
                         <div>
-                            <label>
-                                <input
-                                    type="radio"
-                                    name="intelSource"
-                                    value="CAPTURE"
-                                    checked={intelSource === "CAPTURE"}
-                                    onChange={() => setIntelSource("CAPTURE")}
-                                />
-                                Capture JSON
-                            </label>
-
-                            {intelSource === "CAPTURE" && (
-                                <input
-                                    type="file"
-                                    accept=".json,application/json"
-                                    multiple
-                                    onChange={handleCaptureUpload}
-                                />
-                            )}
                             <label>Intel source</label>
                             <select
                                 value={intelSource}
@@ -379,6 +361,7 @@ function App() {
                                 }}
                             >
                                 <option value="CSV">CSV export from Intel Site</option>
+                                <option value="CAPTURE">Capture JSON</option>
                                 <option value="MANUAL">Manual entry</option>
                             </select>
                         </div>
@@ -417,6 +400,18 @@ function App() {
                                     </div>
                                 )}
                             </>
+                        )}
+
+                        {intelSource === "CAPTURE" && (
+                            <div>
+                                <label>Load capture JSON files</label>
+                                <input
+                                    type="file"
+                                    accept=".json,application/json"
+                                    multiple
+                                    onChange={handleCaptureUpload}
+                                />
+                            </div>
                         )}
                     </div>
                 </div>

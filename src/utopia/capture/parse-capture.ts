@@ -2,6 +2,8 @@ import type { Province } from "../types";
 import type { IntelCapture } from "./types";
 import { mergeCaptureIntoProvince } from "./merge-capture";
 import { parseThroneCapture } from "./parsers/parse-throne";
+import { parseMilitaryCapture } from "./parsers/parse-military";
+import { parseInternalCapture } from "./parsers/parse-internal";
 
 export function parseCaptureJson(text: string): IntelCapture {
     return JSON.parse(text) as IntelCapture;
@@ -13,6 +15,14 @@ export function applyCaptureToProvince(
 ): Province {
     if (capture.url.includes("/wol/game/throne")) {
         return mergeCaptureIntoProvince(province, parseThroneCapture(capture));
+    }
+
+    if (capture.url.includes("/wol/game/council_military")) {
+        return mergeCaptureIntoProvince(province, parseMilitaryCapture(capture));
+    }
+
+    if (capture.url.includes("/wol/game/council_internal")) {
+        return mergeCaptureIntoProvince(province, parseInternalCapture(capture));
     }
 
     return province;
