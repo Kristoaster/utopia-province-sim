@@ -43,16 +43,6 @@ export function parseThroneCapture(capture: IntelCapture): PartialProvinceUpdate
         }
     }
 
-    const spellText = textOf(
-        Array.from(doc.querySelectorAll("h2"))
-            .find((el) => textOf(el) === "Info")
-            ?.nextElementSibling
-    );
-
-    const activeSpells = Array.from(
-        spellText.matchAll(/([A-Za-z' ]+)\s*\(\s*(\d+\s+days|-)\s*\)/g)
-    ).map((m) => m[1].trim());
-
     return {
         ...provinceInfo,
         rulerName: values["Ruler"] || undefined,
